@@ -10,10 +10,11 @@ internal sealed record TaskSample(ProcessCounters Info, double? Cpu, double? Rea
 }
 internal sealed record Frame(double Time, DateTime Clock, double? Cpu, long? TotalRam, long? UsedRam,
     double? DiskRead, double? DiskWrite, double? Received, double? Sent, IReadOnlyList<TaskSample> Tasks,
-    IReadOnlyList<CoreSample> Cores, IReadOnlyList<DiskSample> Disks, IReadOnlyList<AdapterSample> Adapters);
+    IReadOnlyList<CoreSample>? Cores, IReadOnlyList<DiskSample>? Disks, IReadOnlyList<AdapterSample>? Adapters);
 
 internal sealed class Sampler : IDisposable
 {
+    internal const double MaxSampleInterval = 15;
     [StructLayout(LayoutKind.Sequential)]
     private struct MemoryStatus
     {
@@ -41,7 +42,7 @@ internal sealed class Sampler : IDisposable
         var tasks = _processes.Read();
         double time = (double)Stopwatch.GetTimestamp() / Stopwatch.Frequency;
         double seconds = _lastTime is { } previous ? time - previous : 0;
-        bool compare = !restart && seconds is > 0 and <= 15;
+        bool compare = !restart && seconds is > 0 and <= MaxSampleInterval;
         var rows = new List<TaskSample>(tasks.Count);
         foreach (var item in tasks)
         {
@@ -68,20 +69,18 @@ internal sealed class Sampler : IDisposable
             _lastCpu = (idle, total);
         }
         var (rx, tx, adapters) = NetworkRates(compare, seconds);
-        IReadOnlyList<CoreSample> cores = compare ? counters.Cores : [];
-        IReadOnlyList<DiskSample> disks = compare ? counters.Disks : [];
         _previous = tasks.ToDictionary(p => p.Key);
         _lastTime = time;
         return new(time, DateTime.Now, compare && cpuTotal is { } c ? Math.Clamp(c, 0, 100) : null,
             haveMemory ? (long)memory.Total : null, haveMemory ? (long)(memory.Total - memory.Available) : null,
             compare ? counters.Read : null, compare ? counters.Write : null, rx, tx, rows,
-            cores, disks, adapters);
+            compare ? counters.Cores : null, compare ? counters.Disks : null, adapters);
     }
 
     private static double? Rate(long current, long previous, double seconds) =>
         current >= previous ? (current - previous) / seconds : null;
 
-    private (double? Received, double? Sent, List<AdapterSample> Adapters) NetworkRates(bool compare, double seconds)
+    private (double? Received, double? Sent, List<AdapterSample>? Adapters) NetworkRates(bool compare, double seconds)
     {
         var current = new Dictionary<string, (long Rx, long Tx)>();
         var adapters = new List<AdapterSample>();
@@ -110,10 +109,18 @@ internal sealed class Sampler : IDisposable
                     tx += up.Value;
                     matched = true;
                 }
-                catch (NetworkInformationException) { /* Adapter disappeared during enumeration. */ }
+                catch (NetworkInformationException)
+                {
+                    // The adapter was enumerated but its statistics are temporarily unavailable.
+                    adapters.Add(new(adapter.Id, adapter.Name, null, null, null));
+                }
             }
         }
-        catch (NetworkInformationException) { current.Clear(); adapters.Clear(); matched = false; }
+        catch (NetworkInformationException)
+        {
+            _network.Clear();
+            return (null, null, null);
+        }
         adapters.Sort((a, b) =>
         {
             int order = StringComparer.CurrentCultureIgnoreCase.Compare(a.Name, b.Name);

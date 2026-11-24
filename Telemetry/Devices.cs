@@ -1,6 +1,6 @@
 namespace Pulse.Telemetry;
 
-internal sealed record CoreSample(int Group, int Number, double Usage);
+internal sealed record CoreSample(int Group, int Number, double? Usage);
 
 // Instance is the PDH name, such as "0 C: D:". Active is the share of time spent servicing
 // requests and Response is the average seconds per transfer.

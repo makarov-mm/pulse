@@ -1,14 +1,14 @@
 # Pulse
 
-A native Windows 11 task manager developed by Mykhailo Makarov. Pulse brings a minute of system history, a searchable process tree and a live process inspector into one WinUI 3 window.
+A native Windows 11 task manager developed by Mykhailo Makarov. Pulse brings up to 15 minutes of system history, a searchable process tree and a live process inspector into one WinUI 3 window.
 
 ## Why use Pulse over Windows Task Manager?
 
 | When you want to… | What Pulse gives you today |
 | --- | --- |
-| Find out which process led a CPU spike | Hover over the CPU graph. Each sample retains its leading process name, PID and CPU share for the visible minute, even if the process has since exited. The memory graph identifies the largest working set at each sample. |
+| Find out which process led a CPU spike | Hover over the CPU graph. Each sample retains its leading process name, PID and CPU share for the selected time window, even if the process has since exited. The memory graph identifies the largest working set at each sample. |
 | Find a worker process and understand who launched it | Search by name or PID in **Tree** mode. The results retain the chain of parent processes. Typing a worker's PID can reveal the browser, editor or build tool that spawned it. |
-| Find the core, disk or adapter behind a busy overview graph | Open the device view from the CPU, disk or network card. Each logical processor, physical disk and network adapter has its own one-minute graph. Disk tiles separate throughput from active time and response time. |
+| Find the core, disk or adapter behind a busy overview graph | Open the device view from the CPU, disk or network card. Each logical processor, physical disk and network adapter has its own graph for the selected time window. Disk tiles separate throughput from active time and response time. |
 | Compare system load with the activity of one process | Keep CPU, memory, disk and network history visible while inspecting a process's working set, private memory, read and write rates, thread count and handles. Pause to investigate a busy moment without the rows reordering. |
 
 Windows Task Manager provides system-wide performance, process details and services in dedicated views. The table describes workflows available in the current Pulse build. [Windows Task Manager overview](https://learn.microsoft.com/en-us/troubleshoot/windows-server/support-tools/support-tools-task-manager)
@@ -21,7 +21,7 @@ Open the portable `Pulse.exe` on Windows 11 x64. It bundles .NET and the Windows
 
 - Press **Ctrl+F** to search by process name or PID. Click a column heading to sort, and click it again to reverse the order.
 - Toggle **Tree** to follow parent and child processes. Select a row to inspect its executable path, start time and counters.
-- Use the chevron on the CPU, disk or network card to open its device view, and again to close it. The buttons are reachable with **Tab**. Device history is collected while the view is closed, so the tiles open with the last minute already drawn.
+- Use the chevron on the CPU, disk or network card to open its device view, and again to close it. The buttons are reachable with **Tab**. Device history is collected while the view is closed, so the tiles open with the available history already drawn.
 - Click a device tile, or press **Enter** or **Space** on it, to expand it into a larger graph with its maximum and time span labelled. Arrow keys move between tiles. Select the tile again to shrink it.
 - Choose a history window of 1 or 15 minutes beside the refresh interval. Pulse always keeps the last 15 minutes, so switching does not lose samples.
 - Click the CPU or memory graph to list the five processes with the highest CPU use and the five largest working sets at that sample. Processes that have since exited are marked.
@@ -63,7 +63,11 @@ Build a self-contained `publish/Pulse.exe` with the portable profile.
 dotnet publish Pulse.csproj -c Release -p:PublishProfile=Portable -o publish
 ```
 
+## Run the Windows regression checks
+
+From the project directory, run `powershell -File .\tests\Run.ps1`. The test build opens its own WinUI window for each shipped language. It checks live sampling, device removal and recovery, short-window layout, gaps in graphs, pause and the 15-minute history boundary. Device changes and missing time intervals are simulated in the test process. Build output and reports go under `obj/window-checks`.
+
 ## Development roadmap
 
-The current milestone identifies a saturated CPU core, physical disk or network adapter. The device views are in place and their measurements still need checking against a recorded baseline. The 15-minute window and the per-sample process list from milestone 2 are also in place. Later milestones cover longer history, process inspection and capture comparison. [Roadmap and acceptance criteria](ROADMAP.md)
+The current milestone identifies a saturated CPU core, physical disk or network adapter. The device views are in place and their measurements still need checking against a recorded baseline. The 15-minute window and the per-sample process list from milestone 2 are also in place. Later milestones cover process inspection and capture comparison. [Roadmap and acceptance criteria](ROADMAP.md)
 

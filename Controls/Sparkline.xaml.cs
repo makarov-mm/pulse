@@ -1,4 +1,5 @@
 using Pulse.Localization;
+using Pulse.Telemetry;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -23,6 +24,7 @@ public sealed partial class Sparkline : UserControl
     {
         InitializeComponent();
         ToolTipService.SetToolTip(Plot, _tip);
+        Loaded += (_, _) => { UpdateTooltip(); Redraw(); };
     }
 
     // Raised with the sample time when the user taps the graph.
@@ -59,7 +61,13 @@ public sealed partial class Sparkline : UserControl
         Redraw();
     }
 
-    public void Clear() => _history.Clear();
+    public void Clear()
+    {
+        _history.Clear();
+        Line.Data = null;
+        Area.Data = null;
+        _tip.Content = UiText.Get("NoSample");
+    }
 
     private void PlotSizeChanged(object sender, SizeChangedEventArgs args) => Redraw();
 
@@ -74,54 +82,77 @@ public sealed partial class Sparkline : UserControl
     private void PlotTapped(object sender, TappedRoutedEventArgs args)
     {
         if (SampleSelected is null || _history.Count == 0 || Plot.ActualWidth < 1) return;
-        double target = TimeAt(args.GetPosition(Plot).X);
-        if (target < _history[0].Time - 1) return;
-        SampleSelected(this, _history.MinBy(p => Math.Abs(p.Time - target)).Time);
+        int index = SampleAt(TimeAt(args.GetPosition(Plot).X));
+        if (index >= 0 && _history[index].Value.HasValue) SampleSelected(this, _history[index].Time);
     }
 
     // Maps a horizontal position to a sample time. The newest sample sits at the right edge.
     private double TimeAt(double x) => _history[^1].Time - _span + _span * x / Plot.ActualWidth;
 
+    // Restrict selection to the visible time window. Inside a long gap only the
+    // measured endpoints (within one second) are selectable.
+    private int SampleAt(double time)
+    {
+        if (_history.Count == 0 || time < _history[0].Time - 1) return -1;
+        int low = 0, high = _history.Count - 1;
+        while (low < high)
+        {
+            int mid = low + (high - low) / 2;
+            if (_history[mid].Time < time) low = mid + 1;
+            else high = mid;
+        }
+        if (low == 0) return 0;
+        double before = _history[low - 1].Time, after = _history[low].Time;
+        if (after - before > Sampler.MaxSampleInterval && time - before > 1 && after - time > 1) return -1;
+        return before >= _history[^1].Time - _span && time - before < after - time ? low - 1 : low;
+    }
+
     private void UpdateTooltip()
     {
-        if (_history.Count == 0 || Plot.ActualWidth < 1) return;
-        double target = TimeAt(_pointerX ?? Plot.ActualWidth);
-        var p = _history.MinBy(p => Math.Abs(p.Time - target));
-        string text = target < _history[0].Time - 1 ? UiText.Get("NoSample") :
-            $"{p.Clock:T}   {(p.Value is { } v ? _format(v) : UiText.Get("NoData"))}{(p.Detail is null ? "" : Environment.NewLine + p.Detail)}";
+        if (!IsLoaded || _history.Count == 0 || Plot.ActualWidth < 1) return;
+        int index = _pointerX is { } x ? SampleAt(TimeAt(x)) : _history.Count - 1;
+        string text = UiText.Get("NoSample");
+        if (index >= 0)
+        {
+            var p = _history[index];
+            text = $"{p.Clock:T}   {(p.Value is { } v ? _format(v) : UiText.Get("NoData"))}{(p.Detail is null ? "" : Environment.NewLine + p.Detail)}";
+        }
         _tip.Content = Hint is null ? text : text + Environment.NewLine + Hint;
     }
 
     private void Redraw()
     {
-        if (Plot is null || _history.Count == 0 || Plot.ActualWidth < 2 || Plot.ActualHeight < 2) return;
+        if (!IsLoaded || Plot is null || _history.Count == 0 || Plot.ActualWidth < 2 || Plot.ActualHeight < 2) return;
         double w = Plot.ActualWidth - 2, h = Plot.ActualHeight - 2;
         double max = AxisMaximum;
         var stroke = new PathGeometry();
         var fill = new PathGeometry();
-        PathFigure? edge = null, shape = null;
-        double lastX = 0;
+        PointCollection? points = null, fillPoints = null;
+        double? lastTime = null;
         void Finish()
         {
-            if (shape is not null) shape.Segments.Add(new LineSegment { Point = new(lastX, h + 1) });
-            edge = null;
-            shape = null;
+            if (points is null) return;
+            var edge = new PathFigure { StartPoint = points[0] };
+            edge.Segments.Add(new PolyLineSegment { Points = points });
+            stroke.Figures.Add(edge);
+            var shape = new PathFigure { StartPoint = new(points[0].X, h + 1), IsClosed = true };
+            shape.Segments.Add(new PolyLineSegment { Points = fillPoints! });
+            shape.Segments.Add(new LineSegment { Point = new(points[points.Count - 1].X, h + 1) });
+            fill.Figures.Add(shape);
+            points = null;
+            fillPoints = null;
         }
         foreach (var p in Visible())
         {
+            if (lastTime is { } previous && p.Time - previous > Sampler.MaxSampleInterval) Finish();
+            lastTime = p.Time;
             if (p.Value is not { } value) { Finish(); continue; }
             double x = 1 + w * (1 - (_history[^1].Time - p.Time) / _span);
             var point = new Point(x, 1 + h * (1 - Math.Clamp(value / max, 0, 1)));
-            if (edge is null)
-            {
-                edge = new() { StartPoint = point };
-                stroke.Figures.Add(edge);
-                shape = new() { StartPoint = new(x, h + 1), IsClosed = true };
-                fill.Figures.Add(shape);
-            }
-            edge.Segments.Add(new LineSegment { Point = point });
-            shape!.Segments.Add(new LineSegment { Point = point });
-            lastX = x;
+            points ??= new PointCollection();
+            points.Add(point);
+            fillPoints ??= new PointCollection();
+            fillPoints.Add(point);
         }
         Finish();
         Line.Data = stroke;

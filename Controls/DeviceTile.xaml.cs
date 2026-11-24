@@ -79,7 +79,12 @@ public sealed partial class DeviceTile : UserControl
     internal void MarkGap(double time, DateTime clock)
     {
         Reading.Text = "—";
+        Caption.Text = "";
+        Caption.Visibility = Visibility.Collapsed;
+        ToolTipService.SetToolTip(Caption, null);
+        AutomationProperties.SetName(this, $"{Heading.Text}, {Reading.Text}");
         Graph.Add(time, clock, null);
+        UpdateAxis();
     }
 
     internal void ClearHistory() => Graph.Clear();

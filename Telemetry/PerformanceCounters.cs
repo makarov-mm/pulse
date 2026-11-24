@@ -4,9 +4,9 @@ using System.Runtime.InteropServices;
 namespace Pulse.Telemetry;
 
 internal sealed record CounterSample(double? Cpu, double? Read, double? Write,
-    IReadOnlyList<CoreSample> Cores, IReadOnlyList<DiskSample> Disks)
+    IReadOnlyList<CoreSample>? Cores, IReadOnlyList<DiskSample>? Disks)
 {
-    public static readonly CounterSample Empty = new(null, null, null, [], []);
+    public static readonly CounterSample Empty = new(null, null, null, null, null);
 }
 
 internal sealed class PerformanceCounters : IDisposable
@@ -63,63 +63,72 @@ internal sealed class PerformanceCounters : IDisposable
         counter != 0 && PdhGetFormattedCounterValue(counter, FormatDouble, 0, out var value) == 0 && Valid(value)
             ? value.Number : null;
 
-    // Reads every instance of a wildcard counter. Instances without a valid value are omitted.
-    private Dictionary<string, double> GetValues(nint counter)
+    // A null inventory means the query failed. A named instance may still be warming up.
+    private Dictionary<string, double?>? GetValues(nint counter)
     {
-        var result = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
-        if (counter == 0) return result;
+        if (counter == 0) return null;
         for (int attempt = 0; attempt < 3; attempt++)
         {
             uint bytes = _capacity;
             uint status = PdhGetFormattedCounterArrayW(counter, FormatDouble, ref bytes, out uint count, _items);
             if (status == MoreData)
             {
-                // The instance list can grow between the sizing call and the read.
-                Marshal.FreeHGlobal(_items);
-                _items = 0;
-                _capacity = 0;
+                // PDH only guarantees the required byte count on a zero-length sizing call.
+                if (_capacity != 0)
+                {
+                    bytes = 0;
+                    if (PdhGetFormattedCounterArrayW(counter, FormatDouble, ref bytes, out _, 0) != MoreData)
+                        continue;
+                }
                 uint capacity = checked(bytes + 4096);
-                _items = Marshal.AllocHGlobal((nint)capacity);
+                nint buffer = Marshal.AllocHGlobal((nint)capacity);
+                Marshal.FreeHGlobal(_items);
+                _items = buffer;
                 _capacity = capacity;
                 continue;
             }
-            if (status != 0) break;
+            if (status != 0) return null;
+            var result = new Dictionary<string, double?>(StringComparer.OrdinalIgnoreCase);
             int size = Marshal.SizeOf<Item>();
             for (int i = 0; i < count; i++)
             {
                 var item = Marshal.PtrToStructure<Item>(_items + i * size);
-                if (Valid(item.Value) && Marshal.PtrToStringUni(item.Name) is { Length: > 0 } name)
-                    result[name] = item.Value.Number;
+                if (Marshal.PtrToStringUni(item.Name) is { Length: > 0 } name)
+                    result[name] = Valid(item.Value) ? item.Value.Number : null;
             }
-            break;
+            return result;
         }
-        return result;
+        return null;
     }
 
-    private List<CoreSample> Cores()
+    private List<CoreSample>? Cores()
     {
+        var values = GetValues(_cores);
+        if (values is null) return null;
         var cores = new List<CoreSample>();
-        foreach (var (name, usage) in GetValues(_cores))
+        foreach (var (name, usage) in values)
         {
             // Instances are "group,number". "_Total" and "group,_Total" are aggregates.
             var parts = name.Split(',');
             if (parts.Length == 2 &&
                 int.TryParse(parts[0], NumberStyles.None, CultureInfo.InvariantCulture, out int group) &&
                 int.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out int number))
-                cores.Add(new(group, number, Math.Clamp(usage, 0, 100)));
+                cores.Add(new(group, number, usage is { } n ? Math.Clamp(n, 0, 100) : null));
         }
         cores.Sort((a, b) => a.Group != b.Group ? a.Group.CompareTo(b.Group) : a.Number.CompareTo(b.Number));
         return cores;
     }
 
-    private List<DiskSample> Disks()
+    private List<DiskSample>? Disks()
     {
         var read = GetValues(_diskRead);
         var write = GetValues(_diskWrite);
         var idle = GetValues(_diskIdle);
         var response = GetValues(_diskResponse);
+        var available = new[] { read, write, idle, response }.OfType<Dictionary<string, double?>>().ToArray();
+        if (available.Length == 0) return null;
         var disks = new List<DiskSample>();
-        foreach (var name in read.Keys.Union(write.Keys).Union(idle.Keys).Union(response.Keys))
+        foreach (var name in available.SelectMany(counter => counter.Keys).Distinct(StringComparer.OrdinalIgnoreCase))
         {
             if (name.Equals(Total, StringComparison.OrdinalIgnoreCase)) continue;
             // Instances are the disk number followed by its volumes, such as "0 C: D:".
@@ -136,8 +145,8 @@ internal sealed class PerformanceCounters : IDisposable
         return disks;
     }
 
-    private static double? Find(Dictionary<string, double> values, string name) =>
-        values.TryGetValue(name, out double value) ? value : null;
+    private static double? Find(Dictionary<string, double?>? values, string name) =>
+        values?.GetValueOrDefault(name);
 
     public void Dispose()
     {

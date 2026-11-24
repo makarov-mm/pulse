@@ -56,6 +56,7 @@ public sealed partial class MainWindow
         DeviceTitle.Text = current.Title;
         UpdateSpanText();
         LayoutDevices();
+        DevicePanel.StartBringIntoView();
     }
 
     private void CloseDevices(object sender, RoutedEventArgs e)
@@ -69,15 +70,15 @@ public sealed partial class MainWindow
 
     private void UpdateDevices(Frame f)
     {
-        bool groups = f.Cores.Any(c => c.Group != 0);
-        Sync(DeviceView.Processor, f, f.Cores.Select(c => new DeviceReading($"{c.Group},{c.Number}",
+        bool groups = f.Cores?.Any(c => c.Group != 0) == true;
+        Sync(DeviceView.Processor, f, f.Cores?.Select(c => new DeviceReading($"{c.Group},{c.Number}",
             groups ? UiText.Format("CoreGroupName", c.Group, c.Number) : UiText.Format("CoreName", c.Number),
             c.Usage, Format.Percent(c.Usage), "")));
-        Sync(DeviceView.Disk, f, f.Disks.Select(d => new DeviceReading(d.Instance, DiskName(d),
+        Sync(DeviceView.Disk, f, f.Disks?.Select(d => new DeviceReading(d.Instance, DiskName(d),
             d.Read + d.Write, Format.Bytes(d.Read + d.Write, true),
             UiText.Format("DiskDetail", Format.Bytes(d.Read, true), Format.Bytes(d.Write, true),
                 Format.Percent(d.Active), Format.Milliseconds(d.Response)))));
-        Sync(DeviceView.Network, f, f.Adapters.Select(a => new DeviceReading(a.Id, a.Name,
+        Sync(DeviceView.Network, f, f.Adapters?.Select(a => new DeviceReading(a.Id, a.Name,
             a.Received + a.Sent, Format.Bytes(a.Received + a.Sent, true),
             UiText.Format("AdapterDetail", Format.Bytes(a.Received, true), Format.Bytes(a.Sent, true),
                 Format.BitRate(a.LinkSpeed)))));
@@ -87,21 +88,20 @@ public sealed partial class MainWindow
         disk.Index is not { } index ? disk.Instance :
         disk.Volumes.Length == 0 ? UiText.Format("DiskName", index) : UiText.Format("DiskVolumes", index, disk.Volumes);
 
-    private void Sync(DeviceView view, Frame f, IEnumerable<DeviceReading> source)
+    private void Sync(DeviceView view, Frame f, IEnumerable<DeviceReading>? source)
     {
         var group = _devices[view];
-        var readings = source.ToList();
-        if (readings.Count == 0)
+        if (source is null)
         {
-            // A sample without readings is a gap in the data, not proof that every device was removed.
+            // A failed query keeps the inventory. A successful empty inventory removes its last tile.
             foreach (var (_, tile) in group.Tiles) tile.MarkGap(f.Time, f.Clock);
             return;
         }
 
         var known = group.Tiles.ToDictionary(t => t.Key, t => t.Tile);
-        var next = new List<(string Key, DeviceTile Tile)>(readings.Count);
+        var next = new List<(string Key, DeviceTile Tile)>();
         var seen = new HashSet<string>();
-        foreach (var reading in readings)
+        foreach (var reading in source)
         {
             if (!seen.Add(reading.Key)) continue;
             if (!known.TryGetValue(reading.Key, out var tile))
@@ -122,6 +122,7 @@ public sealed partial class MainWindow
         bool changed = !next.Select(t => t.Key).SequenceEqual(group.Tiles.Select(t => t.Key));
         group.Tiles.Clear();
         group.Tiles.AddRange(next);
+        if (group.Expanded is { } expanded && !seen.Contains(expanded)) group.Expanded = null;
         if (changed && view == _deviceView) LayoutDevices();
     }
 
@@ -131,7 +132,7 @@ public sealed partial class MainWindow
         group.Expanded = group.Expanded == key ? null : key;
         if (view != _deviceView) return;
         LayoutDevices();
-        // Rebuilding the grid drops keyboard focus, so return it to the tile.
+        // A pointer or keyboard selection should leave focus on the same tile.
         foreach (var (tileKey, tile) in group.Tiles)
             if (tileKey == key) tile.Focus(FocusState.Programmatic);
     }
@@ -155,7 +156,9 @@ public sealed partial class MainWindow
         var tiles = group.Tiles;
         int columns = _deviceColumns = DeviceColumns(DeviceGrid.ActualWidth);
         bool expanded = tiles.Any(t => t.Key == group.Expanded);
-        DeviceGrid.Children.Clear();
+        bool rebuild = tiles.Count != DeviceGrid.Children.Count ||
+            !tiles.Select(t => (UIElement)t.Tile).SequenceEqual(DeviceGrid.Children);
+        if (rebuild) DeviceGrid.Children.Clear();
         DeviceGrid.ColumnDefinitions.Clear();
         DeviceGrid.RowDefinitions.Clear();
         for (int i = 0; i < columns; i++) DeviceGrid.ColumnDefinitions.Add(new ColumnDefinition());
@@ -172,7 +175,7 @@ public sealed partial class MainWindow
             Grid.SetRow(tile, wide ? 0 : firstRow + cell / columns);
             Grid.SetColumnSpan(tile, wide ? columns : 1);
             if (!wide) cell++;
-            DeviceGrid.Children.Add(tile);
+            if (rebuild) DeviceGrid.Children.Add(tile);
         }
         DeviceEmpty.Visibility = tiles.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
     }

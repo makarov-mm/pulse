@@ -394,6 +394,7 @@ public sealed partial class MainWindow : Window
         Inspector.DisplayMode = e.NewSize.Width < 1060 ? SplitViewDisplayMode.Overlay : SplitViewDisplayMode.Inline;
         Cards.RowSpacing = narrow ? 6 : 0;
         // Leave room for the process table in short windows.
+        OverviewScroll.MaxHeight = Math.Max(110, e.NewSize.Height - 350);
         DeviceScroll.MaxHeight = Math.Clamp(e.NewSize.Height - 620, 86, 190);
         var cards = new[] { CpuCard, MemoryCard, DiskCard, NetworkCard };
         for (int i = 0; i < cards.Length; i++)

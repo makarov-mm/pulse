@@ -15,7 +15,7 @@ The milestones below are planned work. The [README](README.md) describes the fea
 
 - Verify the per-device counters against Task Manager and Performance Monitor, including a disk or adapter removed while Pulse is running.
 - Record the baseline and compare Pulse's CPU and memory footprint at each refresh interval with the device counters enabled.
-- Exercise the device views with the keyboard, in high contrast and in each translation.
+- Exercise the device views with Windows high contrast enabled. Keyboard expansion, collapse and arrow navigation have been checked on the desktop. The WinUI regression checks cover device views in all three shipped languages.
 
 Windows Task Manager's Performance view supplies the device-level model. btop4win informs the compact graphs, selectable disks and keyboard navigation. [Task Manager](https://learn.microsoft.com/en-us/troubleshoot/windows-server/support-tools/support-tools-task-manager) · [btop4win](https://github.com/aristocratos/btop4win)
 
@@ -29,7 +29,7 @@ Windows Task Manager's Performance view supplies the device-level model. btop4wi
 
 **Status.** The history window switches between 1 and 15 minutes. Clicking the CPU or memory graph lists the leading processes of that sample, keyed by PID and creation time, and marks those that have exited. Remaining work:
 
-- Run the acceptance test with a short-lived CPU-heavy process and with a resume from sleep.
+- Run the acceptance test with a short-lived CPU-heavy workload and an actual resume from sleep. Timestamped fixtures cover the 15-minute retention boundary, exited process identities and gaps in the graph.
 - Reach a past sample from the keyboard.
 - Measure memory growth over a full 15-minute history at the 1-second interval.
 
