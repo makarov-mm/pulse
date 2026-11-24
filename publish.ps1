@@ -20,7 +20,7 @@ if (!$SkipChecks) {
     $report = Join-Path $Output 'test-results.txt'
     $lines = @("Pulse window checks, $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')", '')
     try {
-        $lines += & (Join-Path $PSScriptRoot 'tests/Run.ps1') | ForEach-Object { "$_" }
+        $lines += & (Join-Path $PSScriptRoot 'tests/Run.ps1') 2>&1 | ForEach-Object { "$_" }
         $lines += '', 'RESULT: PASS'
     } catch {
         $lines += '', "RESULT: FAIL", "$_"
