@@ -118,4 +118,5 @@
   <data name="MomentCpu" xml:space="preserve"><value>Highest CPU</value></data>
   <data name="MomentMemory" xml:space="preserve"><value>Largest working sets</value></data>
   <data name="MomentExited" xml:space="preserve"><value>{0} · exited</value></data>
+  <data name="AxisNow" xml:space="preserve"><value>now</value></data>
 </root>

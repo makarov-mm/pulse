@@ -31,7 +31,7 @@ public sealed partial class MetricCard : UserControl
     public void SetSpan(double seconds) => Plot.SetSpan(seconds);
 
     // Raised with the sample time when the user taps the graph. EnableSelection turns it on.
-    public event EventHandler<double>? SampleSelected;
+    public event System.EventHandler<double>? SampleSelected;
 
     public void EnableSelection(string hint)
     {
@@ -40,7 +40,7 @@ public sealed partial class MetricCard : UserControl
     }
 
     // Raised when the user asks to open or close the device view behind this card.
-    public event EventHandler? DetailsRequested;
+    public event System.EventHandler? DetailsRequested;
 
     public void EnableDetails(string showLabel, string hideLabel)
     {

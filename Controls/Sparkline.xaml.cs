@@ -26,7 +26,7 @@ public sealed partial class Sparkline : UserControl
     }
 
     // Raised with the sample time when the user taps the graph.
-    public event EventHandler<double>? SampleSelected;
+    public event System.EventHandler<double>? SampleSelected;
 
     // An extra tooltip line, such as what a tap does.
     public string? Hint { get; set; }

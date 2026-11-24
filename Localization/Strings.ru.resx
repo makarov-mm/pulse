@@ -118,4 +118,5 @@
   <data name="MomentCpu" xml:space="preserve"><value>Больше всего ЦП</value></data>
   <data name="MomentMemory" xml:space="preserve"><value>Наибольшие рабочие наборы</value></data>
   <data name="MomentExited" xml:space="preserve"><value>{0} · завершён</value></data>
+  <data name="AxisNow" xml:space="preserve"><value>сейчас</value></data>
 </root>

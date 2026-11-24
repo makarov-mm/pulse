@@ -22,6 +22,8 @@ public sealed partial class MainWindow
         public bool Percent => percent;
         public double MinTileWidth => minTileWidth;
         public List<(string Key, DeviceTile Tile)> Tiles { get; } = [];
+        // The key of the tile expanded into a larger graph, if any.
+        public string? Expanded { get; set; }
     }
 
     private readonly Dictionary<DeviceView, DeviceGroup> _devices = [];
@@ -109,7 +111,9 @@ public sealed partial class MainWindow
                 tile.SetBinding(Control.ForegroundProperty, new Binding { Source = group.Card, Path = new PropertyPath("Foreground") });
                 if (group.Percent) tile.Configure(true, v => Format.Percent(v));
                 else tile.Configure(false, v => Format.Bytes(v, true));
-                tile.SetSpan(_span);
+                tile.SetSpan(_span, SpanLabel);
+                string key = reading.Key;
+                tile.Selected += (_, _) => ExpandDevice(view, key);
             }
             tile.Update(f.Time, f.Clock, reading);
             next.Add((reading.Key, tile));
@@ -119,6 +123,17 @@ public sealed partial class MainWindow
         group.Tiles.Clear();
         group.Tiles.AddRange(next);
         if (changed && view == _deviceView) LayoutDevices();
+    }
+
+    private void ExpandDevice(DeviceView view, string key)
+    {
+        var group = _devices[view];
+        group.Expanded = group.Expanded == key ? null : key;
+        if (view != _deviceView) return;
+        LayoutDevices();
+        // Rebuilding the grid drops keyboard focus, so return it to the tile.
+        foreach (var (tileKey, tile) in group.Tiles)
+            if (tileKey == key) tile.Focus(FocusState.Programmatic);
     }
 
     private void ClearDeviceHistory()
@@ -136,19 +151,27 @@ public sealed partial class MainWindow
     private void LayoutDevices()
     {
         if (_deviceView == DeviceView.None) return;
-        var tiles = _devices[_deviceView].Tiles;
+        var group = _devices[_deviceView];
+        var tiles = group.Tiles;
         int columns = _deviceColumns = DeviceColumns(DeviceGrid.ActualWidth);
+        bool expanded = tiles.Any(t => t.Key == group.Expanded);
         DeviceGrid.Children.Clear();
         DeviceGrid.ColumnDefinitions.Clear();
         DeviceGrid.RowDefinitions.Clear();
         for (int i = 0; i < columns; i++) DeviceGrid.ColumnDefinitions.Add(new ColumnDefinition());
-        for (int i = 0; i < (tiles.Count + columns - 1) / columns; i++)
+        // An expanded tile takes the whole first row. The others follow in order.
+        int compact = tiles.Count - (expanded ? 1 : 0), firstRow = expanded ? 1 : 0;
+        for (int i = 0; i < firstRow + (compact + columns - 1) / columns; i++)
             DeviceGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-        for (int i = 0; i < tiles.Count; i++)
+        int cell = 0;
+        foreach (var (key, tile) in tiles)
         {
-            var tile = tiles[i].Tile;
-            Grid.SetColumn(tile, i % columns);
-            Grid.SetRow(tile, i / columns);
+            bool wide = expanded && key == group.Expanded;
+            tile.SetExpanded(wide);
+            Grid.SetColumn(tile, wide ? 0 : cell % columns);
+            Grid.SetRow(tile, wide ? 0 : firstRow + cell / columns);
+            Grid.SetColumnSpan(tile, wide ? columns : 1);
+            if (!wide) cell++;
             DeviceGrid.Children.Add(tile);
         }
         DeviceEmpty.Visibility = tiles.Count == 0 ? Visibility.Visible : Visibility.Collapsed;

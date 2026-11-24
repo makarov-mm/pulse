@@ -58,7 +58,7 @@
                             <Button Grid.Column="2" Margin="0,-4,-6,-4" Style="{StaticResource SubtleButtonStyle}" Click="CloseDevices" AutomationProperties.Name="{loc:Localize Key=CloseDevices}" ToolTipService.ToolTip="{loc:Localize Key=CloseDevices}"><FontIcon Glyph="&#xE711;" FontSize="12"/></Button>
                         </Grid>
                         <ScrollViewer Grid.Row="1" x:Name="DeviceScroll" MaxHeight="190" VerticalScrollBarVisibility="Auto">
-                            <Grid x:Name="DeviceGrid" ColumnSpacing="8" RowSpacing="8" SizeChanged="DeviceGridSizeChanged"/>
+                            <Grid x:Name="DeviceGrid" ColumnSpacing="8" RowSpacing="8" TabFocusNavigation="Once" XYFocusKeyboardNavigation="Enabled" SizeChanged="DeviceGridSizeChanged"/>
                         </ScrollViewer>
                         <TextBlock Grid.Row="1" x:Name="DeviceEmpty" Text="{loc:Localize Key=NoDevices}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                     </Grid>

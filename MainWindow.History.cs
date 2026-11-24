@@ -22,6 +22,8 @@ public sealed partial class MainWindow
     private readonly List<Moment> _moments = [];
     private double _span = 60;
 
+    private string SpanLabel => UiText.Get(_span > 60 ? "SpanFifteen" : "SpanOne");
+
     private void RecordMoment(Frame f)
     {
         _moments.RemoveAll(m => f.Time - m.Time > Sparkline.Retention);
@@ -36,13 +38,13 @@ public sealed partial class MainWindow
         _span = SpanBox.SelectedIndex == 1 ? Sparkline.Retention : 60;
         foreach (var card in new[] { CpuCard, MemoryCard, DiskCard, NetworkCard }) card.SetSpan(_span);
         foreach (var group in _devices.Values)
-            foreach (var (_, tile) in group.Tiles) tile.SetSpan(_span);
+            foreach (var (_, tile) in group.Tiles) tile.SetSpan(_span, SpanLabel);
         UpdateSpanText();
     }
 
     private void UpdateSpanText()
     {
-        string span = UiText.Get(_span > 60 ? "SpanFifteen" : "SpanOne");
+        string span = SpanLabel;
         HostText.Text = UiText.Format("HostHistory", Environment.MachineName, span);
         if (_deviceView != DeviceView.None)
             DeviceSpan.Text = UiText.Format(_devices[_deviceView].Percent ? "DeviceSpanPercent" : "DeviceSpanPeak", span);

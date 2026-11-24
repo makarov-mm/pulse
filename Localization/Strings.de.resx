@@ -118,4 +118,5 @@
   <data name="MomentCpu" xml:space="preserve"><value>Höchste CPU-Last</value></data>
   <data name="MomentMemory" xml:space="preserve"><value>Größte Arbeitssätze</value></data>
   <data name="MomentExited" xml:space="preserve"><value>{0} · beendet</value></data>
+  <data name="AxisNow" xml:space="preserve"><value>jetzt</value></data>
 </root>

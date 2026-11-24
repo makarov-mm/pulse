@@ -22,6 +22,7 @@ Open the portable `Pulse.exe` on Windows 11 x64. It bundles .NET and the Windows
 - Press **Ctrl+F** to search by process name or PID. Click a column heading to sort, and click it again to reverse the order.
 - Toggle **Tree** to follow parent and child processes. Select a row to inspect its executable path, start time and counters.
 - Use the chevron on the CPU, disk or network card to open its device view, and again to close it. The buttons are reachable with **Tab**. Device history is collected while the view is closed, so the tiles open with the last minute already drawn.
+- Click a device tile, or press **Enter** or **Space** on it, to expand it into a larger graph with its maximum and time span labelled. Arrow keys move between tiles. Select the tile again to shrink it.
 - Choose a history window of 1 or 15 minutes beside the refresh interval. Pulse always keeps the last 15 minutes, so switching does not lose samples.
 - Click the CPU or memory graph to list the five processes with the highest CPU use and the five largest working sets at that sample. Processes that have since exited are marked.
 - Choose a refresh interval of 1, 2 or 5 seconds. The default is 2 seconds. **Pause** freezes the view, including graph history. **Resume** starts a fresh history.
