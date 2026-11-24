@@ -131,4 +131,10 @@
   <data name="ServiceCount" xml:space="preserve"><value>{0} из {1} выполняется</value></data>
   <data name="SearchServices" xml:space="preserve"><value>Поиск по имени, описанию или PID</value></data>
   <data name="ServiceHint" xml:space="preserve"><value>Дважды щёлкните выполняющуюся службу, чтобы показать её процесс</value></data>
+  <data name="DetailsTab" xml:space="preserve"><value>Подробности</value></data>
+  <data name="Users" xml:space="preserve"><value>Пользователи</value></data>
+  <data name="User" xml:space="preserve"><value>Пользователь</value></data>
+  <data name="ParentPid" xml:space="preserve"><value>Родительский PID</value></data>
+  <data name="SessionName" xml:space="preserve"><value>Сеанс {0}</value></data>
+  <data name="SearchUsers" xml:space="preserve"><value>Поиск по имени пользователя</value></data>
 </root>

@@ -75,6 +75,8 @@
                         <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                             <SelectorBar x:Name="Tabs" Margin="-8,-6,0,-6" SelectionChanged="TabChanged">
                                 <SelectorBarItem x:Name="ProcessesTab"/>
+                                <SelectorBarItem x:Name="DetailsTab"/>
+                                <SelectorBarItem x:Name="UsersTab"/>
                                 <SelectorBarItem x:Name="ServicesTab"/>
                             </SelectorBar>
                             <TextBlock x:Name="CountText" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
@@ -162,6 +164,98 @@
                             <TextBlock x:Name="EmptyText" VerticalAlignment="Center" HorizontalAlignment="Center" Text="{loc:Localize Key=Collecting}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" IsHitTestVisible="False"/>
                         </Grid>
                     </SplitView>
+                    <Grid Grid.Row="1" x:Name="DetailsView" Visibility="Collapsed" SizeChanged="DetailsSizeChanged">
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Enabled" VerticalScrollBarVisibility="Disabled" VerticalScrollMode="Disabled">
+                            <Grid x:Name="DetailsBody" HorizontalAlignment="Left">
+                        <Grid.RowDefinitions><RowDefinition Height="36"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                        <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,1">
+                            <Grid Padding="18,0,16,0" ColumnSpacing="12">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="64"/><ColumnDefinition Width="64"/><ColumnDefinition Width="64"/><ColumnDefinition Width="74"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="70"/><ColumnDefinition Width="76"/><ColumnDefinition Width="150"/></Grid.ColumnDefinitions>
+                                <TextBlock Text="{loc:Localize Key=Name}" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="1" Text="PID" HorizontalAlignment="Right" Margin="0,0,6,0" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="2" Text="{loc:Localize Key=ParentPid}" HorizontalAlignment="Right" Margin="0,0,6,0" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="3" Text="{loc:Localize Key=Session}" HorizontalAlignment="Right" Margin="0,0,6,0" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="4" Text="{loc:Localize Key=CPU}" HorizontalAlignment="Right" Margin="0,0,6,0" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="5" Text="{loc:Localize Key=WorkingSet}" HorizontalAlignment="Right" Margin="0,0,6,0" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="6" Text="{loc:Localize Key=PrivateBytes}" HorizontalAlignment="Right" Margin="0,0,6,0" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="7" Text="{loc:Localize Key=ReadRate}" HorizontalAlignment="Right" Margin="0,0,6,0" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="8" Text="{loc:Localize Key=WriteRate}" HorizontalAlignment="Right" Margin="0,0,6,0" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="9" Text="{loc:Localize Key=Threads}" HorizontalAlignment="Right" Margin="0,0,6,0" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="10" Text="{loc:Localize Key=Handles}" HorizontalAlignment="Right" Margin="0,0,6,0" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="11" Text="{loc:Localize Key=Started}" HorizontalAlignment="Right" Margin="0,0,6,0" Style="{StaticResource ColumnTitle}"/>
+                            </Grid>
+                        </Border>
+                        <ListView Grid.Row="1" x:Name="DetailList" SelectionMode="Single" DoubleTapped="DetailDoubleTapped" Padding="0"
+                            ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollMode="Disabled">
+                            <ListView.ItemContainerTransitions><TransitionCollection/></ListView.ItemContainerTransitions>
+                            <ListView.ItemContainerStyle>
+                                <Style TargetType="ListViewItem">
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="Padding" Value="0"/>
+                                    <Setter Property="Margin" Value="0"/><Setter Property="MinHeight" Value="34"/>
+                                </Style>
+                            </ListView.ItemContainerStyle>
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="m:DetailRow">
+                                    <Grid Padding="18,0,16,0" MinHeight="34" ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="64"/><ColumnDefinition Width="64"/><ColumnDefinition Width="64"/><ColumnDefinition Width="74"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="70"/><ColumnDefinition Width="76"/><ColumnDefinition Width="150"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="{x:Bind Name, Mode=OneWay}" Style="{StaticResource TextCell}"/>
+                                        <TextBlock Grid.Column="1" Text="{x:Bind Pid, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
+                                        <TextBlock Grid.Column="2" Text="{x:Bind Parent, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
+                                        <TextBlock Grid.Column="3" Text="{x:Bind Session, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
+                                        <TextBlock Grid.Column="4" Text="{x:Bind Cpu, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
+                                        <TextBlock Grid.Column="5" Text="{x:Bind WorkingSet, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
+                                        <TextBlock Grid.Column="6" Text="{x:Bind PrivateBytes, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
+                                        <TextBlock Grid.Column="7" Text="{x:Bind Read, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
+                                        <TextBlock Grid.Column="8" Text="{x:Bind Write, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
+                                        <TextBlock Grid.Column="9" Text="{x:Bind Threads, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
+                                        <TextBlock Grid.Column="10" Text="{x:Bind Handles, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
+                                        <TextBlock Grid.Column="11" Text="{x:Bind Started, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                            </Grid>
+                        </ScrollViewer>
+                    </Grid>
+                    <Grid Grid.Row="1" x:Name="UsersView" Visibility="Collapsed">
+                        <Grid.RowDefinitions><RowDefinition Height="36"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                        <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,1">
+                            <Grid Padding="18,0,16,0" ColumnSpacing="12">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="90"/><ColumnDefinition Width="100"/><ColumnDefinition Width="90"/><ColumnDefinition Width="120"/><ColumnDefinition Width="130"/><ColumnDefinition Width="90"/></Grid.ColumnDefinitions>
+                                <TextBlock Text="{loc:Localize Key=User}" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="1" Text="{loc:Localize Key=Session}" HorizontalAlignment="Right" Margin="0,0,6,0" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="2" Text="{loc:Localize Key=Processes}" HorizontalAlignment="Right" Margin="0,0,6,0" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="3" Text="{loc:Localize Key=CPU}" HorizontalAlignment="Right" Margin="0,0,6,0" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="4" Text="{loc:Localize Key=Memory}" HorizontalAlignment="Right" Margin="0,0,6,0" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="5" Text="{loc:Localize Key=InputOutput}" HorizontalAlignment="Right" Margin="0,0,6,0" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="6" Text="{loc:Localize Key=Threads}" HorizontalAlignment="Right" Margin="0,0,6,0" Style="{StaticResource ColumnTitle}"/>
+                            </Grid>
+                        </Border>
+                        <ListView Grid.Row="1" x:Name="UserList" SelectionMode="Single" Padding="0"
+                            ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollMode="Disabled">
+                            <ListView.ItemContainerTransitions><TransitionCollection/></ListView.ItemContainerTransitions>
+                            <ListView.ItemContainerStyle>
+                                <Style TargetType="ListViewItem">
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="Padding" Value="0"/>
+                                    <Setter Property="Margin" Value="0"/><Setter Property="MinHeight" Value="34"/>
+                                </Style>
+                            </ListView.ItemContainerStyle>
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="m:UserRow">
+                                    <Grid Padding="18,0,16,0" MinHeight="34" ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="90"/><ColumnDefinition Width="100"/><ColumnDefinition Width="90"/><ColumnDefinition Width="120"/><ColumnDefinition Width="130"/><ColumnDefinition Width="90"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="{x:Bind User, Mode=OneWay}" Style="{StaticResource TextCell}"/>
+                                        <TextBlock Grid.Column="1" Text="{x:Bind Session, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
+                                        <TextBlock Grid.Column="2" Text="{x:Bind Count, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
+                                        <TextBlock Grid.Column="3" Text="{x:Bind Cpu, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
+                                        <TextBlock Grid.Column="4" Text="{x:Bind Memory, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
+                                        <TextBlock Grid.Column="5" Text="{x:Bind Io, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
+                                        <TextBlock Grid.Column="6" Text="{x:Bind Threads, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </Grid>
                     <Grid Grid.Row="1" x:Name="ServicesView" Visibility="Collapsed">
                         <Grid.RowDefinitions><RowDefinition Height="36"/><RowDefinition Height="*"/></Grid.RowDefinitions>
                         <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,1">

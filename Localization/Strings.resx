@@ -131,4 +131,10 @@
   <data name="ServiceCount" xml:space="preserve"><value>{0} of {1} running</value></data>
   <data name="SearchServices" xml:space="preserve"><value>Search by name, description or PID</value></data>
   <data name="ServiceHint" xml:space="preserve"><value>Double-click a running service to show its process</value></data>
+  <data name="DetailsTab" xml:space="preserve"><value>Details</value></data>
+  <data name="Users" xml:space="preserve"><value>Users</value></data>
+  <data name="User" xml:space="preserve"><value>User</value></data>
+  <data name="ParentPid" xml:space="preserve"><value>Parent PID</value></data>
+  <data name="SessionName" xml:space="preserve"><value>Session {0}</value></data>
+  <data name="SearchUsers" xml:space="preserve"><value>Search by user name</value></data>
 </root>

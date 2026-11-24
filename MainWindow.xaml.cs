@@ -55,10 +55,7 @@ public sealed partial class MainWindow : Window
             presenter.PreferredMinimumHeight = Math.Min((int)(550 * dpi), area.Height);
         }
         TaskList.ItemsSource = _visible;
-        ServiceList.ItemsSource = _serviceRows;
-        ProcessesTab.Text = UiText.Get("Processes");
-        ServicesTab.Text = UiText.Get("Services");
-        Tabs.SelectedItem = ProcessesTab;
+        CreateTabs();
         Inspector.PaneClosed += (_, _) => { if (!Inspector.IsPaneOpen) ClearSelection(); };
         CpuCard.Configure(UiText.Get("Processor"), "\uE950", true, v => Format.Percent(v));
         MemoryCard.Configure(UiText.Get("Memory"), "\uE964", true, v => Format.Percent(v));
@@ -132,6 +129,7 @@ public sealed partial class MainWindow : Window
             RecordMoment(frame);
             RefreshServices();
             UpdateRows();
+            UpdateTabRows();
             var uptime = TimeSpan.FromMilliseconds(Environment.TickCount64);
             Uptime.Text = UiText.Format("Uptime", uptime.Days, uptime.Hours, uptime.Minutes);
             Status.Text = UiText.Format("LastUpdate", frame.Clock, frame.Tasks.Sum(t => t.Info.Threads));
@@ -194,7 +192,7 @@ public sealed partial class MainWindow : Window
             if (!ReferenceEquals(TaskList.SelectedItem, selected)) TaskList.SelectedItem = selected;
         }
         finally { _refreshing = false; }
-        if (!_servicesTab) CountText.Text = _visible.Count == _frame.Tasks.Count ? $"{_visible.Count}" : $"{_visible.Count} / {_frame.Tasks.Count}";
+        if (_tab == LowerTab.Processes) CountText.Text = _visible.Count == _frame.Tasks.Count ? $"{_visible.Count}" : $"{_visible.Count} / {_frame.Tasks.Count}";
         EmptyText.Text = search.Length > 0 ? UiText.Get("NoMatches") : UiText.Get("NoProcesses");
         EmptyText.Visibility = _visible.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         UpdateDetails();
@@ -230,7 +228,7 @@ public sealed partial class MainWindow : Window
         await RefreshAsync();
     }
 
-    private void SearchChanged(object sender, TextChangedEventArgs e) { UpdateRows(); UpdateServiceRows(); }
+    private void SearchChanged(object sender, TextChangedEventArgs e) { UpdateRows(); UpdateTabRows(); }
     private void SearchInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
         SearchBox.Focus(FocusState.Keyboard);

@@ -1,0 +1,163 @@
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
+using Pulse.Localization;
+using Pulse.Models;
+using Pulse.Telemetry;
+
+namespace Pulse;
+
+// The tabs of the lower pane: Processes, Details, Users and Services.
+public sealed partial class MainWindow
+{
+    // In the order of the tab bar.
+    private enum LowerTab { Processes, Details, Users, Services }
+
+    private readonly ObservableCollection<DetailRow> _detailRows = [];
+    private readonly ObservableCollection<UserRow> _userRows = [];
+    private readonly ObservableCollection<ServiceRow> _serviceRows = [];
+    private List<ServiceInfo> _services = [];
+    private LowerTab _tab;
+
+    private void CreateTabs()
+    {
+        DetailList.ItemsSource = _detailRows;
+        UserList.ItemsSource = _userRows;
+        ServiceList.ItemsSource = _serviceRows;
+        ProcessesTab.Text = UiText.Get("Processes");
+        DetailsTab.Text = UiText.Get("DetailsTab");
+        UsersTab.Text = UiText.Get("Users");
+        ServicesTab.Text = UiText.Get("Services");
+        Tabs.SelectedItem = ProcessesTab;
+    }
+
+    private void TabChanged(SelectorBar sender, SelectorBarSelectionChangedEventArgs args)
+    {
+        // A selection can be raised while the window is still being built.
+        if (ServicesView is null || DetailsView is null || UsersView is null || Inspector is null || TreeButton is null) return;
+        int index = sender.SelectedItem is { } selected ? sender.Items.IndexOf(selected) : 0;
+        _tab = index is >= 0 and <= (int)LowerTab.Services ? (LowerTab)index : LowerTab.Processes;
+        Inspector.Visibility = Shown(LowerTab.Processes);
+        DetailsView.Visibility = Shown(LowerTab.Details);
+        UsersView.Visibility = Shown(LowerTab.Users);
+        ServicesView.Visibility = Shown(LowerTab.Services);
+        TreeButton.Visibility = Shown(LowerTab.Processes);
+        SearchBox.PlaceholderText = UiText.Get(_tab switch
+        {
+            LowerTab.Users => "SearchUsers",
+            LowerTab.Services => "SearchServices",
+            _ => "Search"
+        });
+        RefreshServices();
+        UpdateRows();
+        UpdateTabRows();
+    }
+
+    private Visibility Shown(LowerTab tab) => _tab == tab ? Visibility.Visible : Visibility.Collapsed;
+
+    // Fills the list of the tab on screen. The Processes tab is filled by UpdateRows.
+    private void UpdateTabRows()
+    {
+        if (_frame is null) return;
+        switch (_tab)
+        {
+            case LowerTab.Details: UpdateDetailRows(_frame.Tasks); break;
+            case LowerTab.Users: UpdateUserRows(_frame.Tasks); break;
+            case LowerTab.Services: UpdateServiceRows(); break;
+        }
+    }
+
+    // Rows keep their position and take on the item that now holds it, which avoids rebuilding list containers.
+    private static void Fill<TRow, TItem>(ObservableCollection<TRow> rows, IReadOnlyList<TItem> items,
+        Func<TRow> create, Action<TRow, TItem> update)
+    {
+        for (int i = 0; i < items.Count; i++)
+        {
+            if (i == rows.Count) rows.Add(create());
+            update(rows[i], items[i]);
+        }
+        while (rows.Count > items.Count) rows.RemoveAt(rows.Count - 1);
+    }
+
+    private void UpdateDetailRows(IReadOnlyList<TaskSample> tasks)
+    {
+        // The Details tab is flat and follows the sort order chosen on the Processes tab.
+        var matches = TaskOrder.Build(tasks, SearchBox.Text, _sort, _descending, false, _collapsed)
+            .Select(branch => branch.Task).ToList();
+        Fill(_detailRows, matches, () => new DetailRow(), (row, task) => row.Update(task));
+        CountText.Text = matches.Count == tasks.Count ? $"{matches.Count}" : $"{matches.Count} / {tasks.Count}";
+    }
+
+    private void UpdateUserRows(IReadOnlyList<TaskSample> tasks)
+    {
+        string search = SearchBox.Text.Trim();
+        var sessions = tasks.GroupBy(t => t.Info.Session)
+            .Select(group => (Session: group.Key, User: SessionLabel(group.Key), Tasks: group.ToList()))
+            .Where(s => search.Length == 0 || s.User.Contains(search, StringComparison.CurrentCultureIgnoreCase))
+            .OrderBy(s => s.Session)
+            .ToList();
+        Fill(_userRows, sessions, () => new UserRow(), (row, s) => row.Update(s.User, s.Session, s.Tasks.Count,
+            s.Tasks.Any(t => t.Cpu.HasValue) ? Math.Min(100, s.Tasks.Sum(t => t.Cpu ?? 0)) : (double?)null,
+            s.Tasks.Sum(t => t.Info.WorkingSet),
+            s.Tasks.Any(t => t.Io.HasValue) ? s.Tasks.Sum(t => t.Io ?? 0) : (double?)null,
+            s.Tasks.Sum(t => t.Info.Threads)));
+        CountText.Text = $"{sessions.Count}";
+    }
+
+    private static string SessionLabel(uint session)
+    {
+        string user = Sessions.User(session);
+        return user.Length != 0 ? user : session == 0 ? UiText.Get("Services") : UiText.Format("SessionName", session);
+    }
+
+    // Services are only queried while something displays them.
+    private void RefreshServices()
+    {
+        if (_tab != LowerTab.Services && !Inspector.IsPaneOpen) return;
+        try { _services = ServiceSnapshot.Read(); }
+        catch (Win32Exception) { _services = []; }
+    }
+
+    private void UpdateServiceRows()
+    {
+        string search = SearchBox.Text.Trim();
+        var matches = _services
+            .Where(s => search.Length == 0 ||
+                s.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                s.DisplayName.Contains(search, StringComparison.CurrentCultureIgnoreCase) ||
+                (s.Pid != 0 && s.Pid.ToString().Contains(search, StringComparison.Ordinal)))
+            .OrderBy(s => s.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        Fill(_serviceRows, matches, () => new ServiceRow(),
+            (row, service) => row.Update(service, _byPid.TryGetValue(service.Pid, out var host) ? host.Info.Name : ""));
+        CountText.Text = UiText.Format("ServiceCount", _services.Count(s => s.State == ServiceState.Running), _services.Count);
+    }
+
+    private void ServiceDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+    {
+        if (ServiceList.SelectedItem is ServiceRow { ProcessId: not 0 } row) ShowProcess(row.ProcessId);
+    }
+
+    private void DetailDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+    {
+        if (DetailList.SelectedItem is DetailRow row) ShowProcess(row.ProcessId);
+    }
+
+    // Shows a process with its parents on the Processes tab.
+    private void ShowProcess(int pid)
+    {
+        SearchBox.Text = pid.ToString();
+        Tabs.SelectedItem = ProcessesTab;
+    }
+
+    private void DetailsSizeChanged(object sender, SizeChangedEventArgs e) =>
+        DetailsBody.Width = Math.Max(1150, e.NewSize.Width);
+
+    private string HostedServices(int pid)
+    {
+        string names = string.Join(", ", _services.Where(s => s.Pid == pid).Select(s => s.Name));
+        return names.Length == 0 ? "—" : names;
+    }
+}

@@ -60,8 +60,8 @@ TaskExplorer's thread and socket panels inform the inspector. Task Manager's Ser
 **Question.** Can Pulse replace both tools for everyday diagnosis?
 
 - Give the lower pane tabs that match Task Manager's pages and add what Resource Monitor shows per process.
-- **Done.** Processes with a collapsible tree and branch totals. Services with status and host process.
-- **Next.** Details with separate read and write rates, priority, user and command line. Users with per-session totals. Startup apps from the registry and Startup folders. Disk activity by file and network activity by connection need thread, file and socket inspection from milestone 3 or an ETW session.
+- **Done.** Processes with a collapsible tree and branch totals. Details with separate read and write rates. Users with per-session totals. Services with status and host process.
+- **Next.** Priority, owner and command line on the Details tab. Startup apps from the registry and Startup folders. Disk activity by file and network activity by connection need thread, file and socket inspection from milestone 3 or an ETW session.
 - App history depends on data that Windows collects for packaged apps and stays out of scope until its source is confirmed.
 - **Acceptance.** For each tab, compare the listed items and values with Task Manager or Resource Monitor on the same machine.
 
