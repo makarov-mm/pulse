@@ -60,9 +60,21 @@ TaskExplorer's thread and socket panels inform the inspector. Task Manager's Ser
 **Question.** Can Pulse replace both tools for everyday diagnosis?
 
 - Give the lower pane tabs that match Task Manager's pages and add what Resource Monitor shows per process.
-- **Done.** Processes with a collapsible tree and branch totals. Details with separate read and write rates. Users with per-session totals. Services with status and host process.
-- **Next.** Priority, owner and command line on the Details tab. Startup apps from the registry and Startup folders. Disk activity by file and network activity by connection need thread, file and socket inspection from milestone 3 or an ETW session.
+- **Done.** Processes with a collapsible tree and branch totals. Details with separate read and write rates. Users with per-session totals. Startup apps from the registry and Startup folders, with a jump to the key in Registry Editor. Services with status and host process.
+- **Next.** Priority, owner and command line on the Details tab. Enabling and disabling startup entries. Disk activity by file and network activity by connection need thread, file and socket inspection from milestone 3 or an ETW session.
 - App history depends on data that Windows collects for packaged apps and stays out of scope until its source is confirmed.
 - **Acceptance.** For each tab, compare the listed items and values with Task Manager or Resource Monitor on the same machine.
+
+## 6. Show what fills a disk
+
+**Question.** Which folders and files take the space on a nearly full volume?
+
+- Scan a chosen volume or folder in the background. Show partial results while the scan runs and let the user cancel it.
+- Present the result as a sunburst or treemap that drills down into a folder, with a sortable list of the largest items beside it.
+- Open the selected item in File Explorer. Pulse does not delete files.
+- Start with a directory walk at the user's access level. Consider reading the NTFS master file table for speed only if Pulse gains an elevated mode.
+- **Acceptance.** The totals for a test folder match File Explorer's properties. Folders the user cannot read are listed as unread instead of counted as empty. Cancelling a scan of a large volume returns control within a second.
+
+WinDirStat and WizTree inform the views. A registry editor is out of scope. Startup entries link to Registry Editor instead. [WinDirStat](https://windirstat.net/) · [WizTree](https://diskanalyzer.com/)
 
 Before releasing each milestone, exercise its keyboard path, light and dark themes, high contrast, and the shipped translations. Measure idle overhead and memory growth using the same process count and refresh interval as the baseline.
