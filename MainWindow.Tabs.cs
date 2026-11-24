@@ -27,8 +27,10 @@ public sealed partial class MainWindow
     private List<ServiceInfo> _services = [];
     private string? _serviceReadError;
     private List<TcpConnection> _connections = [];
-    private bool _ipv4Available, _ipv6Available;
+    private SocketTables _availableTables;
     private List<NetworkAdapter> _adapters = [];
+    private readonly Dictionary<ProcessKey, (int BasePriority, ProcessIdentity Identity)> _identities = [];
+    private bool _identitiesLoading;
     private bool _networkLoading;
     private LowerTab _tab;
 
@@ -118,8 +120,31 @@ public sealed partial class MainWindow
         // The Details tab is flat and follows the sort order chosen on the Processes tab.
         var matches = TaskOrder.Build(tasks, SearchBox.Text, _sort, _descending, false, _collapsed)
             .Select(branch => branch.Task).ToList();
-        Fill(_detailRows, matches, () => new DetailRow(), (row, task) => row.Update(task));
+        Fill(_detailRows, matches, () => new DetailRow(),
+            (row, task) => row.Update(task, _identities.GetValueOrDefault(task.Info.Key).Identity));
         CountText.Text = matches.Count == tasks.Count ? $"{matches.Count}" : $"{matches.Count} / {tasks.Count}";
+        _ = LoadIdentitiesAsync(tasks);
+    }
+
+    // Describes the processes the Details tab has not seen yet. Opening every process takes too long for the UI thread.
+    // A change to the sampled base priority invalidates the cached Windows priority class.
+    private async Task LoadIdentitiesAsync(IReadOnlyList<TaskSample> tasks)
+    {
+        if (_identitiesLoading) return;
+        var live = tasks.Select(t => t.Info.Key).ToHashSet();
+        foreach (var key in _identities.Keys.Where(k => !live.Contains(k)).ToList()) _identities.Remove(key);
+        var missing = tasks.Select(t => (t.Info.Key, t.Info.BasePriority))
+            .Where(t => !_identities.TryGetValue(t.Key, out var cached) || cached.BasePriority != t.BasePriority).ToList();
+        if (missing.Count == 0) return;
+        _identitiesLoading = true;
+        try
+        {
+            var found = await Task.Run(() => missing.Select(t => (t.Key, t.BasePriority, Identity: ProcessActions.Describe(t.Key))).ToList());
+            if (_closed) return;
+            foreach (var (key, priority, identity) in found) _identities[key] = (priority, identity);
+        }
+        finally { _identitiesLoading = false; }
+        if (_tab == LowerTab.Details && _frame is { } frame) UpdateDetailRows(frame.Tasks);
     }
 
     private void UpdateUserRows(IReadOnlyList<TaskSample> tasks)
@@ -165,8 +190,7 @@ public sealed partial class MainWindow
 
     private void StartupDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
     {
-        // A double-click below the last row must not act on the selected one.
-        if ((e.OriginalSource as FrameworkElement)?.DataContext is StartupRow { Item: { } item }) _ = EditStartupAsync(item);
+        if (TappedRow<StartupRow>(e) is { Item: { } item }) _ = EditStartupAsync(item);
     }
 
     // Services and connections are only queried while their tab or the process inspector displays them.
@@ -186,7 +210,7 @@ public sealed partial class MainWindow
                 _serviceReadError = UiText.Format("ServicesUnavailable", error.Message);
             }
         }
-        if (_tab == LowerTab.Connections || inspecting) _connections = TcpConnections.Read(out _ipv4Available, out _ipv6Available);
+        if (_tab == LowerTab.Connections || inspecting) _connections = TcpConnections.Read(out _availableTables);
         if (_tab == LowerTab.Network) _ = LoadNetworkAsync();
     }
 
@@ -241,6 +265,8 @@ public sealed partial class MainWindow
             .Where(m => search.Length == 0 ||
                 m.Process.Contains(search, StringComparison.OrdinalIgnoreCase) ||
                 m.Connection.Pid.ToString().Contains(search, StringComparison.Ordinal) ||
+                m.Connection.Protocol.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                (!m.Connection.Udp && ConnectionRow.StateName(m.Connection.State).Contains(search, StringComparison.OrdinalIgnoreCase)) ||
                 m.Connection.Local.Contains(search, StringComparison.OrdinalIgnoreCase) ||
                 m.Connection.Remote.Contains(search, StringComparison.OrdinalIgnoreCase))
             .OrderBy(m => m.Process, StringComparer.OrdinalIgnoreCase)
@@ -249,31 +275,41 @@ public sealed partial class MainWindow
             .ToList();
         Fill(_connectionRows, matches, () => new ConnectionRow(), (row, m) => row.Update(m.Connection, m.Process));
         string count = matches.Count == _connections.Count ? $"{matches.Count}" : $"{matches.Count} / {_connections.Count}";
-        CountText.Text = WithConnectionStatus(count, " · ");
+        CountText.Text = WithConnectionStatus(count, SocketTables.All, " · ");
     }
 
-    private string WithConnectionStatus(string text, string separator)
+    private string WithConnectionStatus(string text, SocketTables requested, string separator)
     {
-        if (_ipv4Available && _ipv6Available) return text;
-        if (!_ipv4Available && !_ipv6Available) return UiText.Get("ConnectionsUnavailable");
-        string missing = UiText.Format("ProtocolUnavailable", _ipv4Available ? "IPv6" : "IPv4");
-        return text.Length == 0 ? missing : text + separator + missing;
+        var missing = requested & ~_availableTables;
+        if (missing == SocketTables.None) return text;
+        if (missing == requested) return UiText.Get("ConnectionsUnavailable");
+        var names = new List<string>(4);
+        if (missing.HasFlag(SocketTables.Tcp4)) names.Add("TCP/IPv4");
+        if (missing.HasFlag(SocketTables.Tcp6)) names.Add("TCP/IPv6");
+        if (missing.HasFlag(SocketTables.Udp4)) names.Add("UDP/IPv4");
+        if (missing.HasFlag(SocketTables.Udp6)) names.Add("UDP/IPv6");
+        string status = UiText.Format("ProtocolUnavailable", string.Join(", ", names));
+        return text.Length == 0 ? status : text + separator + status;
     }
 
     private void ConnectionDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
     {
-        if (ConnectionList.SelectedItem is ConnectionRow { ProcessId: not 0 } row) ShowProcess(row.ProcessId);
+        if (TappedRow<ConnectionRow>(e) is { ProcessId: not 0 } row) ShowProcess(row.ProcessId);
     }
 
-    // The peers of a process's open connections, for the inspector.
-    private string RemoteEndpoints(int pid)
+    // Separate established conversations from local sockets that can receive traffic.
+    private string ProcessEndpoints(int pid, bool bound)
     {
         const int shown = 6;
-        var peers = _connections.Where(c => c.Pid == pid && c.State == TcpState.Established)
-            .Select(c => c.Remote).Distinct().ToList();
-        string text = string.Join(Environment.NewLine, peers.Take(shown));
-        if (peers.Count > shown) text += $"{Environment.NewLine}+{peers.Count - shown}";
-        text = WithConnectionStatus(text, Environment.NewLine);
+        var endpoints = _connections.Where(c => c.Pid == pid &&
+                (bound ? c.Udp || c.State == TcpState.Listening : !c.Udp && c.State == TcpState.Established))
+            .OrderBy(c => c.Udp).ThenBy(c => c.IPv6).ThenBy(c => c.LocalPort)
+            .ThenBy(c => c.Local, StringComparer.Ordinal).ThenBy(c => c.Remote, StringComparer.Ordinal)
+            .Select(c => bound ? $"{c.Protocol} {c.Local}" : $"{c.Local} → {c.Remote}")
+            .Distinct().ToList();
+        string text = string.Join(Environment.NewLine, endpoints.Take(shown));
+        if (endpoints.Count > shown) text += $"{Environment.NewLine}+{endpoints.Count - shown}";
+        text = WithConnectionStatus(text, bound ? SocketTables.All : SocketTables.Tcp, Environment.NewLine);
         return text.Length == 0 ? "—" : text;
     }
 
@@ -295,23 +331,27 @@ public sealed partial class MainWindow
 
     private void ServiceDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
     {
-        if (ServiceList.SelectedItem is ServiceRow { ProcessId: not 0 } row) ShowProcess(row.ProcessId);
+        if (TappedRow<ServiceRow>(e) is { ProcessId: not 0 } row) ShowProcess(row.ProcessId);
     }
 
     private void DetailDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
     {
-        if (DetailList.SelectedItem is DetailRow row) ShowProcess(row.ProcessId);
+        if (TappedRow<DetailRow>(e) is { } row) ShowProcess(row.ProcessId);
     }
+
+    // The row under a double-click. A click below the last row is not on any row and must not act on the selected one.
+    private static TRow? TappedRow<TRow>(DoubleTappedRoutedEventArgs e) where TRow : class =>
+        (e.OriginalSource as FrameworkElement)?.DataContext as TRow;
 
     // Shows a process with its parents on the Processes tab.
     private void ShowProcess(int pid)
     {
-        SearchBox.Text = pid.ToString();
+        SearchBox.Text = TaskOrder.PidPrefix + pid;
         Tabs.SelectedItem = ProcessesTab;
     }
 
     private void DetailsSizeChanged(object sender, SizeChangedEventArgs e) =>
-        DetailsBody.Width = Math.Max(1190, e.NewSize.Width);
+        DetailsBody.Width = Math.Max(1870, e.NewSize.Width);
 
     private string HostedServices(int pid)
     {

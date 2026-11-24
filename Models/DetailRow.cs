@@ -7,6 +7,8 @@ public sealed class DetailRow : ObservableRow
 {
     private string _name = "", _pid = "", _parent = "", _session = "", _cpu = "", _workingSet = "", _privateBytes = "";
     private string _read = "", _write = "", _threads = "", _handles = "", _started = "";
+    private string _priority = "", _user = "", _commandLine = "";
+    private string? _commandTip;
 
     internal DetailRow() { }
     internal int ProcessId { get; private set; }
@@ -23,8 +25,14 @@ public sealed class DetailRow : ObservableRow
     public string Threads => _threads;
     public string Handles => _handles;
     public string Started => _started;
+    public string Priority => _priority;
+    public string User => _user;
+    public string CommandLine => _commandLine;
+    // Null without a command line, so that no empty tooltip opens.
+    public string? CommandTip => _commandTip;
 
-    internal void Update(TaskSample task)
+    // identity is null until the process has been described in the background.
+    internal void Update(TaskSample task, ProcessIdentity? identity)
     {
         var info = task.Info;
         ProcessId = info.Key.Pid;
@@ -40,5 +48,9 @@ public sealed class DetailRow : ObservableRow
         Set(ref _threads, Format.Number(info.Threads), nameof(Threads));
         Set(ref _handles, Format.Number(info.Handles), nameof(Handles));
         Set(ref _started, info.Key.Created > 0 ? DateTime.FromFileTime(info.Key.Created).ToString("G") : "—", nameof(Started));
+        Set(ref _priority, identity is null ? "" : Format.Priority(identity.PriorityClass), nameof(Priority));
+        Set(ref _user, identity?.User ?? "", nameof(User));
+        Set(ref _commandLine, identity?.CommandLine ?? "", nameof(CommandLine));
+        Set(ref _commandTip, _commandLine.Length == 0 ? null : _commandLine, nameof(CommandTip));
     }
 }

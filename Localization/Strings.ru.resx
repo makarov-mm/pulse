@@ -151,7 +151,8 @@
   <data name="ConnectionProtocol" xml:space="preserve"><value>Протокол</value></data>
   <data name="LocalEndpoint" xml:space="preserve"><value>Локальный адрес</value></data>
   <data name="RemoteEndpoint" xml:space="preserve"><value>Удалённый адрес</value></data>
-  <data name="SearchConnections" xml:space="preserve"><value>Поиск по процессу, PID, адресу или порту</value></data>
+  <data name="SearchConnections" xml:space="preserve"><value>Поиск по процессу, PID, адресу, порту, протоколу или состоянию</value></data>
+  <data name="BoundPorts" xml:space="preserve"><value>Локальные порты</value></data>
   <data name="MenuEnable" xml:space="preserve"><value>Включить</value></data>
   <data name="MenuDisable" xml:space="preserve"><value>Отключить</value></data>
   <data name="MenuDelete" xml:space="preserve"><value>Удалить…</value></data>
@@ -195,7 +196,7 @@
   <data name="ServicesUnavailableShort" xml:space="preserve"><value>Службы недоступны</value></data>
   <data name="ServicesUnavailable" xml:space="preserve"><value>Не удалось прочитать список служб. {0}</value></data>
   <data name="ConnectionsUnavailable" xml:space="preserve"><value>Соединения недоступны</value></data>
-  <data name="ProtocolUnavailable" xml:space="preserve"><value>{0} недоступен</value></data>
+  <data name="ProtocolUnavailable" xml:space="preserve"><value>Недоступные таблицы: {0}</value></data>
   <data name="MenuEdit" xml:space="preserve"><value>Изменить…</value></data>
   <data name="MenuShowFile" xml:space="preserve"><value>Показать в Проводнике</value></data>
   <data name="EditStartupTitle" xml:space="preserve"><value>Запись автозагрузки «{0}»</value></data>

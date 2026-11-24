@@ -22,10 +22,10 @@ public sealed class ConnectionRow : ObservableRow
         ProcessId = connection.Pid;
         Set(ref _host, process, nameof(Host));
         Set(ref _pid, connection.Pid.ToString(), nameof(Pid));
-        Set(ref _protocol, connection.IPv6 ? "TCPv6" : "TCP", nameof(Protocol));
+        Set(ref _protocol, connection.Protocol, nameof(Protocol));
         Set(ref _local, connection.Local, nameof(Local));
         Set(ref _remote, connection.Remote, nameof(Remote));
-        Set(ref _state, StateName(connection.State), nameof(State));
+        Set(ref _state, connection.Udp ? "" : StateName(connection.State), nameof(State));
     }
 
     // Protocol state names are identifiers and stay untranslated, as in netstat.

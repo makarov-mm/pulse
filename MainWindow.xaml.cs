@@ -36,6 +36,7 @@ public sealed partial class MainWindow : Window
     private int _generation;
     private string _path = "";
     private ProcessIdentity _identity = new("", null, "");
+    private int? _inspectedBasePriority;
 
     [DllImport("user32.dll")]
     private static extern uint GetDpiForWindow(nint hwnd);
@@ -276,7 +277,7 @@ public sealed partial class MainWindow : Window
         try { _path = ProcessActions.ImagePath(row.Key); }
         catch (Win32Exception ex) { _path = ex.NativeErrorCode == 5 ? UiText.Get("AccessDenied") : ex.Message; }
         catch (InvalidOperationException ex) { _path = ex.Message; }
-        _identity = ProcessActions.Describe(row.Key);
+        _inspectedBasePriority = null;
         Inspector.IsPaneOpen = true;
         RefreshInspectorSources();
         UpdateDetails();
@@ -284,7 +285,7 @@ public sealed partial class MainWindow : Window
 
     private void CreateFacts()
     {
-        foreach (var key in new[] { "CPU", "WorkingSet", "PrivateBytes", "ReadRate", "WriteRate", "Threads", "BusyThreads", "Handles", "Session", "User", "Priority", "Started", "Parent", "Services", "Connections", "CommandLine" })
+        foreach (var key in new[] { "CPU", "WorkingSet", "PrivateBytes", "ReadRate", "WriteRate", "Threads", "BusyThreads", "Handles", "Session", "User", "Priority", "Started", "Parent", "Services", "Connections", "BoundPorts", "CommandLine" })
         {
             var grid = new Grid { ColumnSpacing = 8 };
             grid.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
@@ -324,10 +325,16 @@ public sealed partial class MainWindow : Window
             t.Info.ParentId == 0 ? "—" : UiText.Format("ParentExited", t.Info.ParentId);
         _facts["Services"].Text = HostedServices(key.Pid);
         _facts["BusyThreads"].Text = BusyThreads(key.Pid);
+        if (_inspectedBasePriority != t.Info.BasePriority)
+        {
+            _identity = ProcessActions.Describe(key);
+            _inspectedBasePriority = t.Info.BasePriority;
+        }
         _facts["User"].Text = _identity.User.Length == 0 ? "—" : _identity.User;
         _facts["Priority"].Text = Format.Priority(_identity.PriorityClass);
         _facts["CommandLine"].Text = _identity.CommandLine.Length == 0 ? "—" : _identity.CommandLine;
-        _facts["Connections"].Text = RemoteEndpoints(key.Pid);
+        _facts["Connections"].Text = ProcessEndpoints(key.Pid, bound: false);
+        _facts["BoundPorts"].Text = ProcessEndpoints(key.Pid, bound: true);
         EndButton.IsEnabled = key.Pid > 4 && key.Pid != Environment.ProcessId;
     }
 

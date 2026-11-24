@@ -151,7 +151,8 @@
   <data name="ConnectionProtocol" xml:space="preserve"><value>Protocol</value></data>
   <data name="LocalEndpoint" xml:space="preserve"><value>Local address</value></data>
   <data name="RemoteEndpoint" xml:space="preserve"><value>Remote address</value></data>
-  <data name="SearchConnections" xml:space="preserve"><value>Search by process, PID, address or port</value></data>
+  <data name="SearchConnections" xml:space="preserve"><value>Search sockets by process, PID, address, port, protocol or state</value></data>
+  <data name="BoundPorts" xml:space="preserve"><value>Local ports</value></data>
   <data name="MenuEnable" xml:space="preserve"><value>Enable</value></data>
   <data name="MenuDisable" xml:space="preserve"><value>Disable</value></data>
   <data name="MenuDelete" xml:space="preserve"><value>Delete…</value></data>
@@ -195,7 +196,7 @@
   <data name="ServicesUnavailableShort" xml:space="preserve"><value>Services unavailable</value></data>
   <data name="ServicesUnavailable" xml:space="preserve"><value>Could not read services. {0}</value></data>
   <data name="ConnectionsUnavailable" xml:space="preserve"><value>Connections unavailable</value></data>
-  <data name="ProtocolUnavailable" xml:space="preserve"><value>{0} unavailable</value></data>
+  <data name="ProtocolUnavailable" xml:space="preserve"><value>Unavailable tables: {0}</value></data>
   <data name="MenuEdit" xml:space="preserve"><value>Edit…</value></data>
   <data name="MenuShowFile" xml:space="preserve"><value>Show in File Explorer</value></data>
   <data name="EditStartupTitle" xml:space="preserve"><value>Startup entry {0}</value></data>

@@ -1,3 +1,4 @@
+using System.Globalization;
 using Pulse.Telemetry;
 
 namespace Pulse.Models;
@@ -12,13 +13,19 @@ internal readonly record struct Branch(TaskSample Task, int Depth, bool HasChild
 
 internal static class TaskOrder
 {
+    public const string PidPrefix = "pid:";
+
     private readonly record struct Metrics(TaskSample Task, double? Cpu, long WorkingSet, double? Io, int Threads);
 
     public static IEnumerable<Branch> Build(IReadOnlyList<TaskSample> source, string search, SortField sort,
         bool descending, bool tree, HashSet<ProcessKey> collapsed)
     {
         search = search.Trim();
-        bool Match(TaskSample t) => t.Info.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+        // "pid:1234" names one process exactly. Other tabs use it to point at the process behind a row.
+        int? exact = search.StartsWith(PidPrefix, StringComparison.OrdinalIgnoreCase) &&
+            int.TryParse(search.AsSpan(PidPrefix.Length), NumberStyles.None, CultureInfo.InvariantCulture, out int wanted) ? wanted : null;
+        bool Match(TaskSample t) => exact is { } pid ? t.Info.Key.Pid == pid :
+            t.Info.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
             t.Info.Key.Pid.ToString().Contains(search, StringComparison.Ordinal);
 
         var totals = new Dictionary<ProcessKey, BranchTotal>();

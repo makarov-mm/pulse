@@ -97,6 +97,12 @@ public sealed partial class MainWindow
         DrawSpace();
         try { await Task.Run(() => SpaceScanner.Scan(root, cancel.Token)); }
         catch (OperationCanceledException) when (cancel.IsCancellationRequested) { _spaceCancelled = true; }
+        // The scanner records read errors itself. A path it cannot form ends the scan and keeps what was found.
+        catch (Exception error) when (error is ArgumentException or NotSupportedException)
+        {
+            _spaceCancelled = true;
+            if (!_closed) ShowError(UiText.Get("ActionError"), error.Message);
+        }
         finally
         {
             cancel.Dispose();

@@ -7,7 +7,7 @@ namespace Pulse.Telemetry;
 internal readonly record struct ProcessKey(int Pid, long Created);
 
 internal sealed record ProcessCounters(ProcessKey Key, string Name, int ParentId, int Threads,
-    uint Handles, uint Session, long WorkingSet, long PrivateBytes, long CpuTicks, long ReadBytes, long WriteBytes);
+    uint Handles, uint Session, long WorkingSet, long PrivateBytes, long CpuTicks, long ReadBytes, long WriteBytes, int BasePriority);
 
 // Created tells a thread apart from a later one that reuses its identifier.
 internal sealed record ThreadCounters(int Id, long Created, long CpuTicks);
@@ -26,6 +26,7 @@ internal sealed class ProcessSnapshot : IDisposable
         [FieldOffset(48)] public long Kernel;
         [FieldOffset(56)] public ushort NameBytes;
         [FieldOffset(64)] public nint Name;
+        [FieldOffset(72)] public int BasePriority;
         [FieldOffset(80)] public nint Pid;
         [FieldOffset(88)] public nint ParentId;
         [FieldOffset(96)] public uint Handles;
@@ -76,7 +77,7 @@ internal sealed class ProcessSnapshot : IDisposable
                     ? Marshal.PtrToStringUni(entry.Name, entry.NameBytes / 2) : null;
                 result.Add(new(new((int)entry.Pid, entry.Created), name ?? $"PID {entry.Pid}",
                     (int)entry.ParentId, entry.Threads, entry.Handles, entry.Session, entry.WorkingSet,
-                    entry.PrivateBytes, entry.Kernel + entry.User, entry.ReadBytes, entry.WriteBytes));
+                    entry.PrivateBytes, entry.Kernel + entry.User, entry.ReadBytes, entry.WriteBytes, entry.BasePriority));
             }
             if (inspectPid is { } inspected && entry.Pid == inspected)
             {

@@ -71,21 +71,20 @@
                 <Grid>
                     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
                     <Grid Padding="15,12" ColumnSpacing="10">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                            <SelectorBar x:Name="Tabs" Margin="-8,-6,0,-6" SelectionChanged="TabChanged">
-                                <SelectorBarItem x:Name="ProcessesTab"/>
-                                <SelectorBarItem x:Name="DetailsTab"/>
-                                <SelectorBarItem x:Name="UsersTab"/>
-                                <SelectorBarItem x:Name="ConnectionsTab"/>
-                                <SelectorBarItem x:Name="NetworkTab"/>
-                                <SelectorBarItem x:Name="StartupTab"/>
-                                <SelectorBarItem x:Name="ServicesTab"/>
-                                <SelectorBarItem x:Name="SpaceTab"/>
-                            </SelectorBar>
-                            <TextBlock x:Name="CountText" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                        </StackPanel>
-                        <TextBox Grid.Column="2" x:Name="SearchBox" Width="214" PlaceholderText="{loc:Localize Key=Search}" AutomationProperties.Name="{loc:Localize Key=Search}" TextChanged="SearchChanged">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <SelectorBar x:Name="Tabs" Margin="-8,-6,0,-6" VerticalAlignment="Center" SelectionChanged="TabChanged">
+                            <SelectorBarItem x:Name="ProcessesTab"/>
+                            <SelectorBarItem x:Name="DetailsTab"/>
+                            <SelectorBarItem x:Name="UsersTab"/>
+                            <SelectorBarItem x:Name="ConnectionsTab"/>
+                            <SelectorBarItem x:Name="NetworkTab"/>
+                            <SelectorBarItem x:Name="StartupTab"/>
+                            <SelectorBarItem x:Name="ServicesTab"/>
+                            <SelectorBarItem x:Name="SpaceTab"/>
+                        </SelectorBar>
+                        <TextBlock Grid.Column="1" x:Name="CountText" MaxWidth="160" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                   ToolTipService.ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBox Grid.Column="2" x:Name="SearchBox" Width="214" PlaceholderText="{loc:Localize Key=Search}" AutomationProperties.Name="{Binding PlaceholderText, RelativeSource={RelativeSource Self}}" TextChanged="SearchChanged">
                             <TextBox.KeyboardAccelerators><KeyboardAccelerator Key="F" Modifiers="Control" Invoked="SearchInvoked"/></TextBox.KeyboardAccelerators>
                         </TextBox>
                         <ToggleButton Grid.Column="3" x:Name="TreeButton" IsChecked="True" Click="TreeClicked" AutomationProperties.Name="{loc:Localize Key=ProcessTree}" ToolTipService.ToolTip="{loc:Localize Key=TreeTip}">
@@ -174,7 +173,7 @@
                         <Grid.RowDefinitions><RowDefinition Height="36"/><RowDefinition Height="*"/></Grid.RowDefinitions>
                         <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,1">
                             <Grid Padding="18,0,16,0" ColumnSpacing="12">
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="64"/><ColumnDefinition Width="96"/><ColumnDefinition Width="72"/><ColumnDefinition Width="74"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="70"/><ColumnDefinition Width="76"/><ColumnDefinition Width="150"/></Grid.ColumnDefinitions>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="64"/><ColumnDefinition Width="96"/><ColumnDefinition Width="72"/><ColumnDefinition Width="74"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="70"/><ColumnDefinition Width="76"/><ColumnDefinition Width="150"/><ColumnDefinition Width="110"/><ColumnDefinition Width="170"/><ColumnDefinition Width="360"/></Grid.ColumnDefinitions>
                                 <TextBlock Text="{loc:Localize Key=Name}" Style="{StaticResource ColumnTitle}"/>
                                 <TextBlock Grid.Column="1" Text="PID" HorizontalAlignment="Right" Margin="0,0,6,0" Style="{StaticResource ColumnTitle}"/>
                                 <TextBlock Grid.Column="2" Text="{loc:Localize Key=ParentPid}" HorizontalAlignment="Right" Margin="0,0,6,0" Style="{StaticResource ColumnTitle}"/>
@@ -187,6 +186,9 @@
                                 <TextBlock Grid.Column="9" Text="{loc:Localize Key=Threads}" HorizontalAlignment="Right" Margin="0,0,6,0" Style="{StaticResource ColumnTitle}"/>
                                 <TextBlock Grid.Column="10" Text="{loc:Localize Key=Handles}" HorizontalAlignment="Right" Margin="0,0,6,0" Style="{StaticResource ColumnTitle}"/>
                                 <TextBlock Grid.Column="11" Text="{loc:Localize Key=Started}" HorizontalAlignment="Right" Margin="0,0,6,0" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="12" Text="{loc:Localize Key=Priority}" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="13" Text="{loc:Localize Key=User}" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="14" Text="{loc:Localize Key=CommandLine}" Style="{StaticResource ColumnTitle}"/>
                             </Grid>
                         </Border>
                         <ListView Grid.Row="1" x:Name="DetailList" SelectionMode="Single" DoubleTapped="DetailDoubleTapped" Padding="0"
@@ -201,7 +203,7 @@
                             <ListView.ItemTemplate>
                                 <DataTemplate x:DataType="m:DetailRow">
                                     <Grid Padding="18,0,16,0" MinHeight="34" ColumnSpacing="12">
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="64"/><ColumnDefinition Width="96"/><ColumnDefinition Width="72"/><ColumnDefinition Width="74"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="70"/><ColumnDefinition Width="76"/><ColumnDefinition Width="150"/></Grid.ColumnDefinitions>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="64"/><ColumnDefinition Width="96"/><ColumnDefinition Width="72"/><ColumnDefinition Width="74"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="70"/><ColumnDefinition Width="76"/><ColumnDefinition Width="150"/><ColumnDefinition Width="110"/><ColumnDefinition Width="170"/><ColumnDefinition Width="360"/></Grid.ColumnDefinitions>
                                         <TextBlock Text="{x:Bind Name, Mode=OneWay}" Style="{StaticResource TextCell}"/>
                                         <TextBlock Grid.Column="1" Text="{x:Bind Pid, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
                                         <TextBlock Grid.Column="2" Text="{x:Bind Parent, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
@@ -214,6 +216,9 @@
                                         <TextBlock Grid.Column="9" Text="{x:Bind Threads, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
                                         <TextBlock Grid.Column="10" Text="{x:Bind Handles, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
                                         <TextBlock Grid.Column="11" Text="{x:Bind Started, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
+                                        <TextBlock Grid.Column="12" Text="{x:Bind Priority, Mode=OneWay}" Style="{StaticResource TextCell}"/>
+                                        <TextBlock Grid.Column="13" Text="{x:Bind User, Mode=OneWay}" Style="{StaticResource TextCell}"/>
+                                        <TextBlock Grid.Column="14" Text="{x:Bind CommandLine, Mode=OneWay}" Style="{StaticResource TextCell}" ToolTipService.ToolTip="{x:Bind CommandTip, Mode=OneWay}"/>
                                     </Grid>
                                 </DataTemplate>
                             </ListView.ItemTemplate>
