@@ -62,10 +62,16 @@ Use Windows 11 x64, the .NET 11 SDK and Windows SDK 10.0.26100. The project uses
 dotnet run --project Pulse.csproj -c Release
 ```
 
-Build a self-contained `publish/Pulse.exe` with the portable profile.
+Build a self-contained `publish/Pulse.exe` with the portable profile. The profile bundles .NET and the Windows App SDK into one compressed executable.
 
 ```powershell
 dotnet publish Pulse.csproj -c Release -p:PublishProfile=Portable -o publish
+```
+
+`publish.ps1` runs the same publish step and then the Windows regression checks, and writes their output to `publish/test-results.txt`. Pass `-SkipChecks` to publish only, or `-Output <folder>` to choose another folder.
+
+```powershell
+powershell -File .\publish.ps1
 ```
 
 ## Run the Windows regression checks
