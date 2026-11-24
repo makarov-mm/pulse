@@ -55,6 +55,7 @@ public sealed partial class MainWindow : Window
             presenter.PreferredMinimumHeight = Math.Min((int)(550 * dpi), area.Height);
         }
         TaskList.ItemsSource = _visible;
+        ServiceList.ItemsSource = _serviceRows;
         Inspector.PaneClosed += (_, _) => { if (!Inspector.IsPaneOpen) ClearSelection(); };
         CpuCard.Configure(UiText.Get("Processor"), "\uE950", true, v => Format.Percent(v));
         MemoryCard.Configure(UiText.Get("Memory"), "\uE964", true, v => Format.Percent(v));
@@ -126,6 +127,7 @@ public sealed partial class MainWindow : Window
             UpdateCards(frame);
             UpdateDevices(frame);
             RecordMoment(frame);
+            RefreshServices();
             UpdateRows();
             var uptime = TimeSpan.FromMilliseconds(Environment.TickCount64);
             Uptime.Text = UiText.Format("Uptime", uptime.Days, uptime.Hours, uptime.Minutes);
@@ -189,7 +191,7 @@ public sealed partial class MainWindow : Window
             if (!ReferenceEquals(TaskList.SelectedItem, selected)) TaskList.SelectedItem = selected;
         }
         finally { _refreshing = false; }
-        CountText.Text = _visible.Count == _frame.Tasks.Count ? $"{_visible.Count}" : $"{_visible.Count} / {_frame.Tasks.Count}";
+        if (!_servicesTab) CountText.Text = _visible.Count == _frame.Tasks.Count ? $"{_visible.Count}" : $"{_visible.Count} / {_frame.Tasks.Count}";
         EmptyText.Text = search.Length > 0 ? UiText.Get("NoMatches") : UiText.Get("NoProcesses");
         EmptyText.Visibility = _visible.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         UpdateDetails();
@@ -225,7 +227,7 @@ public sealed partial class MainWindow : Window
         await RefreshAsync();
     }
 
-    private void SearchChanged(object sender, TextChangedEventArgs e) => UpdateRows();
+    private void SearchChanged(object sender, TextChangedEventArgs e) { UpdateRows(); UpdateServiceRows(); }
     private void SearchInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
         SearchBox.Focus(FocusState.Keyboard);
@@ -270,12 +272,13 @@ public sealed partial class MainWindow : Window
         catch (Win32Exception ex) { _path = ex.NativeErrorCode == 5 ? UiText.Get("AccessDenied") : ex.Message; }
         catch (InvalidOperationException ex) { _path = ex.Message; }
         Inspector.IsPaneOpen = true;
+        RefreshServices();
         UpdateDetails();
     }
 
     private void CreateFacts()
     {
-        foreach (var key in new[] { "CPU", "WorkingSet", "PrivateBytes", "ReadRate", "WriteRate", "Threads", "Handles", "Session", "Started", "Parent" })
+        foreach (var key in new[] { "CPU", "WorkingSet", "PrivateBytes", "ReadRate", "WriteRate", "Threads", "Handles", "Session", "Started", "Parent", "Services" })
         {
             var grid = new Grid { ColumnSpacing = 8 };
             grid.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
@@ -313,6 +316,7 @@ public sealed partial class MainWindow : Window
         var parent = TaskOrder.ValidParent(t, _byPid);
         _facts["Parent"].Text = parent is not null ? $"{parent.Info.Name} ({t.Info.ParentId})" :
             t.Info.ParentId == 0 ? "—" : UiText.Format("ParentExited", t.Info.ParentId);
+        _facts["Services"].Text = HostedServices(key.Pid);
         EndButton.IsEnabled = key.Pid > 4 && key.Pid != Environment.ProcessId;
     }
 

@@ -73,7 +73,10 @@
                     <Grid Padding="15,12" ColumnSpacing="10">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                            <TextBlock Text="{loc:Localize Key=Processes}" FontSize="20" FontWeight="SemiBold"/>
+                            <SelectorBar x:Name="Tabs" Margin="-8,-6,0,-6" SelectionChanged="TabChanged">
+                                <SelectorBarItem x:Name="ProcessesTab" Text="{loc:Localize Key=Processes}" IsSelected="True"/>
+                                <SelectorBarItem x:Name="ServicesTab" Text="{loc:Localize Key=Services}"/>
+                            </SelectorBar>
                             <TextBlock x:Name="CountText" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                         </StackPanel>
                         <TextBox Grid.Column="2" x:Name="SearchBox" Width="214" PlaceholderText="{loc:Localize Key=Search}" AutomationProperties.Name="{loc:Localize Key=Search}" TextChanged="SearchChanged">
@@ -159,6 +162,41 @@
                             <TextBlock x:Name="EmptyText" VerticalAlignment="Center" HorizontalAlignment="Center" Text="{loc:Localize Key=Collecting}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" IsHitTestVisible="False"/>
                         </Grid>
                     </SplitView>
+                    <Grid Grid.Row="1" x:Name="ServicesView" Visibility="Collapsed">
+                        <Grid.RowDefinitions><RowDefinition Height="36"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                        <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,1">
+                            <Grid Padding="18,0,16,0" ColumnSpacing="12">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="3*"/><ColumnDefinition Width="120"/><ColumnDefinition Width="70"/><ColumnDefinition Width="2*"/></Grid.ColumnDefinitions>
+                                <TextBlock Text="{loc:Localize Key=Name}" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="1" Text="{loc:Localize Key=ServiceDescription}" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="2" Text="{loc:Localize Key=ServiceStatus}" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="3" Text="PID" HorizontalAlignment="Right" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="4" Text="{loc:Localize Key=ServiceProcess}" Style="{StaticResource ColumnTitle}" ToolTipService.ToolTip="{loc:Localize Key=ServiceHint}"/>
+                            </Grid>
+                        </Border>
+                        <ListView Grid.Row="1" x:Name="ServiceList" SelectionMode="Single" DoubleTapped="ServiceDoubleTapped" Padding="0"
+                            AutomationProperties.Name="{loc:Localize Key=Services}">
+                            <ListView.ItemContainerTransitions><TransitionCollection/></ListView.ItemContainerTransitions>
+                            <ListView.ItemContainerStyle>
+                                <Style TargetType="ListViewItem">
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="Padding" Value="0"/>
+                                    <Setter Property="Margin" Value="0"/><Setter Property="MinHeight" Value="34"/>
+                                </Style>
+                            </ListView.ItemContainerStyle>
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="m:ServiceRow">
+                                    <Grid Padding="18,0,16,0" MinHeight="34" ColumnSpacing="12" Opacity="{x:Bind Emphasis, Mode=OneWay}">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="3*"/><ColumnDefinition Width="120"/><ColumnDefinition Width="70"/><ColumnDefinition Width="2*"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="{x:Bind Name, Mode=OneWay}" Style="{StaticResource TextCell}"/>
+                                        <TextBlock Grid.Column="1" Text="{x:Bind Description, Mode=OneWay}" Style="{StaticResource TextCell}" ToolTipService.ToolTip="{x:Bind Description, Mode=OneWay}"/>
+                                        <TextBlock Grid.Column="2" Text="{x:Bind Status, Mode=OneWay}" Style="{StaticResource TextCell}"/>
+                                        <TextBlock Grid.Column="3" Text="{x:Bind Pid, Mode=OneWay}" HorizontalAlignment="Right" Style="{StaticResource TextCell}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        <TextBlock Grid.Column="4" Text="{x:Bind Process, Mode=OneWay}" Style="{StaticResource TextCell}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </Grid>
                 </Grid>
             </Border>
         </Grid>

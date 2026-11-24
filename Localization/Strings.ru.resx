@@ -119,4 +119,16 @@
   <data name="MomentMemory" xml:space="preserve"><value>Наибольшие рабочие наборы</value></data>
   <data name="MomentExited" xml:space="preserve"><value>{0} · завершён</value></data>
   <data name="AxisNow" xml:space="preserve"><value>сейчас</value></data>
+  <data name="Services" xml:space="preserve"><value>Службы</value></data>
+  <data name="ServiceDescription" xml:space="preserve"><value>Описание</value></data>
+  <data name="ServiceStatus" xml:space="preserve"><value>Состояние</value></data>
+  <data name="ServiceProcess" xml:space="preserve"><value>Процесс</value></data>
+  <data name="ServiceRunning" xml:space="preserve"><value>Выполняется</value></data>
+  <data name="ServiceStopped" xml:space="preserve"><value>Остановлена</value></data>
+  <data name="ServiceStarting" xml:space="preserve"><value>Запускается</value></data>
+  <data name="ServiceStopping" xml:space="preserve"><value>Останавливается</value></data>
+  <data name="ServicePaused" xml:space="preserve"><value>Приостановлена</value></data>
+  <data name="ServiceCount" xml:space="preserve"><value>{0} из {1} выполняется</value></data>
+  <data name="SearchServices" xml:space="preserve"><value>Поиск по имени, описанию или PID</value></data>
+  <data name="ServiceHint" xml:space="preserve"><value>Дважды щёлкните выполняющуюся службу, чтобы показать её процесс</value></data>
 </root>

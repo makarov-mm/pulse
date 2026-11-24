@@ -36,6 +36,17 @@
                 <Setter Property="HorizontalAlignment" Value="Stretch"/>
                 <Setter Property="HorizontalContentAlignment" Value="Right"/>
             </Style>
+            <Style x:Key="ColumnTitle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+            </Style>
+            <Style x:Key="TextCell" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+            </Style>
             <Style x:Key="NumberCell" TargetType="TextBlock">
                 <Setter Property="FontSize" Value="13"/>
                 <Setter Property="HorizontalAlignment" Value="Right"/>

@@ -119,4 +119,16 @@
   <data name="MomentMemory" xml:space="preserve"><value>Größte Arbeitssätze</value></data>
   <data name="MomentExited" xml:space="preserve"><value>{0} · beendet</value></data>
   <data name="AxisNow" xml:space="preserve"><value>jetzt</value></data>
+  <data name="Services" xml:space="preserve"><value>Dienste</value></data>
+  <data name="ServiceDescription" xml:space="preserve"><value>Beschreibung</value></data>
+  <data name="ServiceStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="ServiceProcess" xml:space="preserve"><value>Prozess</value></data>
+  <data name="ServiceRunning" xml:space="preserve"><value>Wird ausgeführt</value></data>
+  <data name="ServiceStopped" xml:space="preserve"><value>Beendet</value></data>
+  <data name="ServiceStarting" xml:space="preserve"><value>Wird gestartet</value></data>
+  <data name="ServiceStopping" xml:space="preserve"><value>Wird beendet</value></data>
+  <data name="ServicePaused" xml:space="preserve"><value>Angehalten</value></data>
+  <data name="ServiceCount" xml:space="preserve"><value>{0} von {1} aktiv</value></data>
+  <data name="SearchServices" xml:space="preserve"><value>Nach Name, Beschreibung oder PID suchen</value></data>
+  <data name="ServiceHint" xml:space="preserve"><value>Doppelklick auf einen laufenden Dienst zeigt seinen Prozess</value></data>
 </root>

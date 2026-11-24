@@ -119,4 +119,16 @@
   <data name="MomentMemory" xml:space="preserve"><value>Largest working sets</value></data>
   <data name="MomentExited" xml:space="preserve"><value>{0} · exited</value></data>
   <data name="AxisNow" xml:space="preserve"><value>now</value></data>
+  <data name="Services" xml:space="preserve"><value>Services</value></data>
+  <data name="ServiceDescription" xml:space="preserve"><value>Description</value></data>
+  <data name="ServiceStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="ServiceProcess" xml:space="preserve"><value>Process</value></data>
+  <data name="ServiceRunning" xml:space="preserve"><value>Running</value></data>
+  <data name="ServiceStopped" xml:space="preserve"><value>Stopped</value></data>
+  <data name="ServiceStarting" xml:space="preserve"><value>Starting</value></data>
+  <data name="ServiceStopping" xml:space="preserve"><value>Stopping</value></data>
+  <data name="ServicePaused" xml:space="preserve"><value>Paused</value></data>
+  <data name="ServiceCount" xml:space="preserve"><value>{0} of {1} running</value></data>
+  <data name="SearchServices" xml:space="preserve"><value>Search by name, description or PID</value></data>
+  <data name="ServiceHint" xml:space="preserve"><value>Double-click a running service to show its process</value></data>
 </root>
