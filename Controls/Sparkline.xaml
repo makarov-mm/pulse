@@ -1,0 +1,10 @@
+<UserControl x:Class="Pulse.Controls.Sparkline" x:Name="Chart"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid x:Name="Plot" Background="Transparent" SizeChanged="PlotSizeChanged" PointerMoved="PlotPointerMoved" PointerExited="PlotPointerExited">
+        <Border Height="1" VerticalAlignment="Center" Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
+        <Border Height="1" VerticalAlignment="Bottom" Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
+        <Path x:Name="Area" Fill="{Binding Foreground, ElementName=Chart}" Opacity="0.13"/>
+        <Path x:Name="Line" Stroke="{Binding Foreground, ElementName=Chart}" StrokeThickness="1.7" StrokeLineJoin="Round"/>
+    </Grid>
+</UserControl>
