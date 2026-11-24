@@ -1,19 +1,26 @@
 [CmdletBinding()]
-param([string]$ArtifactsPath, [switch]$Extended)
+param([string]$ArtifactsPath, [switch]$Extended, [switch]$Portable)
 
 $ErrorActionPreference = 'Stop'
 if (!$ArtifactsPath) { $ArtifactsPath = Join-Path $PSScriptRoot '../obj/window-checks' }
 $project = (Resolve-Path (Join-Path $PSScriptRoot '../Pulse.csproj')).Path
 $artifacts = [IO.Path]::GetFullPath($ArtifactsPath)
-dotnet build $project -c Release --artifacts-path $artifacts -p:PulseWindowChecks=true
+if ($Portable) {
+    $checkOutput = Join-Path $artifacts 'portable-checks'
+    dotnet publish $project -c Release --artifacts-path $artifacts -p:PulseWindowChecks=true -p:PublishProfile=Portable -o $checkOutput
+    $exe = Join-Path $checkOutput 'MakarovPulse.exe'
+} else {
+    dotnet build $project -c Release --artifacts-path $artifacts -p:PulseWindowChecks=true
+    $exe = Join-Path $artifacts 'bin/Pulse/release_win-x64/MakarovPulse.exe'
+}
 if ($LASTEXITCODE -ne 0) { throw 'The test build failed.' }
 
-$exe = Join-Path $artifacts 'bin/Pulse/release_win-x64/Pulse.exe'
-$runs = @('en-US', 'ru-RU', 'de-CH')
+$runs = @('en-US', 'ru-RU', 'de-CH', 'uk-UA', 'es-MX', 'fr-CA', 'zh-CN')
 if ($Extended) {
     $extendedDirectory = Join-Path $artifacts ("extended-" + [guid]::NewGuid())
     $runs += 'profile', 'recordings', 'volume'
 }
+$failures = @()
 foreach ($run in $runs) {
     $extendedPhase = $run -in 'profile', 'recordings', 'volume'
     $language = if ($extendedPhase) { 'en-US' } else { $run }
@@ -39,11 +46,16 @@ foreach ($run in $runs) {
             throw "Window checks exited without a report during $run (code $($process.ExitCode))."
         }
         $result = Get-Content -Raw -LiteralPath $report
-        if ($result -ne ("PASS " + $language.Split('-')[0])) { throw $result }
+        $expected = if ($language -eq "zh-CN") { "zh-Hans" } else { $language.Split('-')[0] }
+        if ($result -ne ("PASS " + $expected)) { throw $result }
         if ($process.ExitCode -ne 0) { throw "$run exited with code $($process.ExitCode)." }
         Write-Output $result
         if ($extendedPhase) { Write-Output ("Extended reports: " + $start.EnvironmentVariables['PULSE_EXTENDED_CHECKS']) }
+    } catch {
+        $failures += "$run - $($_.Exception.Message)"
+        Write-Output "FAIL $run"
     } finally {
         $process.Dispose()
     }
 }
+if ($failures.Count) { throw ($failures -join [Environment]::NewLine) }

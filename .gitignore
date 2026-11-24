@@ -8,6 +8,7 @@ BundleArtifacts/
 *.msix
 *.msixbundle
 /Pulse.exe
+/MakarovPulse.exe
 
 # IDE and per-user settings
 .vs/

@@ -23,6 +23,7 @@ public sealed partial class MainWindow
         public ScrollViewer Scroll = scroll;
         public double OriginalMinimum = body.MinWidth;
         public Button[] Buttons = buttons;
+        public double[] HeadingMinimums = buttons.Select(MeasureHeading).ToArray();
         public string[] Keys = buttons.Select(b => (string)b.Tag).ToArray();
         public HashSet<Grid> Rows = [];
         public TablePreferences Settings = new([], false, null, false);
@@ -47,13 +48,46 @@ public sealed partial class MainWindow
         return Path.Combine(folder, tab + ".json");
     }
 
+    private static double MeasureHeading(Button button)
+    {
+        var label = new TextBlock
+        {
+            Text = ((string)button.Content).TrimEnd(' ', '↑', '↓') + " ↓",
+            FontFamily = button.FontFamily,
+            FontWeight = button.FontWeight,
+            FontSize = button.FontSize
+        };
+        label.Measure(new(double.PositiveInfinity, double.PositiveInfinity));
+        return Math.Ceiling(label.DesiredSize.Width + button.Padding.Left + button.Padding.Right +
+            button.BorderThickness.Left + button.BorderThickness.Right);
+    }
+
+    private static void FitHeadings(Table table, Grid grid)
+    {
+        for (int i = 0; i < table.HeadingMinimums.Length; i++)
+        {
+            var column = grid.ColumnDefinitions[i];
+            column.MinWidth = Math.Max(column.MinWidth, table.HeadingMinimums[i]);
+        }
+    }
+
     private void ConfigureColumns()
     {
         void Register(LowerTab tab, Grid header, ScrollViewer scroller, Grid body)
         {
             var buttons = header.Children.OfType<Button>().OrderBy(Grid.GetColumn).ToArray();
             var t = new Table(tab, header, scroller, body, buttons);
+            double identityMinimum = tab switch
+            {
+                LowerTab.Details => 260,
+                LowerTab.Users => 200,
+                LowerTab.Network => 160,
+                LowerTab.Connections or LowerTab.Startup or LowerTab.Services => 140,
+                _ => 0
+            };
+            t.HeadingMinimums[0] = Math.Max(t.HeadingMinimums[0], identityMinimum);
             _tables.Add(tab, t);
+            FitHeadings(t, header);
             var original = _gridColumns.GetValue(header, g => new(g));
             foreach (var b in buttons)
             {
@@ -197,12 +231,13 @@ public sealed partial class MainWindow
         finally { try { File.Delete(temp); } catch (IOException) { } catch (UnauthorizedAccessException) { } }
     }
 
-    private void TableRowLoaded(object sender, RoutedEventArgs e)
+    private void TableRowLoading(FrameworkElement sender, object args)
     {
         var row = (Grid)sender;
         if (!_tables.TryGetValue(Enum.Parse<LowerTab>((string)row.Tag), out var t)) return;
         t.Rows.Add(row);
         if (t.Settings.Columns.Length != 0 || _gridColumns.TryGetValue(row, out _)) ApplyGrid(t, row);
+        else FitHeadings(t, row);
     }
     private void TableRowUnloaded(object sender, RoutedEventArgs e)
     {
@@ -239,7 +274,7 @@ public sealed partial class MainWindow
         for (int i = 0; i < t.Keys.Length; i++)
         {
             var col = g.ColumnDefinitions[i];
-            col.MinWidth = choices.Length == 0 ? original.Defaults[i].Minimum : 0;
+            col.MinWidth = choices.Length == 0 ? Math.Max(original.Defaults[i].Minimum, t.HeadingMinimums[i]) : 0;
             col.Width = choices.Length == 0 ? original.Defaults[i].Width : new GridLength(choices[i].Hidden ? 0 : choices[i].Width);
         }
         foreach (var (element, source) in original.Original)

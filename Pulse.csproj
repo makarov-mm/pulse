@@ -13,7 +13,11 @@
     <WindowsPackageType>None</WindowsPackageType>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <AssemblyName>Pulse</AssemblyName>
+    <AssemblyName>MakarovPulse</AssemblyName>
+    <RootNamespace>Pulse</RootNamespace>
+    <Product>Makarov Pulse</Product>
+    <AssemblyTitle>Makarov Pulse</AssemblyTitle>
+    <Description>Process and resource monitor for Windows 11</Description>
     <NeutralLanguage>en</NeutralLanguage>
     <Authors>Mykhailo Makarov</Authors>
     <Company>$(Authors)</Company>
@@ -31,4 +35,5 @@
     <Compile Include="tests\ExtendedChecks.cs" />
     <Compile Include="tests\RoadmapChecks.cs" />
   </ItemGroup>
+  <Import Project="Build\Protect.targets" />
 </Project>

@@ -28,9 +28,17 @@ public partial class App : Application
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        _window = new MainWindow();
-        ((FrameworkElement)_window.Content).Loaded += CheckWindow;
-        _window.Activate();
+        try
+        {
+            _window = new MainWindow();
+            ((FrameworkElement)_window.Content).Loaded += CheckWindow;
+            _window.Activate();
+        }
+        catch (Exception error)
+        {
+            File.WriteAllText(Environment.GetEnvironmentVariable("PULSE_CHECK_REPORT")!, error.ToString());
+            Exit();
+        }
     }
 
     private async void CheckWindow(object sender, RoutedEventArgs args)
@@ -64,6 +72,8 @@ public sealed partial class MainWindow
         PauseClicked(this, new());
         Require(_paused && frame.Tasks.Any(t => t.Info.Key.Pid == Environment.ProcessId), "Missing live process.");
         Require(SearchBox.PlaceholderText == UiText.Get("Search") && Title == UiText.Get("WindowTitle"), "Wrong UI language.");
+        CheckLanguageResources();
+        CheckExecutableLocation();
         await CheckDetailIdentityAsync(frame.Tasks);
 
         var sample = frame with
@@ -124,6 +134,55 @@ public sealed partial class MainWindow
         PauseClicked(this, new());
         Require(!_paused && _moments.Count <= 1, "Resuming retained the paused history.");
     }
+    private static void CheckLanguageResources()
+    {
+        var language = UiText.Language;
+        try
+        {
+            foreach (var (preferences, expected) in new (string[], string)[]
+            {
+                (["it-IT", "es-MX"], "es"), (["fr-CA"], "fr"), (["uk-UA"], "uk"),
+                (["zh-SG"], "zh-Hans"), (["zh"], "zh-Hans"), (["zh-Hant-TW", "de-CH"], "de"), (["it-IT"], "en")
+            })
+            {
+                UiText.UsePreferredLanguages(preferences);
+                Require(UiText.Language.Name == expected, "Incorrect preferred-language fallback.");
+            }
+        }
+        finally { UiText.UsePreferredLanguages([language.Name]); }
+
+        var resources = new System.Resources.ResourceManager("Pulse.Localization.Strings", typeof(App).Assembly);
+        var neutral = resources.GetResourceSet(System.Globalization.CultureInfo.InvariantCulture, true, false)!;
+        var translation = language.Name == "en" ? neutral : resources.GetResourceSet(language, true, false);
+        Require(translation != null, $"Missing resource satellite for {language.Name}.");
+        static IEnumerable<string> Parameters(string text) =>
+            System.Text.RegularExpressions.Regex.Matches(text, @"\{\d+(?:[^{}]*)\}").Select(m => m.Value).Order();
+        foreach (System.Collections.DictionaryEntry entry in neutral)
+        {
+            string key = (string)entry.Key;
+            string? value = translation!.GetString(key);
+            Require(!string.IsNullOrWhiteSpace(value) && Parameters((string)entry.Value!).SequenceEqual(Parameters(value)),
+                $"Missing translation or incorrect parameters for {language.Name}/{key}.");
+        }
+    }
+
+    private void CheckExecutableLocation()
+    {
+        var row = TaskList.Items.OfType<ProcessRow>().Single(r => r.Key.Pid == Environment.ProcessId);
+        TaskList.SelectedItem = row;
+        Require(OpenLocationButton.IsEnabled && !EndButton.IsEnabled &&
+            string.Equals(DetailPath.Text, Environment.ProcessPath, StringComparison.OrdinalIgnoreCase),
+            "The inspector did not expose the selected executable.");
+        var original = _byPid[row.Key.Pid];
+        try
+        {
+            _byPid[row.Key.Pid] = original with { Info = original.Info with { Key = row.Key with { Created = row.Key.Created + 1 } } };
+            UpdateDetails();
+            Require(!OpenLocationButton.IsEnabled, "A reused PID left the file location actionable.");
+        }
+        finally { _byPid[row.Key.Pid] = original; CloseInspector(this, new()); }
+    }
+
     private async Task CheckDetailIdentityAsync(IReadOnlyList<TaskSample> tasks)
     {
         using var process = System.Diagnostics.Process.GetCurrentProcess();
@@ -317,6 +376,8 @@ public sealed partial class MainWindow
             SpaceItems.UpdateLayout();
             var folderContainer = (ListViewItem)SpaceItems.ContainerFromItem(row);
             var cells = (Grid)folderContainer.ContentTemplateRoot;
+            for (int i = 0; i < 50 && !cells.IsLoaded; i++) await Task.Delay(10);
+            Root.UpdateLayout();
             var amount = (TextBlock)cells.Children[2];
             double rightEdge = amount.TransformToVisual(SpaceHeaders).TransformPoint(new(amount.ActualWidth, 0)).X;
             var sizeHeader = (Button)SpaceHeaders.Children[1];

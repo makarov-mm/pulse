@@ -29,7 +29,7 @@ public sealed partial class MainWindow
                 if (ToolTipService.GetToolTip(button) is null) ToolTipService.SetToolTip(button, label);
             }
         }
-        UpdateTabHeaders();
+        UpdateHeaders();
     }
 
     private ColumnOrder CurrentOrder(LowerTab tab)

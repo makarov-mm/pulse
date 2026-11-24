@@ -11,6 +11,7 @@ internal readonly record struct BranchTotal(int Processes, double? Cpu, long Wor
 // Total is set for a collapsed branch, which stands in for the processes hidden below it.
 internal readonly record struct Branch(TaskSample Task, int Depth, bool HasChildren, BranchTotal? Total = null);
 
+[System.Reflection.Obfuscation(Exclude = false, ApplyToMembers = true)]
 internal static class TaskOrder
 {
     public const string PidPrefix = "pid:";

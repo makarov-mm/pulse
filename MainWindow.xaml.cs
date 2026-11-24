@@ -34,7 +34,7 @@ public sealed partial class MainWindow : Window
     private bool _descending = true, _tree = true, _refreshing, _busy, _closed, _paused, _restart = true;
     private bool _loaded, _dialogOpen;
     private int _generation;
-    private string _path = "";
+    private string? _imagePath;
     private ProcessIdentity _identity = new("", null, "");
     private int? _inspectedBasePriority;
 
@@ -283,9 +283,10 @@ public sealed partial class MainWindow : Window
         if (_refreshing || TaskList.SelectedItem is not ProcessRow row) return;
         _selected = row.Key;
         DetailName.Text = row.Sample.Info.Name;
-        try { _path = ProcessActions.ImagePath(row.Key); }
-        catch (Win32Exception ex) { _path = ex.NativeErrorCode == 5 ? UiText.Get("AccessDenied") : ex.Message; }
-        catch (InvalidOperationException ex) { _path = ex.Message; }
+        _imagePath = null;
+        try { DetailPath.Text = _imagePath = ProcessActions.ImagePath(row.Key); }
+        catch (Win32Exception ex) { DetailPath.Text = ex.NativeErrorCode == 5 ? UiText.Get("AccessDenied") : ex.Message; }
+        catch (InvalidOperationException ex) { DetailPath.Text = ex.Message; }
         _inspectedBasePriority = null;
         Inspector.IsPaneOpen = true;
         RefreshInspectorSources();
@@ -314,13 +315,14 @@ public sealed partial class MainWindow : Window
         if (_selected is not { } key || !Inspector.IsPaneOpen) return;
         if (!_byPid.TryGetValue(key.Pid, out var t) || t.Info.Key != key)
         {
+            OpenLocationButton.IsEnabled = false;
             InspectorExtra.Text = "—";
             DetailPid.Text = UiText.Format("ProcessExited", key.Pid);
             EndButton.IsEnabled = false;
             return;
         }
         DetailPid.Text = $"PID {key.Pid}";
-        DetailPath.Text = _path;
+        OpenLocationButton.IsEnabled = _imagePath is not null;
         _facts["CPU"].Text = Format.Percent(t.Cpu);
         _facts["WorkingSet"].Text = Format.Bytes(t.Info.WorkingSet);
         _facts["PrivateBytes"].Text = Format.Bytes(t.Info.PrivateBytes);
@@ -347,7 +349,19 @@ public sealed partial class MainWindow : Window
     }
 
     private void CloseInspector(object sender, RoutedEventArgs e) { Inspector.IsPaneOpen = false; ClearSelection(); }
-    private void ClearSelection() { _selected = null; TaskList.SelectedItem = null; }
+    private void ClearSelection()
+    {
+        _selected = null;
+        _imagePath = null;
+        OpenLocationButton.IsEnabled = false;
+        TaskList.SelectedItem = null;
+    }
+
+    private async void OpenLocationClicked(object sender, RoutedEventArgs e)
+    {
+        if (_selected is { } key && _imagePath is not null)
+            await RunActionAsync(() => FileExplorer.Select(ProcessActions.ImagePath(key)));
+    }
 
     private async void AboutClicked(object sender, RoutedEventArgs e)
     {

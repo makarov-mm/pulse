@@ -1,6 +1,6 @@
-# Pulse recording format
+# Makarov Pulse recording format
 
-A `.pulse` file is a UTF-8 JSON document. Pulse saves only the selected interval. The reader and writer support recordings up to 256 MiB. Select a shorter interval on systems with unusually high process counts. Version 1 uses the following keys. The arrays are ordered by monotonic sample time.
+A `.pulse` file is a UTF-8 JSON document. Makarov Pulse saves only the selected interval. The reader and writer support recordings up to 256 MiB. Select a shorter interval on systems with unusually high process counts. Version 1 uses the following keys. The arrays are ordered by monotonic sample time.
 
 | Field | Meaning |
 | --- | --- |
@@ -15,6 +15,6 @@ A `.pulse` file is a UTF-8 JSON document. Pulse saves only the selected interval
 | `CpuTicks`, `ReadBytes`, `WriteBytes` | Cumulative process CPU time in 100-nanosecond ticks and cumulative process I/O in bytes. Process I/O includes file, network and device operations. |
 | `PrivateBytes`, `Threads`, `Handles` | Private committed memory in bytes, thread count and handle count at the sample. |
 
-Pulse ranks processes by the sum of CPU time measured between adjacent observations of the same instance. Read and write totals use the same pairs. An interval longer than twice the larger configured sampling period plus half a second breaks continuity. Pulse excludes such gaps from cumulative CPU and I/O contributions. A single observation has no measurable delta. Private memory change uses the first and last available observations. The **Observed** column shows those timestamps.
+Makarov Pulse ranks processes by the sum of CPU time measured between adjacent observations of the same instance. Read and write totals use the same pairs. An interval longer than twice the larger configured sampling period plus half a second breaks continuity. Makarov Pulse excludes such gaps from cumulative CPU and I/O contributions. A single observation has no measurable delta. Private memory change uses the first and last available observations. The **Observed** column shows those timestamps.
 
 Offline comparison shows the system CPU and memory peaks of each selected interval and their differences. The two interval selectors remain independent. A change in host metadata or sampling periods appears beside the comparison. Recordings contain process names and identities. Paths, command lines and activity trace events are outside the recording schema.

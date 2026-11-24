@@ -6,7 +6,7 @@ namespace Pulse.Localization;
 internal static class UiText
 {
     private static readonly ResourceManager Resources = new("Pulse.Localization.Strings", typeof(UiText).Assembly);
-    private static readonly HashSet<string> Supported = new(StringComparer.OrdinalIgnoreCase) { "en", "de", "ru" };
+    private static readonly HashSet<string> Supported = new(StringComparer.OrdinalIgnoreCase) { "en", "de", "ru", "uk", "es", "fr", "zh-Hans" };
     public static CultureInfo Language { get; private set; } = CultureInfo.GetCultureInfo("en");
 
     public static void UsePreferredLanguages(IEnumerable<string> preferences)
@@ -24,6 +24,7 @@ internal static class UiText
             try { culture = CultureInfo.GetCultureInfo(tag); }
             catch (CultureNotFoundException) { continue; }
 
+            if (culture.Name == "zh") return CultureInfo.GetCultureInfo("zh-Hans");
             for (; culture.Name.Length != 0; culture = culture.Parent)
                 if (Supported.Contains(culture.Name)) return culture;
         }

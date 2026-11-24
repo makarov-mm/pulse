@@ -4,7 +4,7 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
-  <data name="WindowTitle" xml:space="preserve"><value>Pulse — Task Manager</value></data>
+  <data name="WindowTitle" xml:space="preserve"><value>Makarov Pulse — Task Manager</value></data>
   <data name="AppSubtitle" xml:space="preserve"><value>Task Manager</value></data>
   <data name="Overview" xml:space="preserve"><value>System overview</value></data>
   <data name="Interval" xml:space="preserve"><value>Refresh interval</value></data>
@@ -83,7 +83,7 @@
   <data name="Gibibytes" xml:space="preserve"><value>GiB</value></data>
   <data name="Tebibytes" xml:space="preserve"><value>TiB</value></data>
   <data name="RateUnit" xml:space="preserve"><value>{0}/s</value></data>
-  <data name="About" xml:space="preserve"><value>About Pulse</value></data>
+  <data name="About" xml:space="preserve"><value>About Makarov Pulse</value></data>
   <data name="AboutDescription" xml:space="preserve"><value>A process and resource monitor for Windows 11.</value></data>
   <data name="DevelopedBy" xml:space="preserve"><value>Developed by {0}</value></data>
   <data name="Version" xml:space="preserve"><value>Version {0}</value></data>
@@ -156,7 +156,7 @@
   <data name="MenuEnable" xml:space="preserve"><value>Enable</value></data>
   <data name="MenuDisable" xml:space="preserve"><value>Disable</value></data>
   <data name="MenuDelete" xml:space="preserve"><value>Delete…</value></data>
-  <data name="MenuElevate" xml:space="preserve"><value>Restart Pulse as administrator</value></data>
+  <data name="MenuElevate" xml:space="preserve"><value>Restart Makarov Pulse as administrator</value></data>
   <data name="MenuStart" xml:space="preserve"><value>Start</value></data>
   <data name="MenuStop" xml:space="preserve"><value>Stop</value></data>
   <data name="MenuRestart" xml:space="preserve"><value>Restart</value></data>
@@ -237,7 +237,7 @@
   <data name="RangeEnd" xml:space="preserve"><value>End</value></data>
   <data name="BaseRange" xml:space="preserve"><value>Reference</value></data>
   <data name="MeasuredRange" xml:space="preserve"><value>Selected interval</value></data>
-  <data name="CaptureFile" xml:space="preserve"><value>Pulse recording</value></data>
+  <data name="CaptureFile" xml:space="preserve"><value>Makarov Pulse recording</value></data>
   <data name="RangeSummary" xml:space="preserve"><value>{0:T} – {1:T} · {2} samples · {3} gaps · peak CPU {4} · peak memory {5}</value></data>
   <data name="DifferentCapture" xml:space="preserve"><value>Hardware or sampling intervals differ.</value></data>
   <data name="CpuTime" xml:space="preserve"><value>CPU time</value></data>
@@ -266,4 +266,6 @@
   <data name="RecordingTooLarge" xml:space="preserve"><value>The recording exceeds 256 MiB. Select a shorter interval.</value></data>
   <data name="ReceiveRate" xml:space="preserve"><value>Receive rate</value></data>
   <data name="SendRate" xml:space="preserve"><value>Send rate</value></data>
+  <data name="OpenFileLocation" xml:space="preserve"><value>Open file location</value></data>
+  <data name="StorageCleanup" xml:space="preserve"><value>Windows cleanup recommendations</value></data>
 </root>

@@ -170,7 +170,7 @@ public sealed partial class DiagnosticsWindow : Window
         var data = r.Data.Slice(r.First, r.Last);
         try
         {
-            var picker = new FileSavePicker(AppWindow.Id) { SuggestedFileName = "Pulse-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") };
+            var picker = new FileSavePicker(AppWindow.Id) { SuggestedFileName = "MakarovPulse-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") };
             picker.FileTypeChoices.Add(UiText.Get("CaptureFile"), new List<string> { ".pulse" });
             if (await picker.PickSaveFileAsync() is { } file) await Task.Run(() => data.SaveAsync(file.Path));
         }

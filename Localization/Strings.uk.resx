@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="WindowTitle" xml:space="preserve"><value>Makarov Pulse — Диспетчер завдань</value></data>
+  <data name="AppSubtitle" xml:space="preserve"><value>Диспетчер завдань</value></data>
+  <data name="Overview" xml:space="preserve"><value>Огляд системи</value></data>
+  <data name="Interval" xml:space="preserve"><value>Інтервал оновлення</value></data>
+  <data name="IntervalOne" xml:space="preserve"><value>1 с</value></data>
+  <data name="IntervalTwo" xml:space="preserve"><value>2 с</value></data>
+  <data name="IntervalFive" xml:space="preserve"><value>5 с</value></data>
+  <data name="Pause" xml:space="preserve"><value>Призупинити</value></data>
+  <data name="Resume" xml:space="preserve"><value>Продовжити</value></data>
+  <data name="PauseUpdates" xml:space="preserve"><value>Призупинити оновлення</value></data>
+  <data name="ResumeUpdates" xml:space="preserve"><value>Продовжити оновлення</value></data>
+  <data name="Processes" xml:space="preserve"><value>Процеси</value></data>
+  <data name="Search" xml:space="preserve"><value>Пошук за назвою або PID</value></data>
+  <data name="Tree" xml:space="preserve"><value>Дерево</value></data>
+  <data name="ProcessTree" xml:space="preserve"><value>Дерево процесів</value></data>
+  <data name="TreeTip" xml:space="preserve"><value>Показати батьківські й дочірні процеси</value></data>
+  <data name="Details" xml:space="preserve"><value>Відомості про процес</value></data>
+  <data name="CloseDetails" xml:space="preserve"><value>Закрити відомості</value></data>
+  <data name="Executable" xml:space="preserve"><value>Виконуваний файл</value></data>
+  <data name="EndTask" xml:space="preserve"><value>Завершити завдання</value></data>
+  <data name="IoTip" xml:space="preserve"><value>Сумарна швидкість читання й запису для файлів, пристроїв і мережі</value></data>
+  <data name="ProcessList" xml:space="preserve"><value>Список процесів</value></data>
+  <data name="Collecting" xml:space="preserve"><value>Збирання даних…</value></data>
+  <data name="Processor" xml:space="preserve"><value>Процесор</value></data>
+  <data name="CPU" xml:space="preserve"><value>ЦП</value></data>
+  <data name="Memory" xml:space="preserve"><value>Пам’ять</value></data>
+  <data name="Disk" xml:space="preserve"><value>Диск</value></data>
+  <data name="Network" xml:space="preserve"><value>Мережа</value></data>
+  <data name="HostHistory" xml:space="preserve"><value>{0}   ·   історія: {1}</value></data>
+  <data name="Uptime" xml:space="preserve"><value>Час роботи   {0} д {1:00} год {2:00} хв</value></data>
+  <data name="LastUpdate" xml:space="preserve"><value>Оновлено о {0:T}   ·   потоків: {1:N0}</value></data>
+  <data name="SampleError" xml:space="preserve"><value>Не вдалося отримати показники</value></data>
+  <data name="RetryStatus" xml:space="preserve"><value>Очікування наступного вимірювання</value></data>
+  <data name="CpuCount" xml:space="preserve"><value>Логічні процесори   {0}</value></data>
+  <data name="TopCpu" xml:space="preserve"><value>Найбільше навантаження на ЦП   ·   {0} ({1}) · {2}</value></data>
+  <data name="MemoryUsage" xml:space="preserve"><value>{0} із {1}</value></data>
+  <data name="TopMemory" xml:space="preserve"><value>Найбільший робочий набір   ·   {0} ({1}) · {2}</value></data>
+  <data name="DiskRates" xml:space="preserve"><value>Читання {0}   ·   Запис {1}</value></data>
+  <data name="NoMatches" xml:space="preserve"><value>Відповідних процесів немає</value></data>
+  <data name="NoProcesses" xml:space="preserve"><value>Процесів немає</value></data>
+  <data name="PausedAt" xml:space="preserve"><value>Призупинено   ·   Останнє оновлення о {0:T}</value></data>
+  <data name="Paused" xml:space="preserve"><value>Оновлення призупинено</value></data>
+  <data name="Name" xml:space="preserve"><value>Назва</value></data>
+  <data name="InputOutput" xml:space="preserve"><value>Ввід/вивід</value></data>
+  <data name="Threads" xml:space="preserve"><value>Потоки</value></data>
+  <data name="SortDescending" xml:space="preserve"><value>{0}, за спаданням</value></data>
+  <data name="SortAscending" xml:space="preserve"><value>{0}, за зростанням</value></data>
+  <data name="AccessDenied" xml:space="preserve"><value>Windows обмежила доступ</value></data>
+  <data name="WorkingSet" xml:space="preserve"><value>Робочий набір</value></data>
+  <data name="PrivateBytes" xml:space="preserve"><value>Приватна пам’ять</value></data>
+  <data name="ReadRate" xml:space="preserve"><value>Швидкість читання</value></data>
+  <data name="WriteRate" xml:space="preserve"><value>Швидкість запису</value></data>
+  <data name="Handles" xml:space="preserve"><value>Дескриптори</value></data>
+  <data name="Session" xml:space="preserve"><value>Сеанс</value></data>
+  <data name="Started" xml:space="preserve"><value>Час запуску</value></data>
+  <data name="Parent" xml:space="preserve"><value>Батьківський процес</value></data>
+  <data name="ProcessExited" xml:space="preserve"><value>PID {0}   ·   Процес завершився</value></data>
+  <data name="ParentExited" xml:space="preserve"><value>PID {0} · завершено</value></data>
+  <data name="ConfirmEnd" xml:space="preserve"><value>Завершити {0}?</value></data>
+  <data name="ConfirmEndBody" xml:space="preserve"><value>Процес із PID {0} буде завершено. Незбережені дані може бути втрачено.</value></data>
+  <data name="End" xml:space="preserve"><value>Завершити процес</value></data>
+  <data name="Cancel" xml:space="preserve"><value>Скасувати</value></data>
+  <data name="EndRequested" xml:space="preserve"><value>PID {0}   ·   Надіслано запит на завершення</value></data>
+  <data name="EndError" xml:space="preserve"><value>Не вдалося завершити процес</value></data>
+  <data name="PidReused" xml:space="preserve"><value>Процес завершився, і Windows повторно використала його PID.</value></data>
+  <data name="EndUnavailable" xml:space="preserve"><value>Тут неможливо завершити цей процес.</value></data>
+  <data name="CriticalProcess" xml:space="preserve"><value>Windows визначила цей процес як критичний.</value></data>
+  <data name="IncompleteRecord" xml:space="preserve"><value>Windows повернула неповний запис про процес.</value></data>
+  <data name="RowDescription" xml:space="preserve"><value>{0}, PID {1}, ЦП {2}, пам’ять {3}, ввід/вивід {4}</value></data>
+  <data name="ExpandBranch" xml:space="preserve"><value>Розгорнути гілку</value></data>
+  <data name="CollapseBranch" xml:space="preserve"><value>Згорнути гілку</value></data>
+  <data name="NoSample" xml:space="preserve"><value>Немає вимірювання</value></data>
+  <data name="NoData" xml:space="preserve"><value>Немає даних</value></data>
+  <data name="Bytes" xml:space="preserve"><value>Б</value></data>
+  <data name="Kibibytes" xml:space="preserve"><value>КіБ</value></data>
+  <data name="Mebibytes" xml:space="preserve"><value>МіБ</value></data>
+  <data name="Gibibytes" xml:space="preserve"><value>ГіБ</value></data>
+  <data name="Tebibytes" xml:space="preserve"><value>ТіБ</value></data>
+  <data name="RateUnit" xml:space="preserve"><value>{0}/с</value></data>
+  <data name="About" xml:space="preserve"><value>Про Makarov Pulse</value></data>
+  <data name="AboutDescription" xml:space="preserve"><value>Монітор процесів і ресурсів для Windows 11.</value></data>
+  <data name="DevelopedBy" xml:space="preserve"><value>Розробник — {0}</value></data>
+  <data name="Version" xml:space="preserve"><value>Версія {0}</value></data>
+  <data name="Close" xml:space="preserve"><value>Закрити</value></data>
+  <data name="LogicalProcessors" xml:space="preserve"><value>Логічні процесори</value></data>
+  <data name="PhysicalDisks" xml:space="preserve"><value>Фізичні диски</value></data>
+  <data name="NetworkAdapters" xml:space="preserve"><value>Мережеві адаптери</value></data>
+  <data name="ShowProcessors" xml:space="preserve"><value>Показати логічні процесори</value></data>
+  <data name="ShowDisks" xml:space="preserve"><value>Показати фізичні диски</value></data>
+  <data name="ShowAdapters" xml:space="preserve"><value>Показати мережеві адаптери</value></data>
+  <data name="HideDevices" xml:space="preserve"><value>Приховати подання пристроїв</value></data>
+  <data name="CloseDevices" xml:space="preserve"><value>Закрити подання пристроїв</value></data>
+  <data name="DeviceSpanPercent" xml:space="preserve"><value>Історія: {0}   ·   0–100 %</value></data>
+  <data name="DeviceSpanPeak" xml:space="preserve"><value>Історія: {0}   ·   шкала кожного графіка відповідає його максимуму</value></data>
+  <data name="CoreName" xml:space="preserve"><value>ЦП {0}</value></data>
+  <data name="CoreGroupName" xml:space="preserve"><value>Група {0} · ЦП {1}</value></data>
+  <data name="DiskName" xml:space="preserve"><value>Диск {0}</value></data>
+  <data name="DiskVolumes" xml:space="preserve"><value>Диск {0} ({1})</value></data>
+  <data name="DiskDetail" xml:space="preserve"><value>Читання {0} · Запис {1} · Активність {2} · Відгук {3}</value></data>
+  <data name="AdapterDetail" xml:space="preserve"><value>↓ {0} · ↑ {1} · Канал {2}</value></data>
+  <data name="Milliseconds" xml:space="preserve"><value>мс</value></data>
+  <data name="BitsPerSecond" xml:space="preserve"><value>біт/с</value></data>
+  <data name="KilobitsPerSecond" xml:space="preserve"><value>кбіт/с</value></data>
+  <data name="MegabitsPerSecond" xml:space="preserve"><value>Мбіт/с</value></data>
+  <data name="GigabitsPerSecond" xml:space="preserve"><value>Гбіт/с</value></data>
+  <data name="NoDevices" xml:space="preserve"><value>Показників пристроїв ще немає</value></data>
+  <data name="SpanLabel" xml:space="preserve"><value>Період історії</value></data>
+  <data name="SpanOne" xml:space="preserve"><value>1 хв</value></data>
+  <data name="SpanFifteen" xml:space="preserve"><value>15 хв</value></data>
+  <data name="MomentHint" xml:space="preserve"><value>Клацніть, щоб побачити провідні процеси на цей момент</value></data>
+  <data name="MomentTitle" xml:space="preserve"><value>Процеси о {0:T}</value></data>
+  <data name="MomentCpu" xml:space="preserve"><value>Найбільше навантаження на ЦП</value></data>
+  <data name="MomentMemory" xml:space="preserve"><value>Найбільші робочі набори</value></data>
+  <data name="MomentExited" xml:space="preserve"><value>{0} · завершено</value></data>
+  <data name="AxisNow" xml:space="preserve"><value>зараз</value></data>
+  <data name="Services" xml:space="preserve"><value>Служби</value></data>
+  <data name="ServiceDescription" xml:space="preserve"><value>Опис</value></data>
+  <data name="ServiceStatus" xml:space="preserve"><value>Стан</value></data>
+  <data name="ServiceProcess" xml:space="preserve"><value>Процес</value></data>
+  <data name="ServiceRunning" xml:space="preserve"><value>Працює</value></data>
+  <data name="ServiceStopped" xml:space="preserve"><value>Зупинено</value></data>
+  <data name="ServiceStarting" xml:space="preserve"><value>Запускається</value></data>
+  <data name="ServiceStopping" xml:space="preserve"><value>Зупиняється</value></data>
+  <data name="ServicePaused" xml:space="preserve"><value>Призупинено</value></data>
+  <data name="ServiceCount" xml:space="preserve"><value>Працює {0} із {1}</value></data>
+  <data name="SearchServices" xml:space="preserve"><value>Пошук за назвою, описом або PID</value></data>
+  <data name="ServiceHint" xml:space="preserve"><value>Клацніть службу правою кнопкою, щоб побачити дії. Двічі клацніть запущену службу, щоб показати її процес</value></data>
+  <data name="DetailsTab" xml:space="preserve"><value>Подробиці</value></data>
+  <data name="Users" xml:space="preserve"><value>Користувачі</value></data>
+  <data name="User" xml:space="preserve"><value>Користувач</value></data>
+  <data name="ParentPid" xml:space="preserve"><value>PID батьківського процесу</value></data>
+  <data name="SessionName" xml:space="preserve"><value>Сеанс {0}</value></data>
+  <data name="SearchUsers" xml:space="preserve"><value>Пошук за іменем користувача</value></data>
+  <data name="StartupTab" xml:space="preserve"><value>Автозавантаження</value></data>
+  <data name="StartupCommand" xml:space="preserve"><value>Команда</value></data>
+  <data name="StartupSource" xml:space="preserve"><value>Джерело</value></data>
+  <data name="StartupEnabled" xml:space="preserve"><value>Увімкнено</value></data>
+  <data name="StartupDisabled" xml:space="preserve"><value>Вимкнено</value></data>
+  <data name="StartupUserFolder" xml:space="preserve"><value>Папка автозавантаження користувача</value></data>
+  <data name="StartupCommonFolder" xml:space="preserve"><value>Папка автозавантаження всіх користувачів</value></data>
+  <data name="StartupCount" xml:space="preserve"><value>Увімкнено {0} із {1}</value></data>
+  <data name="SearchStartup" xml:space="preserve"><value>Пошук за назвою або командою</value></data>
+  <data name="StartupHint" xml:space="preserve"><value>Двічі клацніть запис або натисніть Enter, щоб змінити його. Інші дії — у контекстному меню</value></data>
+  <data name="Connections" xml:space="preserve"><value>З’єднання</value></data>
+  <data name="ConnectionProtocol" xml:space="preserve"><value>Протокол</value></data>
+  <data name="LocalEndpoint" xml:space="preserve"><value>Локальна адреса</value></data>
+  <data name="RemoteEndpoint" xml:space="preserve"><value>Віддалена адреса</value></data>
+  <data name="SearchConnections" xml:space="preserve"><value>Шукайте сокети за процесом, PID, адресою, портом, протоколом або станом</value></data>
+  <data name="BoundPorts" xml:space="preserve"><value>Локальні порти</value></data>
+  <data name="MenuEnable" xml:space="preserve"><value>Увімкнути</value></data>
+  <data name="MenuDisable" xml:space="preserve"><value>Вимкнути</value></data>
+  <data name="MenuDelete" xml:space="preserve"><value>Видалити…</value></data>
+  <data name="MenuElevate" xml:space="preserve"><value>Перезапустити Makarov Pulse від імені адміністратора</value></data>
+  <data name="MenuStart" xml:space="preserve"><value>Запустити</value></data>
+  <data name="MenuStop" xml:space="preserve"><value>Зупинити</value></data>
+  <data name="MenuRestart" xml:space="preserve"><value>Перезапустити</value></data>
+  <data name="MenuStartType" xml:space="preserve"><value>Тип запуску</value></data>
+  <data name="StartAutomatic" xml:space="preserve"><value>Автоматично</value></data>
+  <data name="StartManual" xml:space="preserve"><value>Вручну</value></data>
+  <data name="MenuShowProcess" xml:space="preserve"><value>Показати процес</value></data>
+  <data name="ConfirmDelete" xml:space="preserve"><value>Видалити {0}?</value></data>
+  <data name="ConfirmDeleteBody" xml:space="preserve"><value>Запис автозавантаження буде видалено з {0}. Цю дію неможливо скасувати.</value></data>
+  <data name="Save" xml:space="preserve"><value>Зберегти</value></data>
+  <data name="DeleteButton" xml:space="preserve"><value>Видалити</value></data>
+  <data name="ActionError" xml:space="preserve"><value>Не вдалося виконати дію</value></data>
+  <data name="ActionTimeout" xml:space="preserve"><value>Служба не зупинилася за відведений час.</value></data>
+  <data name="BusyThreads" xml:space="preserve"><value>Найактивніші потоки</value></data>
+  <data name="Priority" xml:space="preserve"><value>Пріоритет</value></data>
+  <data name="CommandLine" xml:space="preserve"><value>Командний рядок</value></data>
+  <data name="PriorityLow" xml:space="preserve"><value>Низький</value></data>
+  <data name="PriorityBelowNormal" xml:space="preserve"><value>Нижче звичайного</value></data>
+  <data name="PriorityNormal" xml:space="preserve"><value>Звичайний</value></data>
+  <data name="PriorityAboveNormal" xml:space="preserve"><value>Вище звичайного</value></data>
+  <data name="PriorityHigh" xml:space="preserve"><value>Високий</value></data>
+  <data name="PriorityRealtime" xml:space="preserve"><value>Реального часу</value></data>
+  <data name="SpaceTab" xml:space="preserve"><value>Місце на диску</value></data>
+  <data name="SpaceScan" xml:space="preserve"><value>Сканувати</value></data>
+  <data name="SpaceUpLabel" xml:space="preserve"><value>На рівень вище</value></data>
+  <data name="SpaceOpenLabel" xml:space="preserve"><value>Відкрити у Провіднику</value></data>
+  <data name="SpaceDriveLabel" xml:space="preserve"><value>Диск або папка</value></data>
+  <data name="SpaceDrive" xml:space="preserve"><value>{0}   ·   вільно {1} із {2}</value></data>
+  <data name="SpaceMoreFiles" xml:space="preserve"><value>Інші файли: {0}</value></data>
+  <data name="SpaceOther" xml:space="preserve"><value>Менші елементи: {0}</value></data>
+  <data name="SpaceUnread" xml:space="preserve"><value>немає доступу для читання</value></data>
+  <data name="SpaceScanning" xml:space="preserve"><value>сканування…</value></data>
+  <data name="SpacePrompt" xml:space="preserve"><value>Виберіть диск і запустіть сканування або виберіть папку</value></data>
+  <data name="SpaceBrowseLabel" xml:space="preserve"><value>Вибрати папку для сканування</value></data>
+  <data name="SpaceItemsLabel" xml:space="preserve"><value>Вміст папки</value></data>
+  <data name="SpaceCancelled" xml:space="preserve"><value>Сканування скасовано · неповні результати</value></data>
+  <data name="ServicesUnavailableShort" xml:space="preserve"><value>Служби недоступні</value></data>
+  <data name="ServicesUnavailable" xml:space="preserve"><value>Не вдалося прочитати список служб. {0}</value></data>
+  <data name="ConnectionsUnavailable" xml:space="preserve"><value>З’єднання недоступні</value></data>
+  <data name="ProtocolUnavailable" xml:space="preserve"><value>Недоступні таблиці: {0}</value></data>
+  <data name="MenuEdit" xml:space="preserve"><value>Редагувати…</value></data>
+  <data name="MenuShowFile" xml:space="preserve"><value>Показати у Провіднику</value></data>
+  <data name="EditStartupTitle" xml:space="preserve"><value>Запис автозавантаження {0}</value></data>
+  <data name="StartupNameTaken" xml:space="preserve"><value>Запис із назвою {0} уже існує в цьому розділі</value></data>
+  <data name="StartupNeedsAdmin" xml:space="preserve"><value>Для зміни цього запису потрібні права адміністратора</value></data>
+  <data name="SearchNetwork" xml:space="preserve"><value>Пошук за назвою, адресою або MAC</value></data>
+  <data name="NetworkHint" xml:space="preserve"><value>Під адаптером показано пристрої, з якими Windows нещодавно обмінювалася пакетами в цій мережі</value></data>
+  <data name="NetworkType" xml:space="preserve"><value>Тип</value></data>
+  <data name="NetworkAddress" xml:space="preserve"><value>Адреса</value></data>
+  <data name="NetworkMac" xml:space="preserve"><value>MAC-адреса</value></data>
+  <data name="NetworkSpeed" xml:space="preserve"><value>Канал</value></data>
+  <data name="NetworkActivity" xml:space="preserve"><value>Активність</value></data>
+  <data name="NetworkGateway" xml:space="preserve"><value>Шлюз</value></data>
+  <data name="NetworkDevice" xml:space="preserve"><value>Пристрій</value></data>
+  <data name="AdapterTunnel" xml:space="preserve"><value>Тунель</value></data>
+  <data name="AdapterMobile" xml:space="preserve"><value>Стільниковий зв’язок</value></data>
+  <data name="AdapterOther" xml:space="preserve"><value>Інше</value></data>
+  <data name="AdapterConnected" xml:space="preserve"><value>Підключено</value></data>
+  <data name="AdapterDisconnected" xml:space="preserve"><value>Відключено</value></data>
+  <data name="NeighborReachable" xml:space="preserve"><value>Доступний</value></data>
+  <data name="NeighborIdle" xml:space="preserve"><value>Неактивний</value></data>
+  <data name="NeighborStatic" xml:space="preserve"><value>Статичний</value></data>
+  <data name="NetworkCount" xml:space="preserve"><value>Підключено {0} із {1}</value></data>
+  <data name="ElevateButton" xml:space="preserve"><value>Перезапустити від імені адміністратора</value></data>
+  <data name="SpaceSize" xml:space="preserve"><value>Розмір</value></data>
+  <data name="SpaceShare" xml:space="preserve"><value>Частка</value></data>
+  <data name="Allocated" xml:space="preserve"><value>На диску</value></data>
+  <data name="Diagnostics" xml:space="preserve"><value>Діагностика</value></data>
+  <data name="Intervals" xml:space="preserve"><value>Інтервали</value></data>
+  <data name="WatchProcess" xml:space="preserve"><value>Спостерігати за процесом</value></data>
+  <data name="Pinned" xml:space="preserve"><value>Закріплений процес</value></data>
+  <data name="ActivityTrace" xml:space="preserve"><value>Активність файлів і сокетів</value></data>
+  <data name="OpenCapture" xml:space="preserve"><value>Відкрити запис</value></data>
+  <data name="SaveCapture" xml:space="preserve"><value>Зберегти інтервал</value></data>
+  <data name="CompareCapture" xml:space="preserve"><value>Порівняти записи</value></data>
+  <data name="LiveHistory" xml:space="preserve"><value>Завантажити поточну історію</value></data>
+  <data name="RangeStart" xml:space="preserve"><value>Початок</value></data>
+  <data name="RangeEnd" xml:space="preserve"><value>Кінець</value></data>
+  <data name="BaseRange" xml:space="preserve"><value>Еталон</value></data>
+  <data name="MeasuredRange" xml:space="preserve"><value>Вибраний інтервал</value></data>
+  <data name="CaptureFile" xml:space="preserve"><value>Запис Makarov Pulse</value></data>
+  <data name="RangeSummary" xml:space="preserve"><value>{0:T} – {1:T} · вимірювань: {2} · пропусків: {3} · пік ЦП {4} · пік пам’яті {5}</value></data>
+  <data name="DifferentCapture" xml:space="preserve"><value>Обладнання або інтервали вимірювання різняться.</value></data>
+  <data name="CpuTime" xml:space="preserve"><value>Час ЦП</value></data>
+  <data name="PrivateChange" xml:space="preserve"><value>Зміна приватної пам’яті</value></data>
+  <data name="ReadBytes" xml:space="preserve"><value>Прочитано байтів</value></data>
+  <data name="WrittenBytes" xml:space="preserve"><value>Записано байтів</value></data>
+  <data name="Observed" xml:space="preserve"><value>Період спостереження</value></data>
+  <data name="NoPinned" xml:space="preserve"><value>Виберіть процес на вкладці «Процеси» й натисніть «Спостерігати за процесом».</value></data>
+  <data name="GpuEngine" xml:space="preserve"><value>Рушій GPU</value></data>
+  <data name="DedicatedGpu" xml:space="preserve"><value>Виділена пам’ять</value></data>
+  <data name="SharedGpu" xml:space="preserve"><value>Спільна пам’ять</value></data>
+  <data name="StartTrace" xml:space="preserve"><value>Записувати активність</value></data>
+  <data name="StopTrace" xml:space="preserve"><value>Зупинити запис активності</value></data>
+  <data name="TraceHelp" xml:space="preserve"><value>Запустіть трасування ядра Windows, щоб побачити дискові операції за файлами та мережеві швидкості за кінцевими точками. Можуть знадобитися права адміністратора.</value></data>
+  <data name="TraceLost" xml:space="preserve"><value>Втрачено подій: {0}</value></data>
+  <data name="OverviewFacts" xml:space="preserve"><value>Огляд</value></data>
+  <data name="FromTo" xml:space="preserve"><value>{0:T} – {1:T}</value></data>
+  <data name="PinName" xml:space="preserve"><value>Закріпити перший стовпець</value></data>
+  <data name="RestoreLayout" xml:space="preserve"><value>Скинути макет</value></data>
+  <data name="Columns" xml:space="preserve"><value>Стовпці</value></data>
+  <data name="MoveLeft" xml:space="preserve"><value>Перемістити ліворуч</value></data>
+  <data name="MoveRight" xml:space="preserve"><value>Перемістити праворуч</value></data>
+  <data name="Narrower" xml:space="preserve"><value>Звузити</value></data>
+  <data name="Wider" xml:space="preserve"><value>Розширити</value></data>
+  <data name="RangeGesture" xml:space="preserve"><value>Протягніть вказівник, щоб дослідити інтервал. Стрілками виберіть вимірювання, утримуйте Shift, щоб розширити вибір, і натисніть Enter, щоб відкрити його.</value></data>
+  <data name="RecordingTooLarge" xml:space="preserve"><value>Розмір запису перевищує 256 МіБ. Виберіть коротший інтервал.</value></data>
+  <data name="ReceiveRate" xml:space="preserve"><value>Швидкість отримання</value></data>
+  <data name="SendRate" xml:space="preserve"><value>Швидкість надсилання</value></data>
+  <data name="OpenFileLocation" xml:space="preserve"><value>Відкрити розташування файлу</value></data>
+  <data name="StorageCleanup" xml:space="preserve"><value>Рекомендації Windows з очищення</value></data>
+</root>

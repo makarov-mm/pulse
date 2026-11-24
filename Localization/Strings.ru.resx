@@ -4,7 +4,7 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
-  <data name="WindowTitle" xml:space="preserve"><value>Pulse — Диспетчер задач</value></data>
+  <data name="WindowTitle" xml:space="preserve"><value>Makarov Pulse — Диспетчер задач</value></data>
   <data name="AppSubtitle" xml:space="preserve"><value>Диспетчер задач</value></data>
   <data name="Overview" xml:space="preserve"><value>Обзор системы</value></data>
   <data name="Interval" xml:space="preserve"><value>Интервал обновления</value></data>
@@ -83,7 +83,7 @@
   <data name="Gibibytes" xml:space="preserve"><value>ГиБ</value></data>
   <data name="Tebibytes" xml:space="preserve"><value>ТиБ</value></data>
   <data name="RateUnit" xml:space="preserve"><value>{0}/с</value></data>
-  <data name="About" xml:space="preserve"><value>О программе Pulse</value></data>
+  <data name="About" xml:space="preserve"><value>О программе Makarov Pulse</value></data>
   <data name="AboutDescription" xml:space="preserve"><value>Монитор процессов и ресурсов для Windows 11.</value></data>
   <data name="DevelopedBy" xml:space="preserve"><value>Разработчик — {0}</value></data>
   <data name="Version" xml:space="preserve"><value>Версия {0}</value></data>
@@ -156,7 +156,7 @@
   <data name="MenuEnable" xml:space="preserve"><value>Включить</value></data>
   <data name="MenuDisable" xml:space="preserve"><value>Отключить</value></data>
   <data name="MenuDelete" xml:space="preserve"><value>Удалить…</value></data>
-  <data name="MenuElevate" xml:space="preserve"><value>Перезапустить Pulse от имени администратора</value></data>
+  <data name="MenuElevate" xml:space="preserve"><value>Перезапустить Makarov Pulse от имени администратора</value></data>
   <data name="MenuStart" xml:space="preserve"><value>Запустить</value></data>
   <data name="MenuStop" xml:space="preserve"><value>Остановить</value></data>
   <data name="MenuRestart" xml:space="preserve"><value>Перезапустить</value></data>
@@ -237,7 +237,7 @@
   <data name="RangeEnd" xml:space="preserve"><value>Конец</value></data>
   <data name="BaseRange" xml:space="preserve"><value>Образец</value></data>
   <data name="MeasuredRange" xml:space="preserve"><value>Выбранный интервал</value></data>
-  <data name="CaptureFile" xml:space="preserve"><value>Запись Pulse</value></data>
+  <data name="CaptureFile" xml:space="preserve"><value>Запись Makarov Pulse</value></data>
   <data name="RangeSummary" xml:space="preserve"><value>{0:T} – {1:T} · замеров: {2} · пропусков: {3} · пик ЦП {4} · пик памяти {5}</value></data>
   <data name="DifferentCapture" xml:space="preserve"><value>Оборудование или интервалы опроса различаются.</value></data>
   <data name="CpuTime" xml:space="preserve"><value>Время ЦП</value></data>
@@ -266,4 +266,6 @@
   <data name="RecordingTooLarge" xml:space="preserve"><value>Запись превышает 256 МиБ. Выберите более короткий интервал.</value></data>
   <data name="ReceiveRate" xml:space="preserve"><value>Приём</value></data>
   <data name="SendRate" xml:space="preserve"><value>Отправка</value></data>
+  <data name="OpenFileLocation" xml:space="preserve"><value>Открыть расположение файла</value></data>
+  <data name="StorageCleanup" xml:space="preserve"><value>Рекомендации Windows по очистке</value></data>
 </root>

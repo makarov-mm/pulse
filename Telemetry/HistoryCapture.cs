@@ -93,6 +93,7 @@ internal sealed record HistoryCapture(int Version, CaptureHost Host, HistorySamp
     }
 }
 
+[System.Reflection.Obfuscation(Exclude = false, ApplyToMembers = true)]
 internal sealed class ProcessHistory
 {
     internal readonly List<HistorySample> Samples = [];

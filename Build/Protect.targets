@@ -1,0 +1,22 @@
+<Project>
+  <!-- Replace only the application's bundle entry. Normal build outputs and NuGet packages are shared inputs. -->
+  <Target Name="ProtectPortableApplication" AfterTargets="PrepareForBundle" BeforeTargets="GenerateSingleFileBundle"
+          Condition="'$(ProtectPortable)' == 'true' and '$(PublishSingleFile)' == 'true'">
+    <PropertyGroup>
+      <_ProtectionDir>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'protected'))</_ProtectionDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <_AppToProtect Include="@(FilesToBundle)" Condition="'%(FilesToBundle.RelativePath)' == '$(TargetFileName)'" />
+    </ItemGroup>
+    <Error Condition="'@(_AppToProtect->Count())' != '1'" Text="Expected exactly one application assembly in the portable bundle." />
+    <MakeDir Directories="$(_ProtectionDir)" />
+    <WriteLinesToFile File="$(_ProtectionDir)references.txt" Lines="@(FilesToBundle->'%(RootDir)%(Directory)'->Distinct())"
+                      Overwrite="true" Encoding="UTF-8" />
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)"
+          Command="&quot;$(SystemRoot)\System32\WindowsPowerShell\v1.0\powershell.exe&quot; -NoProfile -ExecutionPolicy RemoteSigned -File &quot;$(MSBuildProjectDirectory)\Build\Protect.ps1&quot; -Assembly &quot;@(_AppToProtect->'%(FullPath)')&quot; -Output &quot;$(_ProtectionDir).&quot;" />
+    <ItemGroup>
+      <FilesToBundle Remove="@(_AppToProtect)" />
+      <FilesToBundle Include="$(_ProtectionDir)$(TargetFileName)" RelativePath="$(TargetFileName)" />
+    </ItemGroup>
+  </Target>
+</Project>

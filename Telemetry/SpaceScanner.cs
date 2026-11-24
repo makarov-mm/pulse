@@ -39,6 +39,7 @@ internal sealed class SpaceNode(string name, SpaceNode? parent, bool isFile, lon
     }
 }
 
+[System.Reflection.Obfuscation(Exclude = false, ApplyToMembers = true)]
 internal static class SpaceScanner
 {
     private const int LargestFiles = 20;

@@ -69,7 +69,7 @@ public sealed partial class MainWindow
         {
             Tabs.SelectedItem = tab;
             Root.UpdateLayout();
-            Require(headers.ColumnDefinitions[0].ActualWidth >= minimum, $"The first {_tab} column collapsed.");
+            Require(headers.ColumnDefinitions[0].ActualWidth >= minimum, $"The first {_tab} column is {headers.ColumnDefinitions[0].ActualWidth} DIP, expected at least {minimum}.");
             foreach (var button in headers.Children.OfType<Button>())
             {
                 string key = (string)button.Tag;

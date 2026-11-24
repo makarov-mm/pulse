@@ -124,6 +124,9 @@ public sealed partial class MainWindow
         DrawSpace();
     }
 
+    private void CleanupClicked(object sender, RoutedEventArgs e) =>
+        _ = RunActionAsync(() => Process.Start(new ProcessStartInfo("ms-settings:storagerecommendations") { UseShellExecute = true })?.Dispose());
+
     private void SpaceOpenClicked(object sender, RoutedEventArgs e)
     {
         if (_spaceCurrent is not { } folder) return;
@@ -145,7 +148,7 @@ public sealed partial class MainWindow
         if (row.Node.Grouped > 0) return;
         var menu = new MenuFlyout();
         menu.Items.Add(MenuEntry("MenuShowFile", true, () => _ = RunActionAsync(() =>
-            Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{row.Node.Path}\"") { UseShellExecute = true })?.Dispose())));
+            FileExplorer.Select(row.Node.Path))));
         ShowMenu(menu, SpaceItems, position);
     }
 

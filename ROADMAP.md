@@ -1,6 +1,6 @@
-# Pulse roadmap
+# Makarov Pulse roadmap
 
-Pulse's main diagnostic goal is to answer “What slowed this machine down a few minutes ago?” Each milestone records progress toward that goal. [Features available in the current build](README.md)
+Makarov Pulse's main diagnostic goal is to answer “What slowed this machine down a few minutes ago?” Each milestone records progress toward that goal. [Features available in the current build](README.md)
 
 ## Implementation and acceptance
 
@@ -20,11 +20,11 @@ Field checks and performance measurements are tracked separately from the featur
 - Add drill-down views for logical processors, physical disks and network interfaces. Show units and the selected time span on every axis.
 - For disks, expose throughput, active time and response time when Windows supplies those counters. For network adapters, show direction, link speed and the selected interface.
 - Keep the compact overview and make each resource view reachable by mouse and keyboard.
-- **Acceptance.** A user can follow a disk spike to a named device and distinguish high throughput from high latency. Disconnecting a device leaves the remaining graphs usable. Compare measurements and Pulse's own CPU and memory footprint against a recorded baseline at each refresh interval.
+- **Acceptance.** A user can follow a disk spike to a named device and distinguish high throughput from high latency. Disconnecting a device leaves the remaining graphs usable. Compare measurements and Makarov Pulse's own CPU and memory footprint against a recorded baseline at each refresh interval.
 
 **Status.** The CPU, disk and network cards open device views with one tile per logical processor, physical disk and network adapter. Disk tiles show throughput, active time and response time. Adapter tiles show direction and link speed. A selected tile expands into a larger graph with its maximum and time span labelled. Remaining work:
 
-- Verify the per-device counters against Task Manager and Performance Monitor, including a disk or adapter removed while Pulse is running.
+- Verify the per-device counters against Task Manager and Performance Monitor, including a disk or adapter removed while Makarov Pulse is running.
 - Exercise the device views with Windows high contrast enabled. Keyboard expansion, collapse and arrow navigation have been checked on the desktop. The WinUI regression checks cover device views in all three shipped languages.
 
 **GPU view.** Diagnostics groups dedicated memory, shared memory and individual engine charts under each adapter. The process table identifies the busiest engine and its adapter. Verify with video playback and a 3D workload that the card and process row identify the active engine on the correct adapter. [How Windows reports GPU utilization](https://devblogs.microsoft.com/directx/gpus-in-the-task-manager/)
@@ -47,7 +47,7 @@ Windows Task Manager's Performance view supplies the device-level model. btop4wi
 
 The point inspector shows five leaders. Interval rankings include every observed process instance, including one with moderate CPU across the entire slowdown. History is bounded to 900 seconds and 901 samples.
 
-System Informer's history graphs link a point in time to the responsible process. This milestone builds on Pulse's existing sample tooltips. [System Informer](https://systeminformer.io/)
+System Informer's history graphs link a point in time to the responsible process. This milestone builds on Makarov Pulse's existing sample tooltips. [System Informer](https://systeminformer.io/)
 
 ## 3. Inspect a process in context
 
@@ -76,11 +76,11 @@ TaskExplorer's thread and socket panels inform the inspector. Task Manager's Ser
 
 ## 5. Cover Task Manager and Resource Monitor
 
-**Question.** Can Pulse replace both tools for everyday diagnosis?
+**Question.** Can Makarov Pulse replace both tools for everyday diagnosis?
 
 - Give the lower pane tabs that match Task Manager's pages and add what Resource Monitor shows per process.
 - **Configurable columns.** Drag header dividers to resize columns and drag headings to reorder them. Let users hide and restore individual columns and pin Name while scrolling horizontally. Save each tab's widths, visible columns, order, pinning and sort direction across restarts.
-- **Table layout check.** In Details, place Name, Working set and Command line side by side. Pin Name, scroll to the right in a narrow window and confirm that the process stays identifiable. Reopen Pulse and verify that Details restores the layout and sort column while Services retains its own choices.
+- **Table layout check.** In Details, place Name, Working set and Command line side by side. Pin Name, scroll to the right in a narrow window and confirm that the process stays identifiable. Reopen Makarov Pulse and verify that Details restores the layout and sort column while Services retains its own choices.
 - **Done.** Processes with a collapsible tree and branch totals. Details with separate read and write rates, priority, user and command line. Users with per-session totals. Connections with TCP sockets and bound UDP ports per process. Network with adapters and the devices on their networks. Startup apps from the registry and Startup folders, with enabling, disabling, deleting and an editor for the name and command. Services with status, host process, start, stop, restart and startup type.
 - **Available on demand.** Diagnostics can start an ETW session for physical disk transfers and endpoint byte rates. It reports access failures and lost events and stops its own session when the activity view closes.
 - App history depends on data that Windows collects for packaged apps and stays out of scope until its source is confirmed.
@@ -92,12 +92,18 @@ TaskExplorer's thread and socket panels inform the inspector. Task Manager's Ser
 
 - Scan a chosen volume or folder in the background. Show partial results while the scan runs and let the user cancel it.
 - Present the result as a sunburst or treemap that drills down into a folder, with a sortable list of the largest items beside it.
-- Open the selected item in File Explorer. Pulse does not delete files.
-- Start with a directory walk at the user's access level. Consider reading the NTFS master file table for speed only if Pulse gains an elevated mode.
+- Open the selected item in File Explorer. Makarov Pulse does not delete files.
+- Start with a directory walk at the user's access level. Consider reading the NTFS master file table for speed only if Makarov Pulse gains an elevated mode.
 - **Acceptance.** The totals for a test folder match File Explorer's properties. Folders the user cannot read are listed as unread instead of counted as empty. Cancelling a scan of a large volume returns control within a second.
 
 **Status.** The Disk space tab scans a selected drive or folder in the background. The treemap and list support drill-down. The list sorts by name, logical size, allocated size or share. The context menu selects an individual file or directory in File Explorer. Cancelling retains partial results, and the current folder opens in File Explorer. Regression checks cover logical byte totals, unread entries, keyboard focus during list reordering and the area assigned to smaller items. The system-volume scan, cancellation timing and comparison with Explorer are documented in the acceptance results.
 
-WinDirStat and WizTree inform the views. A general registry editor is out of scope. Startup entries are edited in Pulse. [WinDirStat](https://windirstat.net/) · [WizTree](https://diskanalyzer.com/)
+WinDirStat and WizTree inform the views. A general registry editor is out of scope. Startup entries are edited in Makarov Pulse. [WinDirStat](https://windirstat.net/) · [WizTree](https://diskanalyzer.com/)
+
+## Process provenance and maintenance
+
+- **Available.** Open file location selects the inspected process executable in Explorer. Disk space opens Windows cleanup recommendations so the user can review candidates and choose what to remove.
+- **Next.** Show the executable publisher, signature status and an on-demand SHA-256 digest beside its path. These fields help distinguish similarly named processes.
+- **Startup investigation.** Add a copy action for the exact source registry key or Startup folder. Windows Registry Editor remains the general-purpose editor.
 
 Before releasing each milestone, exercise its keyboard path, light and dark themes, high contrast, and the shipped translations. Measure idle overhead and memory growth using the same process count and refresh interval as the baseline.

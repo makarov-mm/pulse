@@ -197,6 +197,6 @@ internal static class StartupItems
     public static void ShowFile(StartupItem item)
     {
         if (item.InRegistry) throw new InvalidOperationException();
-        Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{item.Location}\"") { UseShellExecute = true })?.Dispose();
+        FileExplorer.Select(item.Location);
     }
 }

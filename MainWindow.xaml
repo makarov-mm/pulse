@@ -10,7 +10,7 @@
                 <Border Width="22" Height="22" CornerRadius="6" Background="{ThemeResource AccentFillColorDefaultBrush}">
                     <Path Data="M 2,9 L 5,9 7,4 10,14 12,8 16,8" Stroke="{ThemeResource TextOnAccentFillColorPrimaryBrush}" StrokeThickness="1.7" StrokeLineJoin="Round" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
-                <TextBlock Text="Pulse" FontWeight="SemiBold" FontSize="13"/>
+                <TextBlock Text="Makarov Pulse" FontWeight="SemiBold" FontSize="13"/>
                 <Border Height="13" Width="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" VerticalAlignment="Center"/>
                 <TextBlock Text="{loc:Localize Key=AppSubtitle}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
             </StackPanel>
@@ -116,6 +116,9 @@
                                             <TextBlock Text="{loc:Localize Key=Executable}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                                             <TextBlock x:Name="DetailPath" FontSize="13" TextWrapping="Wrap" IsTextSelectionEnabled="True"/>
                                         </StackPanel>
+                                        <Button x:Name="OpenLocationButton" IsEnabled="False" Click="OpenLocationClicked" HorizontalAlignment="Stretch">
+                                            <StackPanel Orientation="Horizontal" Spacing="7"><FontIcon Glyph="&#xE8DA;" FontSize="14"/><TextBlock Text="{loc:Localize Key=OpenFileLocation}"/></StackPanel>
+                                        </Button>
                                         <Button x:Name="EndButton" Click="EndClicked" HorizontalAlignment="Stretch"><StackPanel Orientation="Horizontal" Spacing="7"><FontIcon Glyph="&#xE71A;" FontSize="14"/><TextBlock Text="{loc:Localize Key=EndTask}"/></StackPanel></Button>
                                     </StackPanel>
                                 </ScrollViewer>
@@ -148,7 +151,7 @@
                                         </ListView.ItemContainerStyle>
                                         <ListView.ItemTemplate>
                                             <DataTemplate x:DataType="m:ProcessRow">
-                                                <Grid Tag="Processes" Loaded="TableRowLoaded" Unloaded="TableRowUnloaded" Padding="12,0,16,0" MinHeight="36" AutomationProperties.Name="{x:Bind Accessible, Mode=OneWay}">
+                                                <Grid Tag="Processes" Loading="TableRowLoading" Unloaded="TableRowUnloaded" Padding="12,0,16,0" MinHeight="36" AutomationProperties.Name="{x:Bind Accessible, Mode=OneWay}">
                                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="60"/><ColumnDefinition Width="80"/><ColumnDefinition Width="106"/><ColumnDefinition Width="122"/><ColumnDefinition Width="70"/><ColumnDefinition Width="220"/></Grid.ColumnDefinitions>
                                                     <Grid Margin="{x:Bind Indent, Mode=OneWay}" ColumnSpacing="6">
                                                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
@@ -211,7 +214,7 @@
                                     </ListView.ItemContainerStyle>
                                     <ListView.ItemTemplate>
                                         <DataTemplate x:DataType="m:DetailRow">
-                                            <Grid Tag="Details" Loaded="TableRowLoaded" Unloaded="TableRowUnloaded" Padding="18,0,16,0" MinHeight="34" ColumnSpacing="12">
+                                            <Grid Tag="Details" Loading="TableRowLoading" Unloaded="TableRowUnloaded" Padding="18,0,16,0" MinHeight="34" ColumnSpacing="12">
                                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" MinWidth="260"/><ColumnDefinition Width="70"/><ColumnDefinition Width="140"/><ColumnDefinition Width="106"/><ColumnDefinition Width="86"/><ColumnDefinition Width="146"/><ColumnDefinition Width="148"/><ColumnDefinition Width="124"/><ColumnDefinition Width="124"/><ColumnDefinition Width="90"/><ColumnDefinition Width="105"/><ColumnDefinition Width="180"/><ColumnDefinition Width="145"/><ColumnDefinition Width="190"/><ColumnDefinition Width="400"/></Grid.ColumnDefinitions>
                                                 <TextBlock Text="{x:Bind Name, Mode=OneWay}" Style="{StaticResource TextCell}" ToolTipService.ToolTip="{x:Bind Name, Mode=OneWay}"/>
                                                 <TextBlock Grid.Column="1" Text="{x:Bind Pid, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
@@ -262,7 +265,7 @@
                                     </ListView.ItemContainerStyle>
                                     <ListView.ItemTemplate>
                                         <DataTemplate x:DataType="m:UserRow">
-                                            <Grid Tag="Users" Loaded="TableRowLoaded" Unloaded="TableRowUnloaded" Padding="18,0,16,0" MinHeight="34" ColumnSpacing="12">
+                                            <Grid Tag="Users" Loading="TableRowLoading" Unloaded="TableRowUnloaded" Padding="18,0,16,0" MinHeight="34" ColumnSpacing="12">
                                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="90"/><ColumnDefinition Width="100"/><ColumnDefinition Width="90"/><ColumnDefinition Width="120"/><ColumnDefinition Width="130"/><ColumnDefinition Width="90"/></Grid.ColumnDefinitions>
                                                 <TextBlock Text="{x:Bind User, Mode=OneWay}" Style="{StaticResource TextCell}"/>
                                                 <TextBlock Grid.Column="1" Text="{x:Bind Session, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
@@ -307,7 +310,7 @@
                                     </ListView.ItemContainerStyle>
                                     <ListView.ItemTemplate>
                                         <DataTemplate x:DataType="m:ConnectionRow">
-                                            <Grid Tag="Connections" Loaded="TableRowLoaded" Unloaded="TableRowUnloaded" Padding="18,0,16,0" MinHeight="34" ColumnSpacing="12">
+                                            <Grid Tag="Connections" Loading="TableRowLoading" Unloaded="TableRowUnloaded" Padding="18,0,16,0" MinHeight="34" ColumnSpacing="12">
                                                 <Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="70"/><ColumnDefinition Width="80"/><ColumnDefinition Width="3*"/><ColumnDefinition Width="3*"/><ColumnDefinition Width="130"/><ColumnDefinition Width="112"/><ColumnDefinition Width="112"/></Grid.ColumnDefinitions>
                                                 <TextBlock Text="{x:Bind Host, Mode=OneWay}" Style="{StaticResource TextCell}"/>
                                                 <TextBlock Grid.Column="1" Text="{x:Bind Pid, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
@@ -352,7 +355,7 @@
                                     </ListView.ItemContainerStyle>
                                     <ListView.ItemTemplate>
                                         <DataTemplate x:DataType="m:NetworkRow">
-                                            <Grid Tag="Network" Loaded="TableRowLoaded" Unloaded="TableRowUnloaded" Padding="18,0,16,0" MinHeight="34" ColumnSpacing="12" Background="Transparent" ToolTipService.ToolTip="{x:Bind Details, Mode=OneWay}">
+                                            <Grid Tag="Network" Loading="TableRowLoading" Unloaded="TableRowUnloaded" Padding="18,0,16,0" MinHeight="34" ColumnSpacing="12" Background="Transparent" ToolTipService.ToolTip="{x:Bind Details, Mode=OneWay}">
                                                 <Grid.ColumnDefinitions><ColumnDefinition Width="3*"/><ColumnDefinition Width="100"/><ColumnDefinition Width="2*"/><ColumnDefinition Width="135"/><ColumnDefinition Width="110"/><ColumnDefinition Width="100"/><ColumnDefinition Width="2*"/></Grid.ColumnDefinitions>
                                                 <Grid Margin="{x:Bind Indent, Mode=OneWay}" ColumnSpacing="8">
                                                     <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
@@ -398,7 +401,7 @@
                                     </ListView.ItemContainerStyle>
                                     <ListView.ItemTemplate>
                                         <DataTemplate x:DataType="m:StartupRow">
-                                            <Grid Tag="Startup" Loaded="TableRowLoaded" Unloaded="TableRowUnloaded" Padding="18,0,16,0" MinHeight="34" ColumnSpacing="12">
+                                            <Grid Tag="Startup" Loading="TableRowLoading" Unloaded="TableRowUnloaded" Padding="18,0,16,0" MinHeight="34" ColumnSpacing="12">
                                                 <Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="4*"/><ColumnDefinition Width="2*"/><ColumnDefinition Width="110"/><ColumnDefinition Width="2*"/></Grid.ColumnDefinitions>
                                                 <TextBlock Text="{x:Bind Name, Mode=OneWay}" Style="{StaticResource TextCell}" ToolTipService.ToolTip="{x:Bind Name, Mode=OneWay}"/>
                                                 <TextBlock Grid.Column="1" Text="{x:Bind Command, Mode=OneWay}" Style="{StaticResource TextCell}" ToolTipService.ToolTip="{x:Bind Command, Mode=OneWay}"/>
@@ -438,7 +441,7 @@
                                     </ListView.ItemContainerStyle>
                                     <ListView.ItemTemplate>
                                         <DataTemplate x:DataType="m:ServiceRow">
-                                            <Grid Tag="Services" Loaded="TableRowLoaded" Unloaded="TableRowUnloaded" Padding="18,0,16,0" MinHeight="34" ColumnSpacing="12">
+                                            <Grid Tag="Services" Loading="TableRowLoading" Unloaded="TableRowUnloaded" Padding="18,0,16,0" MinHeight="34" ColumnSpacing="12">
                                                 <Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="3*"/><ColumnDefinition Width="120"/><ColumnDefinition Width="70"/><ColumnDefinition Width="2*"/></Grid.ColumnDefinitions>
                                                 <TextBlock Text="{x:Bind Name, Mode=OneWay}" Style="{StaticResource TextCell}" ToolTipService.ToolTip="{x:Bind Name, Mode=OneWay}"/>
                                                 <TextBlock Grid.Column="1" Text="{x:Bind Title, Mode=OneWay}" Style="{StaticResource TextCell}"/>
@@ -456,13 +459,14 @@
                         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
                         <Grid RowSpacing="4" ColumnSpacing="8">
                             <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                             <ComboBox x:Name="SpaceDrives" HorizontalAlignment="Stretch" AutomationProperties.Name="{loc:Localize Key=SpaceDriveLabel}"/>
                             <Button Grid.Column="1" x:Name="SpaceBrowse" Click="SpaceBrowseClicked" AutomationProperties.Name="{loc:Localize Key=SpaceBrowseLabel}" ToolTipService.ToolTip="{loc:Localize Key=SpaceBrowseLabel}"><FontIcon Glyph="&#xE838;" FontSize="14"/></Button>
                             <Button Grid.Column="2" x:Name="SpaceScan" Click="SpaceScanClicked"/>
                             <Button Grid.Column="3" x:Name="SpaceUp" IsEnabled="False" Click="SpaceUpClicked" AutomationProperties.Name="{loc:Localize Key=SpaceUpLabel}" ToolTipService.ToolTip="{loc:Localize Key=SpaceUpLabel}"><FontIcon Glyph="&#xE74A;" FontSize="14"/></Button>
                             <Button Grid.Column="4" x:Name="SpaceOpen" IsEnabled="False" Click="SpaceOpenClicked" AutomationProperties.Name="{loc:Localize Key=SpaceOpenLabel}" ToolTipService.ToolTip="{loc:Localize Key=SpaceOpenLabel}"><FontIcon Glyph="&#xE8DA;" FontSize="14"/></Button>
-                            <TextBlock Grid.Row="1" Grid.ColumnSpan="5" x:Name="SpacePath" FontSize="13" TextTrimming="CharacterEllipsis"/>
+                            <Button Grid.Column="5" Click="CleanupClicked" AutomationProperties.Name="{loc:Localize Key=StorageCleanup}" ToolTipService.ToolTip="{loc:Localize Key=StorageCleanup}"><FontIcon Glyph="&#xE90F;" FontSize="14"/></Button>
+                            <TextBlock Grid.Row="1" Grid.ColumnSpan="6" x:Name="SpacePath" FontSize="13" TextTrimming="CharacterEllipsis"/>
                         </Grid>
                         <Grid Grid.Row="1" x:Name="SpaceLayout" ColumnSpacing="12" SizeChanged="SpaceLayoutChanged">
                             <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="0"/></Grid.RowDefinitions>
@@ -489,7 +493,7 @@
                                     </ListView.ItemContainerStyle>
                                     <ListView.ItemTemplate>
                                         <DataTemplate x:DataType="m:SpaceRow">
-                                            <Grid Tag="Space" Loaded="TableRowLoaded" Unloaded="TableRowUnloaded" Padding="6,2" ColumnSpacing="6">
+                                            <Grid Tag="Space" Loading="TableRowLoading" Unloaded="TableRowUnloaded" Padding="6,2" ColumnSpacing="6">
                                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" MinWidth="80"/><ColumnDefinition Width="84"/><ColumnDefinition Width="92"/><ColumnDefinition Width="64"/></Grid.ColumnDefinitions>
                                                 <Grid ColumnSpacing="6"><Grid.ColumnDefinitions><ColumnDefinition Width="16"/><ColumnDefinition/></Grid.ColumnDefinitions>
                                                     <FontIcon Glyph="{x:Bind Glyph}" FontSize="14" AutomationProperties.AccessibilityView="Raw"/>

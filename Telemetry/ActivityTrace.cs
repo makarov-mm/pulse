@@ -42,6 +42,7 @@ internal sealed class ActivityTrace : IDisposable
     public void Dispose() => _session.Dispose();
 }
 
+[System.Reflection.Obfuscation(Exclude = false, ApplyToMembers = true)]
 internal sealed class ActivityAccumulator
 {
     private readonly object _sync = new();
