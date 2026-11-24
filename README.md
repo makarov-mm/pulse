@@ -20,7 +20,7 @@ Open the portable `Pulse.exe` on Windows 11 x64. It bundles .NET and the Windows
 ## Using the monitor
 
 - Press **Ctrl+F** to search by process name or PID. Click a column heading to sort, and click it again to reverse the order.
-- The process list opens as a tree of parent and child processes. Collapse a branch to see the number of processes in it and their combined CPU, memory, I/O and threads. Toggle **Tree** for a flat list. Select a row to inspect its executable path, start time, counters and the services it hosts.
+- The process list opens as a tree of parent and child processes. Collapse a branch to see the number of processes in it and their combined CPU, memory, I/O and threads. Toggle **Tree** for a flat list. Select a row to inspect its executable path, command line, user, priority, start time, counters, busiest threads and the services it hosts.
 - Switch to **Details** for a flat list with every counter in its own column: parent PID, session, working set, private bytes, read and write rates, handles and start time. It follows the sort order of the **Processes** tab. Double-click a row to show that process with its parents.
 - Switch to **Users** for the processes, CPU, memory, I/O and threads of each session.
 - Switch to **Connections** for every TCP socket with its owning process, local and remote address and state, including listening ports. Search by process, PID, address or port. Double-click a row to show its process. The process inspector lists the remote addresses of the selected process's open connections.

@@ -26,6 +26,18 @@ internal static class Format
         return unit.Length > 0 ? $"{value} {unit}" : value;
     }
 
+    // Names the Windows priority class of a process.
+    public static string Priority(uint? priorityClass) => priorityClass switch
+    {
+        0x40 => UiText.Get("PriorityLow"),
+        0x4000 => UiText.Get("PriorityBelowNormal"),
+        0x20 => UiText.Get("PriorityNormal"),
+        0x8000 => UiText.Get("PriorityAboveNormal"),
+        0x80 => UiText.Get("PriorityHigh"),
+        0x100 => UiText.Get("PriorityRealtime"),
+        _ => "—"
+    };
+
     public static string Milliseconds(double? seconds) => seconds is { } s
         ? $"{Number(s * 1000, s < 0.01 ? 1 : 0)} {UiText.Get("Milliseconds")}" : "—";
 

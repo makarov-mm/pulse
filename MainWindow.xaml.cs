@@ -35,6 +35,7 @@ public sealed partial class MainWindow : Window
     private bool _loaded, _dialogOpen;
     private int _generation;
     private string _path = "";
+    private ProcessIdentity _identity = new("", null, "");
 
     [DllImport("user32.dll")]
     private static extern uint GetDpiForWindow(nint hwnd);
@@ -118,7 +119,9 @@ public sealed partial class MainWindow : Window
         {
             bool restart = _restart;
             _restart = false;
-            var frame = await Task.Run(() => _sampler.Sample(restart));
+            // Threads are only sampled for the process shown in the inspector.
+            int? inspect = Inspector.IsPaneOpen ? _selected?.Pid : null;
+            var frame = await Task.Run(() => _sampler.Sample(restart, inspect));
             if (_closed || _paused || generation != _generation) return;
             _frame = frame;
             _byPid = frame.Tasks.ToDictionary(t => t.Info.Key.Pid);
@@ -272,6 +275,7 @@ public sealed partial class MainWindow : Window
         try { _path = ProcessActions.ImagePath(row.Key); }
         catch (Win32Exception ex) { _path = ex.NativeErrorCode == 5 ? UiText.Get("AccessDenied") : ex.Message; }
         catch (InvalidOperationException ex) { _path = ex.Message; }
+        _identity = ProcessActions.Describe(row.Key);
         Inspector.IsPaneOpen = true;
         RefreshInspectorSources();
         UpdateDetails();
@@ -279,7 +283,7 @@ public sealed partial class MainWindow : Window
 
     private void CreateFacts()
     {
-        foreach (var key in new[] { "CPU", "WorkingSet", "PrivateBytes", "ReadRate", "WriteRate", "Threads", "Handles", "Session", "Started", "Parent", "Services", "Connections" })
+        foreach (var key in new[] { "CPU", "WorkingSet", "PrivateBytes", "ReadRate", "WriteRate", "Threads", "BusyThreads", "Handles", "Session", "User", "Priority", "Started", "Parent", "Services", "Connections", "CommandLine" })
         {
             var grid = new Grid { ColumnSpacing = 8 };
             grid.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
@@ -318,8 +322,21 @@ public sealed partial class MainWindow : Window
         _facts["Parent"].Text = parent is not null ? $"{parent.Info.Name} ({t.Info.ParentId})" :
             t.Info.ParentId == 0 ? "—" : UiText.Format("ParentExited", t.Info.ParentId);
         _facts["Services"].Text = HostedServices(key.Pid);
+        _facts["BusyThreads"].Text = BusyThreads(key.Pid);
+        _facts["User"].Text = _identity.User.Length == 0 ? "—" : _identity.User;
+        _facts["Priority"].Text = Format.Priority(_identity.PriorityClass);
+        _facts["CommandLine"].Text = _identity.CommandLine.Length == 0 ? "—" : _identity.CommandLine;
         _facts["Connections"].Text = RemoteEndpoints(key.Pid);
         EndButton.IsEnabled = key.Pid > 4 && key.Pid != Environment.ProcessId;
+    }
+
+    // The threads of the inspected process that used the most CPU in the last sample.
+    private string BusyThreads(int pid)
+    {
+        if (_frame is not { } frame || frame.ThreadsPid != pid) return "—";
+        var busy = frame.Threads.Where(t => t.Cpu is > 0).OrderByDescending(t => t.Cpu).Take(5)
+            .Select(t => $"TID {t.Id}   {Format.Percent(t.Cpu)}").ToList();
+        return busy.Count == 0 ? "—" : string.Join(Environment.NewLine, busy);
     }
 
     private void CloseInspector(object sender, RoutedEventArgs e) { Inspector.IsPaneOpen = false; ClearSelection(); }

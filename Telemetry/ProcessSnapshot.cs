@@ -9,6 +9,9 @@ internal readonly record struct ProcessKey(int Pid, long Created);
 internal sealed record ProcessCounters(ProcessKey Key, string Name, int ParentId, int Threads,
     uint Handles, uint Session, long WorkingSet, long PrivateBytes, long CpuTicks, long ReadBytes, long WriteBytes);
 
+// Created tells a thread apart from a later one that reuses its identifier.
+internal sealed record ThreadCounters(int Id, long Created, long CpuTicks);
+
 internal sealed class ProcessSnapshot : IDisposable
 {
     // Offsets in the fixed prefix of the x64 SYSTEM_PROCESS_INFORMATION record.
@@ -42,8 +45,13 @@ internal sealed class ProcessSnapshot : IDisposable
     private int _capacity = 1024 * 1024;
     private nint _buffer;
 
-    public List<ProcessCounters> Read()
+    // Each process record is followed by one x64 SYSTEM_THREAD_INFORMATION record per thread.
+    private const int ProcessBytes = 256, ThreadBytes = 80;
+
+    // Reads every process. The threads of inspectPid, if given, are returned in threads.
+    public List<ProcessCounters> Read(int? inspectPid, out List<ThreadCounters> threads)
     {
+        threads = [];
         int length;
         while (true)
         {
@@ -69,6 +77,18 @@ internal sealed class ProcessSnapshot : IDisposable
                 result.Add(new(new((int)entry.Pid, entry.Created), name ?? $"PID {entry.Pid}",
                     (int)entry.ParentId, entry.Threads, entry.Handles, entry.Session, entry.WorkingSet,
                     entry.PrivateBytes, entry.Kernel + entry.User, entry.ReadBytes, entry.WriteBytes));
+            }
+            if (inspectPid is { } inspected && entry.Pid == inspected)
+            {
+                // The last record has no Next offset, so its extent is the rest of the buffer.
+                long extent = entry.Next != 0 ? (long)entry.Next : length - offset;
+                for (int i = 0; i < entry.Threads && ProcessBytes + (i + 1L) * ThreadBytes <= extent; i++)
+                {
+                    nint thread = _buffer + offset + ProcessBytes + i * ThreadBytes;
+                    // KernelTime, UserTime and CreateTime lead the record. The thread identifier is the second half of ClientId.
+                    threads.Add(new((int)Marshal.ReadIntPtr(thread, 48), Marshal.ReadInt64(thread, 16),
+                        Marshal.ReadInt64(thread, 0) + Marshal.ReadInt64(thread, 8)));
+                }
             }
             if (entry.Next == 0) break;
             if (entry.Next < 256 || entry.Next > length - offset)

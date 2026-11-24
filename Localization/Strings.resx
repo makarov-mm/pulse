@@ -173,4 +173,13 @@
   <data name="DeleteButton" xml:space="preserve"><value>Delete</value></data>
   <data name="ActionError" xml:space="preserve"><value>The action could not be completed</value></data>
   <data name="ActionTimeout" xml:space="preserve"><value>The service did not stop in time.</value></data>
+  <data name="BusyThreads" xml:space="preserve"><value>Busiest threads</value></data>
+  <data name="Priority" xml:space="preserve"><value>Priority</value></data>
+  <data name="CommandLine" xml:space="preserve"><value>Command line</value></data>
+  <data name="PriorityLow" xml:space="preserve"><value>Low</value></data>
+  <data name="PriorityBelowNormal" xml:space="preserve"><value>Below normal</value></data>
+  <data name="PriorityNormal" xml:space="preserve"><value>Normal</value></data>
+  <data name="PriorityAboveNormal" xml:space="preserve"><value>Above normal</value></data>
+  <data name="PriorityHigh" xml:space="preserve"><value>High</value></data>
+  <data name="PriorityRealtime" xml:space="preserve"><value>Realtime</value></data>
 </root>

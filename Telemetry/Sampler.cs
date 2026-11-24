@@ -8,9 +8,16 @@ internal sealed record TaskSample(ProcessCounters Info, double? Cpu, double? Rea
 {
     public double? Io => Read + Write;
 }
+internal sealed record ThreadSample(int Id, double? Cpu);
+
 internal sealed record Frame(double Time, DateTime Clock, double? Cpu, long? TotalRam, long? UsedRam,
     double? DiskRead, double? DiskWrite, double? Received, double? Sent, IReadOnlyList<TaskSample> Tasks,
-    IReadOnlyList<CoreSample>? Cores, IReadOnlyList<DiskSample>? Disks, IReadOnlyList<AdapterSample>? Adapters);
+    IReadOnlyList<CoreSample>? Cores, IReadOnlyList<DiskSample>? Disks, IReadOnlyList<AdapterSample>? Adapters)
+{
+    // The threads of the process that was being inspected when the sample was taken.
+    public int? ThreadsPid { get; init; }
+    public IReadOnlyList<ThreadSample> Threads { get; init; } = [];
+}
 
 internal sealed class Sampler : IDisposable
 {
@@ -34,12 +41,15 @@ internal sealed class Sampler : IDisposable
     private readonly PerformanceCounters _performance = new();
     private Dictionary<ProcessKey, ProcessCounters> _previous = [];
     private Dictionary<string, (long Rx, long Tx)> _network = [];
+    private Dictionary<int, ThreadCounters> _threads = [];
+    private int? _threadsPid;
     private double? _lastTime;
     private (long Idle, long Total)? _lastCpu;
 
-    public Frame Sample(bool restart)
+    // inspectPid selects a process whose threads are sampled as well.
+    public Frame Sample(bool restart, int? inspectPid = null)
     {
-        var tasks = _processes.Read();
+        var tasks = _processes.Read(inspectPid, out var threads);
         double time = (double)Stopwatch.GetTimestamp() / Stopwatch.Frequency;
         double seconds = _lastTime is { } previous ? time - previous : 0;
         bool compare = !restart && seconds is > 0 and <= MaxSampleInterval;
@@ -71,10 +81,24 @@ internal sealed class Sampler : IDisposable
         var (rx, tx, adapters) = NetworkRates(compare, seconds);
         _previous = tasks.ToDictionary(p => p.Key);
         _lastTime = time;
-        return new(time, DateTime.Now, compare && cpuTotal is { } c ? Math.Clamp(c, 0, 100) : null,
+        var threadRows = new List<ThreadSample>(threads.Count);
+        foreach (var thread in threads)
+        {
+            double? cpu = null;
+            if (compare && _threadsPid == inspectPid && _threads.TryGetValue(thread.Id, out var old) &&
+                old.Created == thread.Created && Rate(thread.CpuTicks, old.CpuTicks, seconds) is { } ticks)
+                cpu = Math.Clamp(100 * ticks / TimeSpan.TicksPerSecond / LogicalProcessors, 0, 100);
+            threadRows.Add(new(thread.Id, cpu));
+        }
+        _threads = threads.ToDictionary(t => t.Id);
+        _threadsPid = inspectPid;
+        return new Frame(time, DateTime.Now, compare && cpuTotal is { } c ? Math.Clamp(c, 0, 100) : null,
             haveMemory ? (long)memory.Total : null, haveMemory ? (long)(memory.Total - memory.Available) : null,
             compare ? counters.Read : null, compare ? counters.Write : null, rx, tx, rows,
-            compare ? counters.Cores : null, compare ? counters.Disks : null, adapters);
+            compare ? counters.Cores : null, compare ? counters.Disks : null, adapters)
+        {
+            ThreadsPid = inspectPid, Threads = threadRows
+        };
     }
 
     private static double? Rate(long current, long previous, double seconds) =>

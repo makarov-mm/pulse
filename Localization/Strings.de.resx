@@ -173,4 +173,13 @@
   <data name="DeleteButton" xml:space="preserve"><value>Löschen</value></data>
   <data name="ActionError" xml:space="preserve"><value>Die Aktion konnte nicht abgeschlossen werden</value></data>
   <data name="ActionTimeout" xml:space="preserve"><value>Der Dienst wurde nicht rechtzeitig beendet.</value></data>
+  <data name="BusyThreads" xml:space="preserve"><value>Aktivste Threads</value></data>
+  <data name="Priority" xml:space="preserve"><value>Priorität</value></data>
+  <data name="CommandLine" xml:space="preserve"><value>Befehlszeile</value></data>
+  <data name="PriorityLow" xml:space="preserve"><value>Niedrig</value></data>
+  <data name="PriorityBelowNormal" xml:space="preserve"><value>Niedriger als normal</value></data>
+  <data name="PriorityNormal" xml:space="preserve"><value>Normal</value></data>
+  <data name="PriorityAboveNormal" xml:space="preserve"><value>Höher als normal</value></data>
+  <data name="PriorityHigh" xml:space="preserve"><value>Hoch</value></data>
+  <data name="PriorityRealtime" xml:space="preserve"><value>Echtzeit</value></data>
 </root>

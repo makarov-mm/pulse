@@ -43,7 +43,7 @@ System Informer's history graphs link a point in time to the responsible process
 - Show what Windows makes available at the user's current access level. Close inspection handles when a tab closes or the selected process exits.
 - **Acceptance.** Select a known service host, find its hosted service, and identify a busy thread during a controlled workload. Rapidly switch between processes and verify that counters and connections always belong to the selected process instance.
 
-**Status.** The inspector lists the services hosted by the selected process and the remote addresses of its open TCP connections. The Services and Connections tabs link each service and socket to its process. Thread CPU deltas are not started. UDP endpoints and per-connection byte rates are not shown.
+**Status.** The inspector lists the services hosted by the selected process and the remote addresses of its open TCP connections. The Services and Connections tabs link each service and socket to its process. While a process is inspected, its threads are sampled and the five that used the most CPU are listed. The inspector is a single pane, not yet split into tabs. UDP endpoints and per-connection byte rates are not shown.
 
 TaskExplorer's thread and socket panels inform the inspector. Task Manager's Services view supplies the service-to-process workflow. [TaskExplorer](https://github.com/DavidXanatos/TaskExplorer) · [Task Manager](https://learn.microsoft.com/en-us/troubleshoot/windows-server/support-tools/support-tools-task-manager)
 
@@ -61,7 +61,7 @@ TaskExplorer's thread and socket panels inform the inspector. Task Manager's Ser
 
 - Give the lower pane tabs that match Task Manager's pages and add what Resource Monitor shows per process.
 - **Done.** Processes with a collapsible tree and branch totals. Details with separate read and write rates. Users with per-session totals. Connections with TCP sockets and listening ports per process. Startup apps from the registry and Startup folders, with enabling, disabling, editing and deleting. Services with status, host process, start, stop, restart and startup type.
-- **Next.** Priority, owner and command line on the Details tab. Disk activity by file and byte rates per connection need an ETW session.
+- **Next.** Priority, owner and command line are shown in the process inspector and still missing as columns on the Details tab. Disk activity by file and byte rates per connection need an ETW session.
 - App history depends on data that Windows collects for packaged apps and stays out of scope until its source is confirmed.
 - **Acceptance.** For each tab, compare the listed items and values with Task Manager or Resource Monitor on the same machine.
 
