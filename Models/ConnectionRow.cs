@@ -17,9 +17,15 @@ public sealed class ConnectionRow : ObservableRow
     public string Remote => _remote;
     public string State => _state;
 
-    internal void Update(TcpConnection connection, string process)
+    private string _received = "", _sent = "";
+    public string Received => _received;
+    public string Sent => _sent;
+
+    internal void Update(TcpConnection connection, string process, (double? Received, double? Sent) rate = default)
     {
         ProcessId = connection.Pid;
+        Set(ref _received, Format.Bytes(rate.Received, true), nameof(Received));
+        Set(ref _sent, Format.Bytes(rate.Sent, true), nameof(Sent));
         Set(ref _host, process, nameof(Host));
         Set(ref _pid, connection.Pid.ToString(), nameof(Pid));
         Set(ref _protocol, connection.Protocol, nameof(Protocol));

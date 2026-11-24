@@ -140,6 +140,30 @@ public sealed partial class MainWindow
         DrawSpace();
     }
 
+    private void SpaceItemMenu(SpaceRow row, Point? position)
+    {
+        if (row.Node.Grouped > 0) return;
+        var menu = new MenuFlyout();
+        menu.Items.Add(MenuEntry("MenuShowFile", true, () => _ = RunActionAsync(() =>
+            Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{row.Node.Path}\"") { UseShellExecute = true })?.Dispose())));
+        ShowMenu(menu, SpaceItems, position);
+    }
+
+    private void SpaceRightTapped(object sender, RightTappedRoutedEventArgs e)
+    {
+        if ((e.OriginalSource as FrameworkElement)?.DataContext is not SpaceRow row) return;
+        SpaceItems.SelectedItem = row;
+        SpaceItemMenu(row, e.GetPosition(SpaceItems));
+        e.Handled = true;
+    }
+
+    private void SpaceKeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key != Windows.System.VirtualKey.Application || SpaceItems.SelectedItem is not SpaceRow row) return;
+        SpaceItemMenu(row, null);
+        e.Handled = true;
+    }
+
     private void SpaceItemClicked(object sender, ItemClickEventArgs args)
     {
         if (args.ClickedItem is SpaceRow row) OpenSpaceFolder(row.Node);
@@ -159,7 +183,7 @@ public sealed partial class MainWindow
         string status = _spaceCancel is not null ? UiText.Get("SpaceScanning") :
             _spaceCancelled ? UiText.Get("SpaceCancelled") : "";
         string path = folder.Unread ? $"{folder.Path} ({UiText.Get("SpaceUnread")})" : folder.Path;
-        SpacePath.Text = $"{path}   ·   {Format.Bytes(size)}{(status.Length == 0 ? "" : "   ·   " + status)}";
+        SpacePath.Text = $"{path}   ·   {Format.Bytes(size)}   ·   {UiText.Get("Allocated")} {Format.Bytes(folder.Allocated)}{(status.Length == 0 ? "" : "   ·   " + status)}";
         ToolTipService.SetToolTip(SpacePath, SpacePath.Text);
         SpaceUp.IsEnabled = folder.Parent is not null;
         SpaceOpen.IsEnabled = true;
@@ -169,7 +193,7 @@ public sealed partial class MainWindow
             .OrderByDescending(item => item.Size).ThenBy(item => item.Node.Name, StringComparer.CurrentCultureIgnoreCase).ToList();
         var listItems = SortItems(LowerTab.Space, items, (item, column) => column switch
         {
-            "Name" => SpaceRow.Label(item.Node), "Size" or "Share" => item.Size,
+            "Name" => SpaceRow.Label(item.Node), "Size" or "Share" => item.Size, "Allocated" => item.Node.Allocated,
             _ => throw new ArgumentOutOfRangeException(nameof(column))
         });
         UpdateSpaceList(folder, listItems, size);

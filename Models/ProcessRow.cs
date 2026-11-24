@@ -17,6 +17,8 @@ public sealed class ProcessRow : ObservableRow
     internal ProcessKey Key => Sample.Info.Key;
     internal ProcessRow(TaskSample sample) => Sample = sample;
 
+    private string _gpu = "";
+    public string Gpu => _gpu;
     public string Name => _name;
     public string Pid => _pid;
     public string Threads => _threads;
@@ -36,6 +38,7 @@ public sealed class ProcessRow : ObservableRow
     internal void Update(Branch branch, bool tree, bool collapsed, bool filtering)
     {
         Sample = branch.Task;
+        Set(ref _gpu, MainWindow.GpuText(Sample.Gpu), nameof(Gpu));
         var info = Sample.Info;
         // A collapsed branch shows the totals of the process and everything below it.
         var total = branch.Total;

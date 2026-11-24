@@ -39,7 +39,9 @@ public partial class App : Application
         string path = Environment.GetEnvironmentVariable("PULSE_CHECK_REPORT")!;
         try
         {
-            await _window!.RunChecksAsync();
+            if (Environment.GetEnvironmentVariable("PULSE_EXTENDED_CHECKS") is { Length: > 0 } directory)
+                await _window!.RunExtendedAsync(directory);
+            else await _window!.RunChecksAsync();
             File.WriteAllText(path, $"PASS {UiText.Language.Name}");
         }
         catch (Exception error) { File.WriteAllText(path, error.ToString()); }
@@ -117,6 +119,7 @@ public sealed partial class MainWindow
         CheckMonitorTabs();
         await CheckTableHeadersAsync();
         await CheckDiskSpaceAsync();
+        await CheckRoadmapAsync();
         PauseButton.IsChecked = false;
         PauseClicked(this, new());
         Require(!_paused && _moments.Count <= 1, "Resuming retained the paused history.");

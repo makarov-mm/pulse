@@ -26,6 +26,14 @@ public sealed partial class MetricCard : UserControl
         ToolTipService.SetToolTip(Caption, caption);
     }
 
+    internal void SetSeries(List<(double Time, DateTime Clock, double? Value)> points, string number, string caption)
+    {
+        Plot.Append(points);
+        Number.Text = number;
+        Caption.Text = caption;
+        ToolTipService.SetToolTip(Caption, caption);
+    }
+
     public void ClearHistory() => Plot.Clear();
 
     public void SetSpan(double seconds) => Plot.SetSpan(seconds);

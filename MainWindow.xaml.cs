@@ -59,6 +59,8 @@ public sealed partial class MainWindow : Window
         TaskList.ItemsSource = _visible;
         CreateTabs();
         ConfigureTableHeaders();
+        ConfigureColumns();
+        ConfigureDiagnostics();
         Inspector.PaneClosed += (_, _) => { if (!Inspector.IsPaneOpen) ClearSelection(); };
         CpuCard.Configure(UiText.Get("Processor"), "\uE950", true, v => Format.Percent(v));
         MemoryCard.Configure(UiText.Get("Memory"), "\uE964", true, v => Format.Percent(v));
@@ -81,6 +83,7 @@ public sealed partial class MainWindow : Window
         Closed += (_, _) =>
         {
             _closed = true;
+            _diagnostics?.Close();
             _systemColors.ColorValuesChanged -= SystemColorsChanged;
             _timer.Stop();
             if (!_busy) _sampler.Dispose();
@@ -123,7 +126,7 @@ public sealed partial class MainWindow : Window
             bool restart = _restart;
             _restart = false;
             // Threads are only sampled for the process shown in the inspector.
-            int? inspect = Inspector.IsPaneOpen ? _selected?.Pid : null;
+            int? inspect = Inspector.IsPaneOpen && InspectorSection == 1 ? _selected?.Pid : null;
             var frame = await Task.Run(() => _sampler.Sample(restart, inspect));
             if (_closed || _paused || generation != _generation) return;
             _frame = frame;
@@ -133,6 +136,7 @@ public sealed partial class MainWindow : Window
             UpdateCards(frame);
             UpdateDevices(frame);
             RecordMoment(frame);
+            RecordDiagnostics(frame);
             RefreshInspectorSources();
             UpdateRows();
             UpdateTabRows();
@@ -229,6 +233,8 @@ public sealed partial class MainWindow : Window
         foreach (var card in new[] { CpuCard, MemoryCard, DiskCard, NetworkCard }) card.ClearHistory();
         ClearDeviceHistory();
         _moments.Clear();
+        _history.Samples.Clear();
+        _graphics.Clear();
         _restart = true;
         SetInterval();
         await RefreshAsync();
@@ -255,6 +261,7 @@ public sealed partial class MainWindow : Window
         var field = Enum.Parse<SortField>((string)((Button)sender).Tag);
         _descending = field == _sort ? !_descending : field is not (SortField.Pid or SortField.Name);
         _sort = field;
+        Save(_tables[LowerTab.Processes]);
         UpdateHeaders();
         UpdateRows();
     }
@@ -262,7 +269,7 @@ public sealed partial class MainWindow : Window
     private void UpdateHeaders()
     {
         UpdateTabHeaders();
-        foreach (var (button, label) in new[] { (NameHeader, UiText.Get("Name")), (PidHeader, "PID"), (CpuHeader, UiText.Get("CPU")),
+        foreach (var (button, label) in new[] { (GpuHeader, UiText.Get("GpuEngine")), (NameHeader, UiText.Get("Name")), (PidHeader, "PID"), (CpuHeader, UiText.Get("CPU")),
                      (RamHeader, UiText.Get("Memory")), (IoHeader, UiText.Get("InputOutput")), (ThreadsHeader, UiText.Get("Threads")) })
         {
             bool active = (string)button.Tag == _sort.ToString();
@@ -287,7 +294,7 @@ public sealed partial class MainWindow : Window
 
     private void CreateFacts()
     {
-        foreach (var key in new[] { "CPU", "WorkingSet", "PrivateBytes", "ReadRate", "WriteRate", "Threads", "BusyThreads", "Handles", "Session", "User", "Priority", "Started", "Parent", "Services", "Connections", "BoundPorts", "CommandLine" })
+        foreach (var key in new[] { "CPU", "WorkingSet", "PrivateBytes", "ReadRate", "WriteRate", "Threads", "Handles", "Session", "User", "Priority", "Started", "Parent", "CommandLine", "GpuEngine" })
         {
             var grid = new Grid { ColumnSpacing = 8 };
             grid.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
@@ -307,6 +314,7 @@ public sealed partial class MainWindow : Window
         if (_selected is not { } key || !Inspector.IsPaneOpen) return;
         if (!_byPid.TryGetValue(key.Pid, out var t) || t.Info.Key != key)
         {
+            InspectorExtra.Text = "—";
             DetailPid.Text = UiText.Format("ProcessExited", key.Pid);
             EndButton.IsEnabled = false;
             return;
@@ -325,8 +333,7 @@ public sealed partial class MainWindow : Window
         var parent = TaskOrder.ValidParent(t, _byPid);
         _facts["Parent"].Text = parent is not null ? $"{parent.Info.Name} ({t.Info.ParentId})" :
             t.Info.ParentId == 0 ? "—" : UiText.Format("ParentExited", t.Info.ParentId);
-        _facts["Services"].Text = HostedServices(key.Pid);
-        _facts["BusyThreads"].Text = BusyThreads(key.Pid);
+        _facts["GpuEngine"].Text = GpuText(t.Gpu);
         if (_inspectedBasePriority != t.Info.BasePriority)
         {
             _identity = ProcessActions.Describe(key);
@@ -335,18 +342,8 @@ public sealed partial class MainWindow : Window
         _facts["User"].Text = _identity.User.Length == 0 ? "—" : _identity.User;
         _facts["Priority"].Text = Format.Priority(_identity.PriorityClass);
         _facts["CommandLine"].Text = _identity.CommandLine.Length == 0 ? "—" : _identity.CommandLine;
-        _facts["Connections"].Text = ProcessEndpoints(key.Pid, bound: false);
-        _facts["BoundPorts"].Text = ProcessEndpoints(key.Pid, bound: true);
+        UpdateInspectorPage(key);
         EndButton.IsEnabled = key.Pid > 4 && key.Pid != Environment.ProcessId;
-    }
-
-    // The threads of the inspected process that used the most CPU in the last sample.
-    private string BusyThreads(int pid)
-    {
-        if (_frame is not { } frame || frame.ThreadsPid != pid) return "—";
-        var busy = frame.Threads.Where(t => t.Cpu is > 0).OrderByDescending(t => t.Cpu).Take(5)
-            .Select(t => $"TID {t.Id}   {Format.Percent(t.Cpu)}").ToList();
-        return busy.Count == 0 ? "—" : string.Join(Environment.NewLine, busy);
     }
 
     private void CloseInspector(object sender, RoutedEventArgs e) { Inspector.IsPaneOpen = false; ClearSelection(); }

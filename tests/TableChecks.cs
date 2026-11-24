@@ -12,6 +12,8 @@ namespace Pulse;
 
 public sealed partial class MainWindow
 {
+    static partial void OverridePreferencesDirectory(ref string directory) => directory = Environment.GetEnvironmentVariable("PULSE_CHECK_REPORT")! + ".tables";
+
     private async Task ClickHeaderAsync(Grid headers, string key)
     {
         var button = headers.Children.OfType<Button>().Single(b => Equals(b.Tag, key));
@@ -42,7 +44,7 @@ public sealed partial class MainWindow
         Tabs.SelectedItem = ProcessesTab;
         var savedSort = _sort;
         bool savedDirection = _descending;
-        foreach (var header in new[] { NameHeader, PidHeader, CpuHeader, RamHeader, IoHeader, ThreadsHeader })
+        foreach (var header in new[] { NameHeader, PidHeader, CpuHeader, RamHeader, IoHeader, ThreadsHeader, GpuHeader })
         {
             var field = Enum.Parse<SortField>((string)header.Tag);
             var invoke = (IInvokeProvider)new ButtonAutomationPeer(header).GetPattern(PatternInterface.Invoke);
@@ -92,7 +94,7 @@ public sealed partial class MainWindow
         var scroller = (ScrollViewer)DetailsView.Children[0];
         scroller.ChangeView(scroller.ScrollableWidth, null, null, true);
         await Task.Delay(60);
-        double right = ((Button)DetailsHeaders.Children.Last()).TransformToVisual(scroller).TransformPoint(new(0, 0)).X;
+        double right = DetailsHeaders.Children.OfType<Button>().Last().TransformToVisual(scroller).TransformPoint(new(0, 0)).X;
         Require(scroller.HorizontalOffset > 0 && right >= 0 && right < scroller.ActualWidth, "The last Details column is unreachable.");
         scroller.ChangeView(0, null, null, true);
         AppWindow.Resize(size);

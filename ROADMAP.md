@@ -2,12 +2,16 @@
 
 Pulse's main diagnostic goal is to answer “What slowed this machine down a few minutes ago?” Each milestone records progress toward that goal. [Features available in the current build](README.md)
 
-## Release priorities
+## Implementation and acceptance
 
-1. **Next release — configurable tables and a performance baseline.** Let users arrange each table for the task at hand. Record Pulse's own CPU and memory use at the 1-, 2- and 5-second refresh intervals before expanding history collection.
-2. **Following release — explain and save a slowdown.** Make a selected time range the primary unit of investigation. A user should be able to identify an exited process, save that interval and reproduce the result offline.
-3. **Then — watch one process over time.** Use the same history to investigate rising memory or handle counts during a repeatable task.
-4. **After that — add GPU monitoring.** Connect each adapter's activity to the process and GPU engine responsible for it.
+| Capability | Available in this build |
+| --- | --- |
+| Configurable tables | Drag and keyboard layout commands, column visibility, pinned names and per-tab preferences. |
+| Slowdown analysis | Fifteen-minute per-process history, graph interval selection, offline recordings and comparison. |
+| Process inspection | Separate thread, service and socket pages, plus a modeless watch window for a pinned process. |
+| GPU and I/O | GPU memory and engine graphs by adapter, per-process engine attribution, optional kernel ETW activity and allocated file sizes. |
+
+Field checks and performance measurements are tracked separately from the feature list. [Windows acceptance results](docs/ACCEPTANCE.md)
 
 ## 1. Identify the resource under pressure
 
@@ -21,10 +25,9 @@ Pulse's main diagnostic goal is to answer “What slowed this machine down a few
 **Status.** The CPU, disk and network cards open device views with one tile per logical processor, physical disk and network adapter. Disk tiles show throughput, active time and response time. Adapter tiles show direction and link speed. A selected tile expands into a larger graph with its maximum and time span labelled. Remaining work:
 
 - Verify the per-device counters against Task Manager and Performance Monitor, including a disk or adapter removed while Pulse is running.
-- Record the baseline and compare Pulse's CPU and memory footprint at each refresh interval with the device counters enabled.
 - Exercise the device views with Windows high contrast enabled. Keyboard expansion, collapse and arrow navigation have been checked on the desktop. The WinUI regression checks cover device views in all three shipped languages.
 
-**Planned GPU view.** Give each GPU its own card. Show dedicated and shared memory usage and separate graphs for the engines the adapter exposes, including 3D, video decode and copy where available. Add the busiest GPU engine and its adapter to process rows. Verify with video playback and a 3D workload that the card and process row identify the active engine on the correct adapter. [How Windows reports GPU utilization](https://devblogs.microsoft.com/directx/gpus-in-the-task-manager/)
+**GPU view.** Diagnostics groups dedicated memory, shared memory and individual engine charts under each adapter. The process table identifies the busiest engine and its adapter. Verify with video playback and a 3D workload that the card and process row identify the active engine on the correct adapter. [How Windows reports GPU utilization](https://devblogs.microsoft.com/directx/gpus-in-the-task-manager/)
 
 Windows Task Manager's Performance view supplies the device-level model. btop4win informs the compact graphs, selectable disks and keyboard navigation. [Task Manager](https://learn.microsoft.com/en-us/troubleshoot/windows-server/support-tools/support-tools-task-manager) · [btop4win](https://github.com/aristocratos/btop4win)
 
@@ -38,13 +41,11 @@ Windows Task Manager's Performance view supplies the device-level model. btop4wi
 
 **Status.** The history window switches between 1 and 15 minutes. Clicking the CPU or memory graph lists the leading processes of that sample, keyed by PID and creation time, and marks those that have exited. Remaining work:
 
-- Run the acceptance test with a short-lived CPU-heavy workload and an actual resume from sleep. Timestamped fixtures cover the 15-minute retention boundary, exited process identities and gaps in the graph.
-- Reach a past sample from the keyboard.
-- Measure memory growth over a full 15-minute history at the 1-second interval.
+- Verify an actual sleep and resume on a machine available for that test. The graph and capture regression checks cover gaps in timestamped samples. Keyboard sample selection and interval selection are implemented.
 
 **Selected intervals.** Drag across a graph or select the interval with the keyboard. For each process, show CPU time consumed, change in private bytes, and bytes read and written during that interval. Keep exited processes identifiable by PID and creation time. Use the first and last available samples for each process and show gaps in coverage.
 
-The current top five at each point cannot account for a process that uses moderate CPU throughout a slowdown. Retain bounded per-process measurements for the full history window so that such a process appears in the interval ranking. Check memory growth against the baseline from the preceding release.
+The point inspector shows five leaders. Interval rankings include every observed process instance, including one with moderate CPU across the entire slowdown. History is bounded to 900 seconds and 901 samples.
 
 System Informer's history graphs link a point in time to the responsible process. This milestone builds on Pulse's existing sample tooltips. [System Informer](https://systeminformer.io/)
 
@@ -56,7 +57,7 @@ System Informer's history graphs link a point in time to the responsible process
 - Show what Windows makes available at the user's current access level. Close inspection handles when a tab closes or the selected process exits.
 - **Acceptance.** Select a known service host, find its hosted service, and identify a busy thread during a controlled workload. Rapidly switch between processes and verify that counters and connections always belong to the selected process instance.
 
-**Status.** The inspector shows hosted services, the busiest five threads, both endpoints of established TCP connections, and local TCP listeners and UDP ports for the selected process. Services and Connections link back to a process by exact PID. Regression checks cover protocol and state filters, IPv6 scope IDs and partial table access. Separate inspector tabs and per-connection throughput remain open.
+**Status.** The inspector has separate pages for threads ranked by CPU, hosted services and sockets. Selecting Watch process opens a separate timeline keyed by PID and creation time. The Connections table and inspector show endpoint rates while the activity recorder runs. Regression checks cover protocol and state filters, IPv6 scope IDs and partial table access.
 
 **Pinned process.** Pin a process instance and plot its CPU, private bytes, thread count and handle count on a shared time axis while browsing other rows. To check the view, open and close the same document several times. The graph should show whether memory and handle counts return to their starting levels after each cycle. If the process exits, mark the end of its history even if Windows reuses its PID.
 
@@ -71,6 +72,8 @@ TaskExplorer's thread and socket panels inform the inspector. Task Manager's Ser
 - **First capture check.** Run a known workload for 20 seconds and let it exit. Five minutes later, select its interval and identify the process and its measured contribution. Save the interval, reopen it offline and verify that the process identity, CPU time, private-byte change and I/O totals match the live interval report.
 - **Acceptance.** Capture a repeatable workload twice, reopen both files on another machine, and reproduce the peak CPU and memory values shown during capture. Missing samples survive the round trip.
 
+**Status.** Save interval, Open recording and Compare recording are available in Diagnostics. The reference and current recordings have independent time ranges. The five-minute retention and local playback check passed with two real workloads. Second-machine playback remains a field check. [Capture schema](docs/CAPTURES.md)
+
 ## 5. Cover Task Manager and Resource Monitor
 
 **Question.** Can Pulse replace both tools for everyday diagnosis?
@@ -79,7 +82,7 @@ TaskExplorer's thread and socket panels inform the inspector. Task Manager's Ser
 - **Configurable columns.** Drag header dividers to resize columns and drag headings to reorder them. Let users hide and restore individual columns and pin Name while scrolling horizontally. Save each tab's widths, visible columns, order, pinning and sort direction across restarts.
 - **Table layout check.** In Details, place Name, Working set and Command line side by side. Pin Name, scroll to the right in a narrow window and confirm that the process stays identifiable. Reopen Pulse and verify that Details restores the layout and sort column while Services retains its own choices.
 - **Done.** Processes with a collapsible tree and branch totals. Details with separate read and write rates, priority, user and command line. Users with per-session totals. Connections with TCP sockets and bound UDP ports per process. Network with adapters and the devices on their networks. Startup apps from the registry and Startup folders, with enabling, disabling, deleting and an editor for the name and command. Services with status, host process, start, stop, restart and startup type.
-- **Next.** Disk activity by file and byte rates per connection need an ETW session.
+- **Available on demand.** Diagnostics can start an ETW session for physical disk transfers and endpoint byte rates. It reports access failures and lost events and stops its own session when the activity view closes.
 - App history depends on data that Windows collects for packaged apps and stays out of scope until its source is confirmed.
 - **Acceptance.** For each tab, compare the listed items and values with Task Manager or Resource Monitor on the same machine.
 
@@ -93,10 +96,7 @@ TaskExplorer's thread and socket panels inform the inspector. Task Manager's Ser
 - Start with a directory walk at the user's access level. Consider reading the NTFS master file table for speed only if Pulse gains an elevated mode.
 - **Acceptance.** The totals for a test folder match File Explorer's properties. Folders the user cannot read are listed as unread instead of counted as empty. Cancelling a scan of a large volume returns control within a second.
 
-**Status.** The Disk space tab scans a selected drive or folder in the background. The treemap and list support drill-down. The list sorts by name, size or share. Cancelling retains partial results, and the current folder opens in File Explorer. Regression checks cover logical byte totals, unread entries, keyboard focus during list reordering and the area assigned to smaller items. Remaining work:
-
-- Run the acceptance checks against File Explorer and on a large volume.
-- Report allocated size beside file length.
+**Status.** The Disk space tab scans a selected drive or folder in the background. The treemap and list support drill-down. The list sorts by name, logical size, allocated size or share. The context menu selects an individual file or directory in File Explorer. Cancelling retains partial results, and the current folder opens in File Explorer. Regression checks cover logical byte totals, unread entries, keyboard focus during list reordering and the area assigned to smaller items. The system-volume scan, cancellation timing and comparison with Explorer are documented in the acceptance results.
 
 WinDirStat and WizTree inform the views. A general registry editor is out of scope. Startup entries are edited in Pulse. [WinDirStat](https://windirstat.net/) · [WizTree](https://diskanalyzer.com/)
 

@@ -233,7 +233,7 @@ public sealed partial class MainWindow
     {
         if (_tab == LowerTab.Startup) _startupItems = StartupItems.Read();
         bool inspecting = _tab == LowerTab.Processes && Inspector.IsPaneOpen;
-        if (_tab == LowerTab.Services || inspecting)
+        if (_tab == LowerTab.Services || (inspecting && InspectorSection == 2))
         {
             try
             {
@@ -246,7 +246,7 @@ public sealed partial class MainWindow
                 _serviceReadError = UiText.Format("ServicesUnavailable", error.Message);
             }
         }
-        if (_tab == LowerTab.Connections || inspecting) _connections = TcpConnections.Read(out _availableTables);
+        if (_tab == LowerTab.Connections || (inspecting && InspectorSection == 3)) _connections = TcpConnections.Read(out _availableTables);
         if (_tab == LowerTab.Network) _ = LoadNetworkAsync();
     }
 
@@ -317,7 +317,7 @@ public sealed partial class MainWindow
     {
         string search = SearchBox.Text.Trim();
         var matches = _connections
-            .Select(c => (Connection: c, Process: ProcessName(c.Pid)))
+            .Select(c => (Connection: c, Process: ProcessName(c.Pid), Rate: SocketRates(c)))
             .Where(m => search.Length == 0 ||
                 m.Process.Contains(search, StringComparison.OrdinalIgnoreCase) ||
                 m.Connection.Pid.ToString().Contains(search, StringComparison.Ordinal) ||
@@ -331,6 +331,7 @@ public sealed partial class MainWindow
             .ToList();
         matches = SortItems(LowerTab.Connections, matches, (entry, column) => column switch
         {
+            "Received" => entry.Rate.Received, "Sent" => entry.Rate.Sent,
             "Host" => entry.Process, "Pid" => entry.Connection.Pid, "Protocol" => entry.Connection.Protocol,
             "Local" => new AddressOrder(entry.Connection.LocalAddress, entry.Connection.LocalPort),
             "Remote" => entry.Connection.Remote.Length == 0 ? null : new AddressOrder(entry.Connection.RemoteAddress, entry.Connection.RemotePort),
@@ -338,7 +339,7 @@ public sealed partial class MainWindow
             _ => throw new ArgumentOutOfRangeException(nameof(column))
         }).ToList();
         Fill(ConnectionList, _connectionRows, matches, row => (row.ProcessId, row.Protocol, row.Local, row.Remote),
-            () => new ConnectionRow(), (row, m) => row.Update(m.Connection, m.Process));
+            () => new ConnectionRow(), (row, m) => row.Update(m.Connection, m.Process, m.Rate));
         string count = matches.Count == _connections.Count ? $"{matches.Count}" : $"{matches.Count} / {_connections.Count}";
         CountText.Text = WithConnectionStatus(count, SocketTables.All, " · ");
     }

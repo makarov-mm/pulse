@@ -6,6 +6,7 @@ namespace Pulse.Telemetry;
 internal sealed record CounterSample(double? Cpu, double? Read, double? Write,
     IReadOnlyList<CoreSample>? Cores, IReadOnlyList<DiskSample>? Disks)
 {
+    public GpuSnapshot? Gpu { get; init; }
     public static readonly CounterSample Empty = new(null, null, null, null, null);
 }
 
@@ -34,6 +35,8 @@ internal sealed class PerformanceCounters : IDisposable
     private static extern uint PdhCloseQuery(nint query);
 
     private nint _query, _cpu, _read, _write, _cores, _diskRead, _diskWrite, _diskIdle, _diskResponse;
+    private readonly Dictionary<ulong, string> _gpuNames = GpuCounters.AdapterNames();
+    private nint _gpuEngine, _gpuDedicated, _gpuShared;
     private nint _items;
     private uint _capacity;
 
@@ -42,6 +45,9 @@ internal sealed class PerformanceCounters : IDisposable
         if (_query == 0)
         {
             if (PdhOpenQueryW(null, 0, out _query) != 0) return CounterSample.Empty;
+            _gpuEngine = Add(@"\GPU Engine(*)\Utilization Percentage");
+            _gpuDedicated = Add(@"\GPU Adapter Memory(*)\Dedicated Usage");
+            _gpuShared = Add(@"\GPU Adapter Memory(*)\Shared Usage");
             _cpu = Add(@"\Processor Information(_Total)\% Processor Time");
             _read = Add(@"\PhysicalDisk(_Total)\Disk Read Bytes/sec");
             _write = Add(@"\PhysicalDisk(_Total)\Disk Write Bytes/sec");
@@ -52,7 +58,8 @@ internal sealed class PerformanceCounters : IDisposable
             _diskResponse = Add(@"\PhysicalDisk(*)\Avg. Disk sec/Transfer");
         }
         if (PdhCollectQueryData(_query) != 0) return CounterSample.Empty;
-        return new(GetValue(_cpu), GetValue(_read), GetValue(_write), Cores(), Disks());
+        return new(GetValue(_cpu), GetValue(_read), GetValue(_write), Cores(), Disks())
+        { Gpu = GpuCounters.Read(GetValues(_gpuEngine), GetValues(_gpuDedicated), GetValues(_gpuShared), _gpuNames) };
     }
 
     private nint Add(string path) => PdhAddEnglishCounterW(_query, path, 0, out nint counter) == 0 ? counter : 0;

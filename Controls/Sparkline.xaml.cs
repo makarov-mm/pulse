@@ -18,7 +18,71 @@ public sealed partial class Sparkline : UserControl
     private double? _pointerX;
     private double _span = 60;
     private Func<double, string> _format = v => v.ToString("N0");
-    private bool _percent;
+    private bool _percent, _suppressTap;
+    private double? _dragX, _anchorTime, _keyboardTime;
+
+    internal void EnableRange(Action<double, double> open, Action<double> inspect)
+    {
+        IsTabStop = true;
+        UseSystemFocusVisuals = true;
+        Hint = UiText.Get("RangeGesture");
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(this, Hint);
+        Plot.PointerPressed += (_, e) =>
+        {
+            if (_history.Count == 0 || !e.GetCurrentPoint(Plot).Properties.IsLeftButtonPressed) return;
+            _suppressTap = false;
+            _dragX = e.GetCurrentPoint(Plot).Position.X;
+            _anchorTime = TimeAt(_dragX.Value);
+            Plot.CapturePointer(e.Pointer);
+        };
+        Plot.PointerMoved += (_, e) =>
+        {
+            if (_dragX is { } x) Band(x, e.GetCurrentPoint(Plot).Position.X);
+        };
+        Plot.PointerReleased += (_, e) =>
+        {
+            if (_dragX is not { } x || _anchorTime is not { } first) return;
+            double end = e.GetCurrentPoint(Plot).Position.X;
+            _dragX = null;
+            Plot.ReleasePointerCapture(e.Pointer);
+            SelectionBand.Visibility = Visibility.Collapsed;
+            if (Math.Abs(end - x) >= 4 && _history.Count > 0) { _suppressTap = true; open(first, TimeAt(end)); }
+        };
+        Plot.PointerCaptureLost += (_, _) => { _dragX = null; SelectionBand.Visibility = Visibility.Collapsed; };
+        LostFocus += (_, _) => { _keyboardTime = _anchorTime = null; SelectionBand.Visibility = Visibility.Collapsed; };
+        KeyDown += (_, e) =>
+        {
+            if (_history.Count == 0) return;
+            if (e.Key == Windows.System.VirtualKey.Enter)
+            {
+                double current = _keyboardTime ?? _history[^1].Time;
+                if (_anchorTime is { } start && start != current) open(start, current); else inspect(current);
+            }
+            else if (e.Key is Windows.System.VirtualKey.Left or Windows.System.VirtualKey.Right)
+            {
+                double current = _keyboardTime ?? _history[^1].Time;
+                int i = Math.Clamp(SampleAt(current) + (e.Key == Windows.System.VirtualKey.Left ? -1 : 1),
+                    _history.FindIndex(p => p.Time >= _history[^1].Time - _span), _history.Count - 1);
+                bool extend = (Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(Windows.System.VirtualKey.Shift)
+                    & Windows.UI.Core.CoreVirtualKeyStates.Down) != 0;
+                _anchorTime = extend ? _anchorTime ?? current : _history[i].Time;
+                _keyboardTime = _history[i].Time;
+                double X(double t) => Plot.ActualWidth * (1 - (_history[^1].Time - t) / _span);
+                Band(X(_anchorTime.Value), X(_keyboardTime.Value));
+                _pointerX = X(_keyboardTime.Value); UpdateTooltip();
+            }
+            else return;
+            e.Handled = true;
+        };
+    }
+
+    private void Band(double a, double b)
+    {
+        double left = Math.Clamp(Math.Min(a, b), 0, Plot.ActualWidth);
+        SelectionBand.Margin = new Thickness(left, 0, 0, 0);
+        SelectionBand.Width = Math.Max(2, Math.Min(Math.Max(a, b), Plot.ActualWidth) - left);
+        SelectionBand.Visibility = Visibility.Visible;
+    }
 
     public Sparkline()
     {
@@ -61,6 +125,15 @@ public sealed partial class Sparkline : UserControl
         Redraw();
     }
 
+    internal void Append(List<(double Time, DateTime Clock, double? Value)> points)
+    {
+        if (points.Count == 0) return;
+        _history.RemoveAll(p => points[^1].Time - p.Time > Retention);
+        foreach (var p in points) _history.Add((p.Time, p.Clock, p.Value, null));
+        UpdateTooltip();
+        Redraw();
+    }
+
     public void Clear()
     {
         _history.Clear();
@@ -81,6 +154,7 @@ public sealed partial class Sparkline : UserControl
 
     private void PlotTapped(object sender, TappedRoutedEventArgs args)
     {
+        if (_suppressTap) { _suppressTap = false; return; }
         if (SampleSelected is null || _history.Count == 0 || Plot.ActualWidth < 1) return;
         int index = SampleAt(TimeAt(args.GetPosition(Plot).X));
         if (index >= 0 && _history[index].Value.HasValue) SampleSelected(this, _history[index].Time);

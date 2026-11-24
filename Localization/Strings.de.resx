@@ -223,4 +223,47 @@
   <data name="ElevateButton" xml:space="preserve"><value>Als Administrator starten</value></data>
   <data name="SpaceSize" xml:space="preserve"><value>Größe</value></data>
   <data name="SpaceShare" xml:space="preserve"><value>Anteil</value></data>
+  <data name="Allocated" xml:space="preserve"><value>Auf Disk</value></data>
+  <data name="Diagnostics" xml:space="preserve"><value>Diagnose</value></data>
+  <data name="Intervals" xml:space="preserve"><value>Intervalle</value></data>
+  <data name="WatchProcess" xml:space="preserve"><value>Prozess beobachten</value></data>
+  <data name="Pinned" xml:space="preserve"><value>Fixierter Prozess</value></data>
+  <data name="ActivityTrace" xml:space="preserve"><value>Datei- und Socketaktivität</value></data>
+  <data name="OpenCapture" xml:space="preserve"><value>Aufzeichnung öffnen</value></data>
+  <data name="SaveCapture" xml:space="preserve"><value>Intervall speichern</value></data>
+  <data name="CompareCapture" xml:space="preserve"><value>Aufzeichnung vergleichen</value></data>
+  <data name="LiveHistory" xml:space="preserve"><value>Aktuellen Verlauf laden</value></data>
+  <data name="RangeStart" xml:space="preserve"><value>Beginn</value></data>
+  <data name="RangeEnd" xml:space="preserve"><value>Ende</value></data>
+  <data name="BaseRange" xml:space="preserve"><value>Referenz</value></data>
+  <data name="MeasuredRange" xml:space="preserve"><value>Gewähltes Intervall</value></data>
+  <data name="CaptureFile" xml:space="preserve"><value>Pulse-Aufzeichnung</value></data>
+  <data name="RangeSummary" xml:space="preserve"><value>{0:T} – {1:T} · {2} Messungen · {3} Lücken · CPU-Spitze {4} · Speicherspitze {5}</value></data>
+  <data name="DifferentCapture" xml:space="preserve"><value>Hardware oder Abtastintervalle unterscheiden sich.</value></data>
+  <data name="CpuTime" xml:space="preserve"><value>CPU-Zeit</value></data>
+  <data name="PrivateChange" xml:space="preserve"><value>Private Bytes Δ</value></data>
+  <data name="ReadBytes" xml:space="preserve"><value>Gelesen</value></data>
+  <data name="WrittenBytes" xml:space="preserve"><value>Geschrieben</value></data>
+  <data name="Observed" xml:space="preserve"><value>Beobachtet</value></data>
+  <data name="NoPinned" xml:space="preserve"><value>Prozess in der Prozessliste wählen und auf „Prozess beobachten“ klicken.</value></data>
+  <data name="GpuEngine" xml:space="preserve"><value>GPU-Engine</value></data>
+  <data name="DedicatedGpu" xml:space="preserve"><value>Dedizierter Speicher</value></data>
+  <data name="SharedGpu" xml:space="preserve"><value>Gemeinsamer Speicher</value></data>
+  <data name="StartTrace" xml:space="preserve"><value>Aktivität aufzeichnen</value></data>
+  <data name="StopTrace" xml:space="preserve"><value>Aufzeichnung beenden</value></data>
+  <data name="TraceHelp" xml:space="preserve"><value>Eine Kernelaufzeichnung erfasst Datenträgerzugriffe je Datei und Netzwerkverkehr je Endpunkt. Windows kann Administratorrechte verlangen.</value></data>
+  <data name="TraceLost" xml:space="preserve"><value>Verlorene Ereignisse: {0}</value></data>
+  <data name="OverviewFacts" xml:space="preserve"><value>Übersicht</value></data>
+  <data name="FromTo" xml:space="preserve"><value>{0:T} – {1:T}</value></data>
+  <data name="PinName" xml:space="preserve"><value>Erste Spalte fixieren</value></data>
+  <data name="RestoreLayout" xml:space="preserve"><value>Layout zurücksetzen</value></data>
+  <data name="Columns" xml:space="preserve"><value>Spalten</value></data>
+  <data name="MoveLeft" xml:space="preserve"><value>Nach links</value></data>
+  <data name="MoveRight" xml:space="preserve"><value>Nach rechts</value></data>
+  <data name="Narrower" xml:space="preserve"><value>Schmaler</value></data>
+  <data name="Wider" xml:space="preserve"><value>Breiter</value></data>
+  <data name="RangeGesture" xml:space="preserve"><value>Ziehen, um ein Intervall auszuwählen. Pfeiltasten wählen eine Messung, Umschalt erweitert die Auswahl, Eingabe öffnet sie.</value></data>
+  <data name="RecordingTooLarge" xml:space="preserve"><value>Die Aufzeichnung überschreitet 256 MiB. Bitte ein kürzeres Intervall auswählen.</value></data>
+  <data name="ReceiveRate" xml:space="preserve"><value>Empfangsrate</value></data>
+  <data name="SendRate" xml:space="preserve"><value>Senderate</value></data>
 </root>

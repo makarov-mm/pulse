@@ -3,7 +3,7 @@ using Pulse.Telemetry;
 
 namespace Pulse.Models;
 
-internal enum SortField { Name, Pid, Cpu, Ram, Io, Threads }
+internal enum SortField { Name, Pid, Cpu, Ram, Io, Threads, Gpu }
 
 // The combined counters of a process and all of its descendants.
 internal readonly record struct BranchTotal(int Processes, double? Cpu, long WorkingSet, double? Io, int Threads);
@@ -40,15 +40,16 @@ internal static class TaskOrder
             {
                 SortField.Name => StringComparer.OrdinalIgnoreCase.Compare(a.Task.Info.Name, b.Task.Info.Name),
                 SortField.Pid => a.Task.Info.Key.Pid.CompareTo(b.Task.Info.Key.Pid),
+                SortField.Gpu => Nullable.Compare(a.Task.Gpu?.Percent, b.Task.Gpu?.Percent),
                 SortField.Cpu => Nullable.Compare(a.Cpu, b.Cpu),
                 SortField.Ram => a.WorkingSet.CompareTo(b.WorkingSet),
                 SortField.Io => Nullable.Compare(a.Io, b.Io),
                 _ => a.Threads.CompareTo(b.Threads)
             };
-            if (sort is SortField.Cpu or SortField.Io)
+            if (sort is SortField.Cpu or SortField.Io or SortField.Gpu)
             {
-                bool missingA = (sort == SortField.Cpu ? a.Cpu : a.Io) is null;
-                bool missingB = (sort == SortField.Cpu ? b.Cpu : b.Io) is null;
+                bool missingA = (sort == SortField.Cpu ? a.Cpu : sort == SortField.Gpu ? a.Task.Gpu?.Percent : a.Io) is null;
+                bool missingB = (sort == SortField.Cpu ? b.Cpu : sort == SortField.Gpu ? b.Task.Gpu?.Percent : b.Io) is null;
                 if (missingA != missingB) return missingA ? 1 : -1;
             }
             return result == 0 ? a.Task.Info.Key.Pid.CompareTo(b.Task.Info.Key.Pid) : descending ? -result : result;

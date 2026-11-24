@@ -4,6 +4,7 @@
     <Grid x:Name="Plot" Background="Transparent" SizeChanged="PlotSizeChanged" PointerMoved="PlotPointerMoved" PointerExited="PlotPointerExited" Tapped="PlotTapped">
         <Border Height="1" VerticalAlignment="Center" Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
         <Border Height="1" VerticalAlignment="Bottom" Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
+        <Border x:Name="SelectionBand" HorizontalAlignment="Left" Background="{ThemeResource AccentFillColorDefaultBrush}" Opacity="0.25" Visibility="Collapsed" IsHitTestVisible="False"/>
         <Path x:Name="Area" Fill="{Binding Foreground, ElementName=Chart}" Opacity="0.13"/>
         <Path x:Name="Line" Stroke="{Binding Foreground, ElementName=Chart}" StrokeThickness="1.7" StrokeLineJoin="Round"/>
     </Grid>

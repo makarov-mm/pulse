@@ -223,4 +223,47 @@
   <data name="ElevateButton" xml:space="preserve"><value>От имени администратора</value></data>
   <data name="SpaceSize" xml:space="preserve"><value>Размер</value></data>
   <data name="SpaceShare" xml:space="preserve"><value>Доля</value></data>
+  <data name="Allocated" xml:space="preserve"><value>На диске</value></data>
+  <data name="Diagnostics" xml:space="preserve"><value>Диагностика</value></data>
+  <data name="Intervals" xml:space="preserve"><value>Интервалы</value></data>
+  <data name="WatchProcess" xml:space="preserve"><value>Наблюдать за процессом</value></data>
+  <data name="Pinned" xml:space="preserve"><value>Закреплённый процесс</value></data>
+  <data name="ActivityTrace" xml:space="preserve"><value>Активность файлов и сокетов</value></data>
+  <data name="OpenCapture" xml:space="preserve"><value>Открыть запись</value></data>
+  <data name="SaveCapture" xml:space="preserve"><value>Сохранить интервал</value></data>
+  <data name="CompareCapture" xml:space="preserve"><value>Сравнить с записью</value></data>
+  <data name="LiveHistory" xml:space="preserve"><value>Загрузить текущую историю</value></data>
+  <data name="RangeStart" xml:space="preserve"><value>Начало</value></data>
+  <data name="RangeEnd" xml:space="preserve"><value>Конец</value></data>
+  <data name="BaseRange" xml:space="preserve"><value>Образец</value></data>
+  <data name="MeasuredRange" xml:space="preserve"><value>Выбранный интервал</value></data>
+  <data name="CaptureFile" xml:space="preserve"><value>Запись Pulse</value></data>
+  <data name="RangeSummary" xml:space="preserve"><value>{0:T} – {1:T} · замеров: {2} · пропусков: {3} · пик ЦП {4} · пик памяти {5}</value></data>
+  <data name="DifferentCapture" xml:space="preserve"><value>Оборудование или интервалы опроса различаются.</value></data>
+  <data name="CpuTime" xml:space="preserve"><value>Время ЦП</value></data>
+  <data name="PrivateChange" xml:space="preserve"><value>Изменение частной памяти</value></data>
+  <data name="ReadBytes" xml:space="preserve"><value>Прочитано</value></data>
+  <data name="WrittenBytes" xml:space="preserve"><value>Записано</value></data>
+  <data name="Observed" xml:space="preserve"><value>Наблюдался</value></data>
+  <data name="NoPinned" xml:space="preserve"><value>Выберите процесс на вкладке процессов и нажмите «Наблюдать за процессом».</value></data>
+  <data name="GpuEngine" xml:space="preserve"><value>Блок GPU</value></data>
+  <data name="DedicatedGpu" xml:space="preserve"><value>Выделенная память</value></data>
+  <data name="SharedGpu" xml:space="preserve"><value>Общая память</value></data>
+  <data name="StartTrace" xml:space="preserve"><value>Начать сбор активности</value></data>
+  <data name="StopTrace" xml:space="preserve"><value>Остановить сбор активности</value></data>
+  <data name="TraceHelp" xml:space="preserve"><value>Запустите трассировку ядра для просмотра операций диска по файлам и трафика по адресам. Windows может запросить права администратора.</value></data>
+  <data name="TraceLost" xml:space="preserve"><value>Потеряно событий: {0}</value></data>
+  <data name="OverviewFacts" xml:space="preserve"><value>Обзор</value></data>
+  <data name="FromTo" xml:space="preserve"><value>{0:T} – {1:T}</value></data>
+  <data name="PinName" xml:space="preserve"><value>Закрепить первый столбец</value></data>
+  <data name="RestoreLayout" xml:space="preserve"><value>Сбросить раскладку</value></data>
+  <data name="Columns" xml:space="preserve"><value>Столбцы</value></data>
+  <data name="MoveLeft" xml:space="preserve"><value>Сдвинуть влево</value></data>
+  <data name="MoveRight" xml:space="preserve"><value>Сдвинуть вправо</value></data>
+  <data name="Narrower" xml:space="preserve"><value>Уже</value></data>
+  <data name="Wider" xml:space="preserve"><value>Шире</value></data>
+  <data name="RangeGesture" xml:space="preserve"><value>Выделите интервал мышью. Стрелки выбирают замер, Shift расширяет интервал, Enter открывает.</value></data>
+  <data name="RecordingTooLarge" xml:space="preserve"><value>Запись превышает 256 МиБ. Выберите более короткий интервал.</value></data>
+  <data name="ReceiveRate" xml:space="preserve"><value>Приём</value></data>
+  <data name="SendRate" xml:space="preserve"><value>Отправка</value></data>
 </root>

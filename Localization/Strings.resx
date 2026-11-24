@@ -223,4 +223,47 @@
   <data name="ElevateButton" xml:space="preserve"><value>Restart as administrator</value></data>
   <data name="SpaceSize" xml:space="preserve"><value>Size</value></data>
   <data name="SpaceShare" xml:space="preserve"><value>Share</value></data>
+  <data name="Allocated" xml:space="preserve"><value>On disk</value></data>
+  <data name="Diagnostics" xml:space="preserve"><value>Diagnostics</value></data>
+  <data name="Intervals" xml:space="preserve"><value>Intervals</value></data>
+  <data name="WatchProcess" xml:space="preserve"><value>Watch process</value></data>
+  <data name="Pinned" xml:space="preserve"><value>Pinned process</value></data>
+  <data name="ActivityTrace" xml:space="preserve"><value>File and socket activity</value></data>
+  <data name="OpenCapture" xml:space="preserve"><value>Open recording</value></data>
+  <data name="SaveCapture" xml:space="preserve"><value>Save interval</value></data>
+  <data name="CompareCapture" xml:space="preserve"><value>Compare recording</value></data>
+  <data name="LiveHistory" xml:space="preserve"><value>Load current history</value></data>
+  <data name="RangeStart" xml:space="preserve"><value>Start</value></data>
+  <data name="RangeEnd" xml:space="preserve"><value>End</value></data>
+  <data name="BaseRange" xml:space="preserve"><value>Reference</value></data>
+  <data name="MeasuredRange" xml:space="preserve"><value>Selected interval</value></data>
+  <data name="CaptureFile" xml:space="preserve"><value>Pulse recording</value></data>
+  <data name="RangeSummary" xml:space="preserve"><value>{0:T} – {1:T} · {2} samples · {3} gaps · peak CPU {4} · peak memory {5}</value></data>
+  <data name="DifferentCapture" xml:space="preserve"><value>Hardware or sampling intervals differ.</value></data>
+  <data name="CpuTime" xml:space="preserve"><value>CPU time</value></data>
+  <data name="PrivateChange" xml:space="preserve"><value>Private bytes Δ</value></data>
+  <data name="ReadBytes" xml:space="preserve"><value>Bytes read</value></data>
+  <data name="WrittenBytes" xml:space="preserve"><value>Bytes written</value></data>
+  <data name="Observed" xml:space="preserve"><value>Observed</value></data>
+  <data name="NoPinned" xml:space="preserve"><value>Select a process in Processes and choose Watch process.</value></data>
+  <data name="GpuEngine" xml:space="preserve"><value>GPU engine</value></data>
+  <data name="DedicatedGpu" xml:space="preserve"><value>Dedicated memory</value></data>
+  <data name="SharedGpu" xml:space="preserve"><value>Shared memory</value></data>
+  <data name="StartTrace" xml:space="preserve"><value>Start recording activity</value></data>
+  <data name="StopTrace" xml:space="preserve"><value>Stop recording activity</value></data>
+  <data name="TraceHelp" xml:space="preserve"><value>Start a Windows kernel trace to see disk transfers by file and network rates by endpoint. Windows may require administrator access.</value></data>
+  <data name="TraceLost" xml:space="preserve"><value>Lost events: {0}</value></data>
+  <data name="OverviewFacts" xml:space="preserve"><value>Overview</value></data>
+  <data name="FromTo" xml:space="preserve"><value>{0:T} – {1:T}</value></data>
+  <data name="PinName" xml:space="preserve"><value>Pin first column</value></data>
+  <data name="RestoreLayout" xml:space="preserve"><value>Reset layout</value></data>
+  <data name="Columns" xml:space="preserve"><value>Columns</value></data>
+  <data name="MoveLeft" xml:space="preserve"><value>Move left</value></data>
+  <data name="MoveRight" xml:space="preserve"><value>Move right</value></data>
+  <data name="Narrower" xml:space="preserve"><value>Narrower</value></data>
+  <data name="Wider" xml:space="preserve"><value>Wider</value></data>
+  <data name="RangeGesture" xml:space="preserve"><value>Drag to inspect an interval. Use the arrow keys to select a sample, Shift to extend, and Enter to open.</value></data>
+  <data name="RecordingTooLarge" xml:space="preserve"><value>The recording exceeds 256 MiB. Select a shorter interval.</value></data>
+  <data name="ReceiveRate" xml:space="preserve"><value>Receive rate</value></data>
+  <data name="SendRate" xml:space="preserve"><value>Send rate</value></data>
 </root>

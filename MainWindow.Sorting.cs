@@ -39,7 +39,7 @@ public sealed partial class MainWindow
         {
             LowerTab.Details => new(_sort switch
             {
-                SortField.Ram => "WorkingSet", SortField.Io => "", _ => _sort.ToString()
+                SortField.Ram => "WorkingSet", SortField.Io or SortField.Gpu => "", _ => _sort.ToString()
             }, _descending),
             LowerTab.Users => new("Session", false),
             LowerTab.Connections => new("Host", false),
@@ -57,8 +57,9 @@ public sealed partial class MainWindow
         var previous = CurrentOrder(tab);
         bool descending = previous.Column == column ? !previous.Descending :
             column is "Cpu" or "WorkingSet" or "PrivateBytes" or "Read" or "Write" or "Threads" or
-                "Handles" or "Count" or "Memory" or "Io" or "Speed" or "Activity" or "Size" or "Share";
+                "Handles" or "Count" or "Memory" or "Io" or "Speed" or "Activity" or "Received" or "Sent" or "Size" or "Allocated" or "Share";
         _tabOrders[tab] = new(column, descending);
+        Save(_tables[tab]);
         UpdateTabHeaders();
         if (tab == LowerTab.Space) DrawSpace();
         else UpdateTabRows();
@@ -138,7 +139,7 @@ public sealed partial class MainWindow
 
     private void SpaceLayoutChanged(object sender, SizeChangedEventArgs e)
     {
-        bool stacked = e.NewSize.Width < 760;
+        bool stacked = e.NewSize.Width < 980;
         var layout = (Grid)sender;
         layout.ColumnDefinitions[0].Width = new GridLength(stacked ? 1 : 3, GridUnitType.Star);
         layout.ColumnDefinitions[1].Width = stacked ? new GridLength(0) : new GridLength(2, GridUnitType.Star);

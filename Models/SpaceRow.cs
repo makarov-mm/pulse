@@ -14,6 +14,8 @@ public sealed class SpaceRow : ObservableRow
     public string Name => _name;
     public string Glyph => Node.IsFile ? "\uE7C3" : "\uE8B7";
     public string Amount => _amount;
+    private string _allocated = "";
+    public string Allocated => _allocated;
     public string Share => _share;
 
     public override string ToString() => Name;
@@ -29,6 +31,7 @@ public sealed class SpaceRow : ObservableRow
             _unread = Node.Unread;
             Set(ref _name, Label(Node), nameof(Name));
         }
+        Set(ref _allocated, Format.Bytes(Node.Allocated), nameof(Allocated));
         if (_bytes != size) Set(ref _amount, Format.Bytes(size), nameof(Amount));
         if (_bytes != size || _total != total)
             Set(ref _share, total > 0 ? Format.Percent(100.0 * size / total) : "—", nameof(Share));
