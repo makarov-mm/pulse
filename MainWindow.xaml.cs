@@ -56,6 +56,9 @@ public sealed partial class MainWindow : Window
         }
         TaskList.ItemsSource = _visible;
         ServiceList.ItemsSource = _serviceRows;
+        ProcessesTab.Text = UiText.Get("Processes");
+        ServicesTab.Text = UiText.Get("Services");
+        Tabs.SelectedItem = ProcessesTab;
         Inspector.PaneClosed += (_, _) => { if (!Inspector.IsPaneOpen) ClearSelection(); };
         CpuCard.Configure(UiText.Get("Processor"), "\uE950", true, v => Format.Percent(v));
         MemoryCard.Configure(UiText.Get("Memory"), "\uE964", true, v => Format.Percent(v));
