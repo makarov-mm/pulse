@@ -27,6 +27,9 @@
                             ToolTipService.ToolTip="{loc:Localize Key=About}" Padding="10,6">
                         <FontIcon Glyph="&#xE946;" FontSize="16"/>
                     </Button>
+                    <ComboBox x:Name="SpanBox" SelectedIndex="0" SelectionChanged="SpanChanged" AutomationProperties.Name="{loc:Localize Key=SpanLabel}" ToolTipService.ToolTip="{loc:Localize Key=SpanLabel}">
+                        <ComboBoxItem Content="{loc:Localize Key=SpanOne}"/><ComboBoxItem Content="{loc:Localize Key=SpanFifteen}"/>
+                    </ComboBox>
                     <ComboBox x:Name="IntervalBox" SelectedIndex="1" SelectionChanged="IntervalChanged" AutomationProperties.Name="{loc:Localize Key=Interval}" ToolTipService.ToolTip="{loc:Localize Key=Interval}">
                         <ComboBoxItem Content="{loc:Localize Key=IntervalOne}"/><ComboBoxItem Content="{loc:Localize Key=IntervalTwo}"/><ComboBoxItem Content="{loc:Localize Key=IntervalFive}"/>
                     </ComboBox>

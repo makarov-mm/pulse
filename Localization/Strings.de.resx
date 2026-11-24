@@ -32,7 +32,7 @@
   <data name="Memory" xml:space="preserve"><value>Speicher</value></data>
   <data name="Disk" xml:space="preserve"><value>Datenträger</value></data>
   <data name="Network" xml:space="preserve"><value>Netzwerk</value></data>
-  <data name="HostHistory" xml:space="preserve"><value>{0}   ·   Verlauf über 60 s</value></data>
+  <data name="HostHistory" xml:space="preserve"><value>{0}   ·   Verlauf: {1}</value></data>
   <data name="Uptime" xml:space="preserve"><value>Betriebszeit   {0} T {1:00} Std. {2:00} Min.</value></data>
   <data name="LastUpdate" xml:space="preserve"><value>Aktualisiert um {0:T}   ·   {1:N0} Threads</value></data>
   <data name="SampleError" xml:space="preserve"><value>Messung fehlgeschlagen</value></data>
@@ -96,8 +96,8 @@
   <data name="ShowAdapters" xml:space="preserve"><value>Netzwerkadapter anzeigen</value></data>
   <data name="HideDevices" xml:space="preserve"><value>Geräteansicht ausblenden</value></data>
   <data name="CloseDevices" xml:space="preserve"><value>Geräteansicht schließen</value></data>
-  <data name="DeviceSpanPercent" xml:space="preserve"><value>Letzte 60 Sekunden   ·   0–100 %</value></data>
-  <data name="DeviceSpanPeak" xml:space="preserve"><value>Letzte 60 Sekunden   ·   jedes Diagramm ist auf seinen eigenen Spitzenwert skaliert</value></data>
+  <data name="DeviceSpanPercent" xml:space="preserve"><value>Verlauf: {0}   ·   0–100 %</value></data>
+  <data name="DeviceSpanPeak" xml:space="preserve"><value>Verlauf: {0}   ·   jedes Diagramm ist auf seinen eigenen Spitzenwert skaliert</value></data>
   <data name="CoreName" xml:space="preserve"><value>CPU {0}</value></data>
   <data name="CoreGroupName" xml:space="preserve"><value>Gruppe {0} · CPU {1}</value></data>
   <data name="DiskName" xml:space="preserve"><value>Datenträger {0}</value></data>
@@ -110,4 +110,12 @@
   <data name="MegabitsPerSecond" xml:space="preserve"><value>MBit/s</value></data>
   <data name="GigabitsPerSecond" xml:space="preserve"><value>GBit/s</value></data>
   <data name="NoDevices" xml:space="preserve"><value>Noch keine Gerätemesswerte</value></data>
+  <data name="SpanLabel" xml:space="preserve"><value>Verlaufsfenster</value></data>
+  <data name="SpanOne" xml:space="preserve"><value>1 min</value></data>
+  <data name="SpanFifteen" xml:space="preserve"><value>15 min</value></data>
+  <data name="MomentHint" xml:space="preserve"><value>Klicken, um die führenden Prozesse zu diesem Zeitpunkt anzuzeigen</value></data>
+  <data name="MomentTitle" xml:space="preserve"><value>Prozesse um {0:T}</value></data>
+  <data name="MomentCpu" xml:space="preserve"><value>Höchste CPU-Last</value></data>
+  <data name="MomentMemory" xml:space="preserve"><value>Größte Arbeitssätze</value></data>
+  <data name="MomentExited" xml:space="preserve"><value>{0} · beendet</value></data>
 </root>

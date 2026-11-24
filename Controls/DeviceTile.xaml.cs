@@ -47,4 +47,10 @@ public sealed partial class DeviceTile : UserControl
     }
 
     internal void ClearHistory() => Graph.Clear();
+
+    internal void SetSpan(double seconds)
+    {
+        Graph.SetSpan(seconds);
+        if (!_percent) AxisLabel.Text = _format(Graph.AxisMaximum);
+    }
 }

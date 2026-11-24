@@ -32,7 +32,7 @@
   <data name="Memory" xml:space="preserve"><value>Memory</value></data>
   <data name="Disk" xml:space="preserve"><value>Disk</value></data>
   <data name="Network" xml:space="preserve"><value>Network</value></data>
-  <data name="HostHistory" xml:space="preserve"><value>{0}   ·   60-second history</value></data>
+  <data name="HostHistory" xml:space="preserve"><value>{0}   ·   history: {1}</value></data>
   <data name="Uptime" xml:space="preserve"><value>Uptime   {0}d {1:00}h {2:00}m</value></data>
   <data name="LastUpdate" xml:space="preserve"><value>Updated at {0:T}   ·   {1:N0} threads</value></data>
   <data name="SampleError" xml:space="preserve"><value>Could not collect a sample</value></data>
@@ -96,8 +96,8 @@
   <data name="ShowAdapters" xml:space="preserve"><value>Show network adapters</value></data>
   <data name="HideDevices" xml:space="preserve"><value>Hide device view</value></data>
   <data name="CloseDevices" xml:space="preserve"><value>Close device view</value></data>
-  <data name="DeviceSpanPercent" xml:space="preserve"><value>Last 60 seconds   ·   0–100 %</value></data>
-  <data name="DeviceSpanPeak" xml:space="preserve"><value>Last 60 seconds   ·   each graph scales to its own peak</value></data>
+  <data name="DeviceSpanPercent" xml:space="preserve"><value>History: {0}   ·   0–100 %</value></data>
+  <data name="DeviceSpanPeak" xml:space="preserve"><value>History: {0}   ·   each graph scales to its own peak</value></data>
   <data name="CoreName" xml:space="preserve"><value>CPU {0}</value></data>
   <data name="CoreGroupName" xml:space="preserve"><value>Group {0} · CPU {1}</value></data>
   <data name="DiskName" xml:space="preserve"><value>Disk {0}</value></data>
@@ -110,4 +110,12 @@
   <data name="MegabitsPerSecond" xml:space="preserve"><value>Mbit/s</value></data>
   <data name="GigabitsPerSecond" xml:space="preserve"><value>Gbit/s</value></data>
   <data name="NoDevices" xml:space="preserve"><value>No device readings yet</value></data>
+  <data name="SpanLabel" xml:space="preserve"><value>History window</value></data>
+  <data name="SpanOne" xml:space="preserve"><value>1 min</value></data>
+  <data name="SpanFifteen" xml:space="preserve"><value>15 min</value></data>
+  <data name="MomentHint" xml:space="preserve"><value>Click to list the leading processes at this moment</value></data>
+  <data name="MomentTitle" xml:space="preserve"><value>Processes at {0:T}</value></data>
+  <data name="MomentCpu" xml:space="preserve"><value>Highest CPU</value></data>
+  <data name="MomentMemory" xml:space="preserve"><value>Largest working sets</value></data>
+  <data name="MomentExited" xml:space="preserve"><value>{0} · exited</value></data>
 </root>

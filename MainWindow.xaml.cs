@@ -61,7 +61,11 @@ public sealed partial class MainWindow : Window
         MemoryCard.Configure(UiText.Get("Memory"), "\uE964", true, v => Format.Percent(v));
         DiskCard.Configure(UiText.Get("Disk"), "\uEDA2", false, v => Format.Bytes(v, true));
         NetworkCard.Configure(UiText.Get("Network"), "\uE968", false, v => Format.Bytes(v, true));
-        HostText.Text = UiText.Format("HostHistory", Environment.MachineName);
+        CpuCard.EnableSelection(UiText.Get("MomentHint"));
+        MemoryCard.EnableSelection(UiText.Get("MomentHint"));
+        CpuCard.SampleSelected += (_, time) => ShowMoment(CpuCard, time);
+        MemoryCard.SampleSelected += (_, time) => ShowMoment(MemoryCard, time);
+        UpdateSpanText();
         CreateDeviceViews();
         CreateFacts();
         UpdateHeaders();
@@ -123,6 +127,7 @@ public sealed partial class MainWindow : Window
             _collapsed.RemoveWhere(k => !live.Contains(k));
             UpdateCards(frame);
             UpdateDevices(frame);
+            RecordMoment(frame);
             UpdateRows();
             var uptime = TimeSpan.FromMilliseconds(Environment.TickCount64);
             Uptime.Text = UiText.Format("Uptime", uptime.Days, uptime.Hours, uptime.Minutes);
@@ -214,6 +219,7 @@ public sealed partial class MainWindow : Window
         }
         foreach (var card in new[] { CpuCard, MemoryCard, DiskCard, NetworkCard }) card.ClearHistory();
         ClearDeviceHistory();
+        _moments.Clear();
         _restart = true;
         SetInterval();
         await RefreshAsync();

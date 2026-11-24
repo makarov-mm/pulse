@@ -52,7 +52,7 @@ public sealed partial class MainWindow
         }
         var current = _devices[_deviceView];
         DeviceTitle.Text = current.Title;
-        DeviceSpan.Text = UiText.Get(current.Percent ? "DeviceSpanPercent" : "DeviceSpanPeak");
+        UpdateSpanText();
         LayoutDevices();
     }
 
@@ -109,6 +109,7 @@ public sealed partial class MainWindow
                 tile.SetBinding(Control.ForegroundProperty, new Binding { Source = group.Card, Path = new PropertyPath("Foreground") });
                 if (group.Percent) tile.Configure(true, v => Format.Percent(v));
                 else tile.Configure(false, v => Format.Bytes(v, true));
+                tile.SetSpan(_span);
             }
             tile.Update(f.Time, f.Clock, reading);
             next.Add((reading.Key, tile));
