@@ -11,6 +11,13 @@ The milestones below are planned work. The [README](README.md) describes the fea
 - Keep the compact overview and make each resource view reachable by mouse and keyboard.
 - **Acceptance.** A user can follow a disk spike to a named device and distinguish high throughput from high latency. Disconnecting a device leaves the remaining graphs usable. Compare measurements and Pulse's own CPU and memory footprint against a recorded baseline at each refresh interval.
 
+**Status.** The CPU, disk and network cards open device views with one tile per logical processor, physical disk and network adapter. Disk tiles show throughput, active time and response time. Adapter tiles show direction and link speed. Remaining work:
+
+- Verify the per-device counters against Task Manager and Performance Monitor, including a disk or adapter removed while Pulse is running.
+- Record the baseline and compare Pulse's CPU and memory footprint at each refresh interval with the device counters enabled.
+- Select a single disk or adapter for a larger graph with labelled axes.
+- Exercise the device views with the keyboard, in high contrast and in each translation.
+
 Windows Task Manager's Performance view supplies the device-level model. btop4win informs the compact graphs, selectable disks and keyboard navigation. [Task Manager](https://learn.microsoft.com/en-us/troubleshoot/windows-server/support-tools/support-tools-task-manager) · [btop4win](https://github.com/aristocratos/btop4win)
 
 ## 2. Explain a spike after it has passed
