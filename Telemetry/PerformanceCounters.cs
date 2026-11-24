@@ -1,11 +1,24 @@
+using System.Globalization;
 using System.Runtime.InteropServices;
 
 namespace Pulse.Telemetry;
 
+internal sealed record CounterSample(double? Cpu, double? Read, double? Write,
+    IReadOnlyList<CoreSample> Cores, IReadOnlyList<DiskSample> Disks)
+{
+    public static readonly CounterSample Empty = new(null, null, null, [], []);
+}
+
 internal sealed class PerformanceCounters : IDisposable
 {
+    private const uint MoreData = 0x800007D2, FormatDouble = 0x200;
+    private const string Total = "_Total";
+
     [StructLayout(LayoutKind.Sequential)]
     private struct Value { public uint Status; public double Number; }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct Item { public nint Name; public Value Value; }
 
     [DllImport("pdh.dll", CharSet = CharSet.Unicode)]
     private static extern uint PdhOpenQueryW(string? source, nuint user, out nint query);
@@ -16,31 +29,122 @@ internal sealed class PerformanceCounters : IDisposable
     [DllImport("pdh.dll")]
     private static extern uint PdhGetFormattedCounterValue(nint counter, uint format, nint type, out Value value);
     [DllImport("pdh.dll")]
+    private static extern uint PdhGetFormattedCounterArrayW(nint counter, uint format, ref uint bytes, out uint count, nint items);
+    [DllImport("pdh.dll")]
     private static extern uint PdhCloseQuery(nint query);
 
-    private nint _query, _cpu, _read, _write;
+    private nint _query, _cpu, _read, _write, _cores, _diskRead, _diskWrite, _diskIdle, _diskResponse;
+    private nint _items;
+    private uint _capacity;
 
-    public (double? Cpu, double? Read, double? Write) Sample()
+    public CounterSample Sample()
     {
         if (_query == 0)
         {
-            if (PdhOpenQueryW(null, 0, out _query) != 0) return (null, null, null);
-            PdhAddEnglishCounterW(_query, @"\Processor Information(_Total)\% Processor Time", 0, out _cpu);
-            PdhAddEnglishCounterW(_query, @"\PhysicalDisk(_Total)\Disk Read Bytes/sec", 0, out _read);
-            PdhAddEnglishCounterW(_query, @"\PhysicalDisk(_Total)\Disk Write Bytes/sec", 0, out _write);
+            if (PdhOpenQueryW(null, 0, out _query) != 0) return CounterSample.Empty;
+            _cpu = Add(@"\Processor Information(_Total)\% Processor Time");
+            _read = Add(@"\PhysicalDisk(_Total)\Disk Read Bytes/sec");
+            _write = Add(@"\PhysicalDisk(_Total)\Disk Write Bytes/sec");
+            _cores = Add(@"\Processor Information(*)\% Processor Time");
+            _diskRead = Add(@"\PhysicalDisk(*)\Disk Read Bytes/sec");
+            _diskWrite = Add(@"\PhysicalDisk(*)\Disk Write Bytes/sec");
+            _diskIdle = Add(@"\PhysicalDisk(*)\% Idle Time");
+            _diskResponse = Add(@"\PhysicalDisk(*)\Avg. Disk sec/Transfer");
         }
-        if (PdhCollectQueryData(_query) != 0) return (null, null, null);
-        return (GetValue(_cpu), GetValue(_read), GetValue(_write));
+        if (PdhCollectQueryData(_query) != 0) return CounterSample.Empty;
+        return new(GetValue(_cpu), GetValue(_read), GetValue(_write), Cores(), Disks());
     }
 
+    private nint Add(string path) => PdhAddEnglishCounterW(_query, path, 0, out nint counter) == 0 ? counter : 0;
+
+    private static bool Valid(Value value) => value.Status <= 1 && double.IsFinite(value.Number) && value.Number >= 0;
+
     private static double? GetValue(nint counter) =>
-        counter != 0 && PdhGetFormattedCounterValue(counter, 0x200, 0, out var value) == 0 &&
-        value.Status <= 1 && double.IsFinite(value.Number) && value.Number >= 0 ? value.Number : null;
+        counter != 0 && PdhGetFormattedCounterValue(counter, FormatDouble, 0, out var value) == 0 && Valid(value)
+            ? value.Number : null;
+
+    // Reads every instance of a wildcard counter. Instances without a valid value are omitted.
+    private Dictionary<string, double> GetValues(nint counter)
+    {
+        var result = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+        if (counter == 0) return result;
+        for (int attempt = 0; attempt < 3; attempt++)
+        {
+            uint bytes = _capacity;
+            uint status = PdhGetFormattedCounterArrayW(counter, FormatDouble, ref bytes, out uint count, _items);
+            if (status == MoreData)
+            {
+                // The instance list can grow between the sizing call and the read.
+                Marshal.FreeHGlobal(_items);
+                _items = 0;
+                _capacity = 0;
+                uint capacity = checked(bytes + 4096);
+                _items = Marshal.AllocHGlobal((nint)capacity);
+                _capacity = capacity;
+                continue;
+            }
+            if (status != 0) break;
+            int size = Marshal.SizeOf<Item>();
+            for (int i = 0; i < count; i++)
+            {
+                var item = Marshal.PtrToStructure<Item>(_items + i * size);
+                if (Valid(item.Value) && Marshal.PtrToStringUni(item.Name) is { Length: > 0 } name)
+                    result[name] = item.Value.Number;
+            }
+            break;
+        }
+        return result;
+    }
+
+    private List<CoreSample> Cores()
+    {
+        var cores = new List<CoreSample>();
+        foreach (var (name, usage) in GetValues(_cores))
+        {
+            // Instances are "group,number". "_Total" and "group,_Total" are aggregates.
+            var parts = name.Split(',');
+            if (parts.Length == 2 &&
+                int.TryParse(parts[0], NumberStyles.None, CultureInfo.InvariantCulture, out int group) &&
+                int.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out int number))
+                cores.Add(new(group, number, Math.Clamp(usage, 0, 100)));
+        }
+        cores.Sort((a, b) => a.Group != b.Group ? a.Group.CompareTo(b.Group) : a.Number.CompareTo(b.Number));
+        return cores;
+    }
+
+    private List<DiskSample> Disks()
+    {
+        var read = GetValues(_diskRead);
+        var write = GetValues(_diskWrite);
+        var idle = GetValues(_diskIdle);
+        var response = GetValues(_diskResponse);
+        var disks = new List<DiskSample>();
+        foreach (var name in read.Keys.Union(write.Keys).Union(idle.Keys).Union(response.Keys))
+        {
+            if (name.Equals(Total, StringComparison.OrdinalIgnoreCase)) continue;
+            // Instances are the disk number followed by its volumes, such as "0 C: D:".
+            int space = name.IndexOf(' ');
+            string head = space < 0 ? name : name[..space];
+            int? index = int.TryParse(head, NumberStyles.None, CultureInfo.InvariantCulture, out int n) ? n : null;
+            string volumes = index is null || space < 0 ? "" : name[(space + 1)..].Trim();
+            disks.Add(new(name, index, volumes, Find(read, name), Find(write, name),
+                Find(idle, name) is { } free ? Math.Clamp(100 - free, 0, 100) : null, Find(response, name)));
+        }
+        disks.Sort((a, b) => a.Index != b.Index
+            ? (a.Index ?? int.MaxValue).CompareTo(b.Index ?? int.MaxValue)
+            : StringComparer.OrdinalIgnoreCase.Compare(a.Instance, b.Instance));
+        return disks;
+    }
+
+    private static double? Find(Dictionary<string, double> values, string name) =>
+        values.TryGetValue(name, out double value) ? value : null;
 
     public void Dispose()
     {
         if (_query != 0) PdhCloseQuery(_query);
         _query = 0;
+        Marshal.FreeHGlobal(_items);
+        _items = 0;
+        _capacity = 0;
     }
 }
-

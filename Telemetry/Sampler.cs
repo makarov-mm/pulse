@@ -9,7 +9,8 @@ internal sealed record TaskSample(ProcessCounters Info, double? Cpu, double? Rea
     public double? Io => Read + Write;
 }
 internal sealed record Frame(double Time, DateTime Clock, double? Cpu, long? TotalRam, long? UsedRam,
-    double? DiskRead, double? DiskWrite, double? Received, double? Sent, IReadOnlyList<TaskSample> Tasks);
+    double? DiskRead, double? DiskWrite, double? Received, double? Sent, IReadOnlyList<TaskSample> Tasks,
+    IReadOnlyList<CoreSample> Cores, IReadOnlyList<DiskSample> Disks, IReadOnlyList<AdapterSample> Adapters);
 
 internal sealed class Sampler : IDisposable
 {
@@ -66,20 +67,24 @@ internal sealed class Sampler : IDisposable
                 cpuTotal = 100 * (1 - (double)(idle - old.Idle) / (total - old.Total));
             _lastCpu = (idle, total);
         }
-        var (rx, tx) = NetworkRates(compare, seconds);
+        var (rx, tx, adapters) = NetworkRates(compare, seconds);
+        IReadOnlyList<CoreSample> cores = compare ? counters.Cores : [];
+        IReadOnlyList<DiskSample> disks = compare ? counters.Disks : [];
         _previous = tasks.ToDictionary(p => p.Key);
         _lastTime = time;
         return new(time, DateTime.Now, compare && cpuTotal is { } c ? Math.Clamp(c, 0, 100) : null,
             haveMemory ? (long)memory.Total : null, haveMemory ? (long)(memory.Total - memory.Available) : null,
-            compare ? counters.Read : null, compare ? counters.Write : null, rx, tx, rows);
+            compare ? counters.Read : null, compare ? counters.Write : null, rx, tx, rows,
+            cores, disks, adapters);
     }
 
     private static double? Rate(long current, long previous, double seconds) =>
         current >= previous ? (current - previous) / seconds : null;
 
-    private (double?, double?) NetworkRates(bool compare, double seconds)
+    private (double? Received, double? Sent, List<AdapterSample> Adapters) NetworkRates(bool compare, double seconds)
     {
         var current = new Dictionary<string, (long Rx, long Tx)>();
+        var adapters = new List<AdapterSample>();
         double rx = 0, tx = 0;
         bool matched = false;
         try
@@ -91,20 +96,32 @@ internal sealed class Sampler : IDisposable
                 try
                 {
                     var stats = adapter.GetIPStatistics();
+                    long speed = adapter.Speed;
                     current[adapter.Id] = (stats.BytesReceived, stats.BytesSent);
-                    if (!compare || !_network.TryGetValue(adapter.Id, out var old)) continue;
-                    if (Rate(stats.BytesReceived, old.Rx, seconds) is not { } down ||
-                        Rate(stats.BytesSent, old.Tx, seconds) is not { } up) continue;
-                    rx += down;
-                    tx += up;
+                    double? down = null, up = null;
+                    if (compare && _network.TryGetValue(adapter.Id, out var old))
+                    {
+                        down = Rate(stats.BytesReceived, old.Rx, seconds);
+                        up = Rate(stats.BytesSent, old.Tx, seconds);
+                    }
+                    adapters.Add(new(adapter.Id, adapter.Name, down, up, speed > 0 ? speed : (long?)null));
+                    if (down is null || up is null) continue;
+                    rx += down.Value;
+                    tx += up.Value;
                     matched = true;
                 }
                 catch (NetworkInformationException) { /* Adapter disappeared during enumeration. */ }
             }
         }
-        catch (NetworkInformationException) { current.Clear(); matched = false; }
+        catch (NetworkInformationException) { current.Clear(); adapters.Clear(); matched = false; }
+        adapters.Sort((a, b) =>
+        {
+            int order = StringComparer.CurrentCultureIgnoreCase.Compare(a.Name, b.Name);
+            return order != 0 ? order : StringComparer.Ordinal.Compare(a.Id, b.Id);
+        });
         _network = current;
-        return matched ? (rx, tx) : (null, null);
+        double? received = matched ? rx : null, sent = matched ? tx : null;
+        return (received, sent, adapters);
     }
 
     public void Dispose()
