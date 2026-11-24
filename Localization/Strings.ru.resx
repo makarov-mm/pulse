@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="WindowTitle" xml:space="preserve"><value>Pulse — Диспетчер задач</value></data>
+  <data name="AppSubtitle" xml:space="preserve"><value>Диспетчер задач</value></data>
+  <data name="Overview" xml:space="preserve"><value>Обзор системы</value></data>
+  <data name="Interval" xml:space="preserve"><value>Интервал обновления</value></data>
+  <data name="IntervalOne" xml:space="preserve"><value>1 с</value></data>
+  <data name="IntervalTwo" xml:space="preserve"><value>2 с</value></data>
+  <data name="IntervalFive" xml:space="preserve"><value>5 с</value></data>
+  <data name="Pause" xml:space="preserve"><value>Пауза</value></data>
+  <data name="Resume" xml:space="preserve"><value>Продолжить</value></data>
+  <data name="PauseUpdates" xml:space="preserve"><value>Приостановить обновление</value></data>
+  <data name="ResumeUpdates" xml:space="preserve"><value>Продолжить обновление</value></data>
+  <data name="Processes" xml:space="preserve"><value>Процессы</value></data>
+  <data name="Search" xml:space="preserve"><value>Поиск по имени или PID</value></data>
+  <data name="Tree" xml:space="preserve"><value>Дерево</value></data>
+  <data name="ProcessTree" xml:space="preserve"><value>Дерево процессов</value></data>
+  <data name="TreeTip" xml:space="preserve"><value>Показать родительские и дочерние процессы</value></data>
+  <data name="Details" xml:space="preserve"><value>Сведения о процессе</value></data>
+  <data name="CloseDetails" xml:space="preserve"><value>Закрыть сведения</value></data>
+  <data name="Executable" xml:space="preserve"><value>Исполняемый файл</value></data>
+  <data name="EndTask" xml:space="preserve"><value>Завершить задачу</value></data>
+  <data name="IoTip" xml:space="preserve"><value>Суммарная скорость чтения и записи файлов, устройств и сети</value></data>
+  <data name="ProcessList" xml:space="preserve"><value>Список процессов</value></data>
+  <data name="Collecting" xml:space="preserve"><value>Сбор данных…</value></data>
+  <data name="Processor" xml:space="preserve"><value>Процессор</value></data>
+  <data name="CPU" xml:space="preserve"><value>ЦП</value></data>
+  <data name="Memory" xml:space="preserve"><value>Память</value></data>
+  <data name="Disk" xml:space="preserve"><value>Диск</value></data>
+  <data name="Network" xml:space="preserve"><value>Сеть</value></data>
+  <data name="HostHistory" xml:space="preserve"><value>{0}   ·   История за 60 с</value></data>
+  <data name="Uptime" xml:space="preserve"><value>Время работы   {0} д {1:00} ч {2:00} мин</value></data>
+  <data name="LastUpdate" xml:space="preserve"><value>Обновлено в {0:T}   ·   Потоков {1:N0}</value></data>
+  <data name="SampleError" xml:space="preserve"><value>Ошибка сбора данных</value></data>
+  <data name="RetryStatus" xml:space="preserve"><value>Ожидание следующего замера</value></data>
+  <data name="CpuCount" xml:space="preserve"><value>Логических процессоров   {0}</value></data>
+  <data name="TopCpu" xml:space="preserve"><value>Больше всего ЦП   ·   {0} ({1}) · {2}</value></data>
+  <data name="MemoryUsage" xml:space="preserve"><value>{0} из {1}</value></data>
+  <data name="TopMemory" xml:space="preserve"><value>Наибольший рабочий набор   ·   {0} ({1}) · {2}</value></data>
+  <data name="DiskRates" xml:space="preserve"><value>Чт. {0}   ·   Зап. {1}</value></data>
+  <data name="NoMatches" xml:space="preserve"><value>Совпадений нет</value></data>
+  <data name="NoProcesses" xml:space="preserve"><value>Нет процессов</value></data>
+  <data name="PausedAt" xml:space="preserve"><value>Пауза   ·   Последнее обновление в {0:T}</value></data>
+  <data name="Paused" xml:space="preserve"><value>Обновление приостановлено</value></data>
+  <data name="Name" xml:space="preserve"><value>Имя</value></data>
+  <data name="InputOutput" xml:space="preserve"><value>Ввод-вывод</value></data>
+  <data name="Threads" xml:space="preserve"><value>Потоки</value></data>
+  <data name="SortDescending" xml:space="preserve"><value>{0}, по убыванию</value></data>
+  <data name="SortAscending" xml:space="preserve"><value>{0}, по возрастанию</value></data>
+  <data name="AccessDenied" xml:space="preserve"><value>Доступ ограничен Windows</value></data>
+  <data name="WorkingSet" xml:space="preserve"><value>Рабочий набор</value></data>
+  <data name="PrivateBytes" xml:space="preserve"><value>Частная память</value></data>
+  <data name="ReadRate" xml:space="preserve"><value>Чтение</value></data>
+  <data name="WriteRate" xml:space="preserve"><value>Запись</value></data>
+  <data name="Handles" xml:space="preserve"><value>Дескрипторы</value></data>
+  <data name="Session" xml:space="preserve"><value>Сеанс</value></data>
+  <data name="Started" xml:space="preserve"><value>Запущен</value></data>
+  <data name="Parent" xml:space="preserve"><value>Родитель</value></data>
+  <data name="ProcessExited" xml:space="preserve"><value>PID {0}   ·   Процесс завершён</value></data>
+  <data name="ParentExited" xml:space="preserve"><value>PID {0} · завершён</value></data>
+  <data name="ConfirmEnd" xml:space="preserve"><value>Завершить {0}?</value></data>
+  <data name="ConfirmEndBody" xml:space="preserve"><value>Процесс с PID {0} будет остановлен. Несохранённые данные могут быть потеряны.</value></data>
+  <data name="End" xml:space="preserve"><value>Завершить</value></data>
+  <data name="Cancel" xml:space="preserve"><value>Отмена</value></data>
+  <data name="EndRequested" xml:space="preserve"><value>PID {0}   ·   Завершение запрошено</value></data>
+  <data name="EndError" xml:space="preserve"><value>Не удалось завершить процесс</value></data>
+  <data name="PidReused" xml:space="preserve"><value>Процесс завершился, и Windows повторно использовала его PID.</value></data>
+  <data name="EndUnavailable" xml:space="preserve"><value>Завершение этого процесса недоступно.</value></data>
+  <data name="CriticalProcess" xml:space="preserve"><value>Windows пометила процесс как критический.</value></data>
+  <data name="IncompleteRecord" xml:space="preserve"><value>Windows вернула неполную запись процесса.</value></data>
+  <data name="RowDescription" xml:space="preserve"><value>{0}, PID {1}, ЦП {2}, память {3}, ввод-вывод {4}</value></data>
+  <data name="ExpandBranch" xml:space="preserve"><value>Развернуть ветвь</value></data>
+  <data name="CollapseBranch" xml:space="preserve"><value>Свернуть ветвь</value></data>
+  <data name="NoSample" xml:space="preserve"><value>Нет замера</value></data>
+  <data name="NoData" xml:space="preserve"><value>Нет данных</value></data>
+  <data name="Bytes" xml:space="preserve"><value>Б</value></data>
+  <data name="Kibibytes" xml:space="preserve"><value>КиБ</value></data>
+  <data name="Mebibytes" xml:space="preserve"><value>МиБ</value></data>
+  <data name="Gibibytes" xml:space="preserve"><value>ГиБ</value></data>
+  <data name="Tebibytes" xml:space="preserve"><value>ТиБ</value></data>
+  <data name="RateUnit" xml:space="preserve"><value>{0}/с</value></data>
+  <data name="About" xml:space="preserve"><value>О программе Pulse</value></data>
+  <data name="AboutDescription" xml:space="preserve"><value>Монитор процессов и ресурсов для Windows 11.</value></data>
+  <data name="DevelopedBy" xml:space="preserve"><value>Разработчик — {0}</value></data>
+  <data name="Version" xml:space="preserve"><value>Версия {0}</value></data>
+  <data name="Close" xml:space="preserve"><value>Закрыть</value></data>
+</root>

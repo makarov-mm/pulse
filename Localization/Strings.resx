@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="WindowTitle" xml:space="preserve"><value>Pulse — Task Manager</value></data>
+  <data name="AppSubtitle" xml:space="preserve"><value>Task Manager</value></data>
+  <data name="Overview" xml:space="preserve"><value>System overview</value></data>
+  <data name="Interval" xml:space="preserve"><value>Refresh interval</value></data>
+  <data name="IntervalOne" xml:space="preserve"><value>1 s</value></data>
+  <data name="IntervalTwo" xml:space="preserve"><value>2 s</value></data>
+  <data name="IntervalFive" xml:space="preserve"><value>5 s</value></data>
+  <data name="Pause" xml:space="preserve"><value>Pause</value></data>
+  <data name="Resume" xml:space="preserve"><value>Resume</value></data>
+  <data name="PauseUpdates" xml:space="preserve"><value>Pause updates</value></data>
+  <data name="ResumeUpdates" xml:space="preserve"><value>Resume updates</value></data>
+  <data name="Processes" xml:space="preserve"><value>Processes</value></data>
+  <data name="Search" xml:space="preserve"><value>Search by name or PID</value></data>
+  <data name="Tree" xml:space="preserve"><value>Tree</value></data>
+  <data name="ProcessTree" xml:space="preserve"><value>Process tree</value></data>
+  <data name="TreeTip" xml:space="preserve"><value>Show parent and child processes</value></data>
+  <data name="Details" xml:space="preserve"><value>Process details</value></data>
+  <data name="CloseDetails" xml:space="preserve"><value>Close details</value></data>
+  <data name="Executable" xml:space="preserve"><value>Executable file</value></data>
+  <data name="EndTask" xml:space="preserve"><value>End task</value></data>
+  <data name="IoTip" xml:space="preserve"><value>Combined read and write rate across files, devices and network I/O</value></data>
+  <data name="ProcessList" xml:space="preserve"><value>Process list</value></data>
+  <data name="Collecting" xml:space="preserve"><value>Collecting data…</value></data>
+  <data name="Processor" xml:space="preserve"><value>Processor</value></data>
+  <data name="CPU" xml:space="preserve"><value>CPU</value></data>
+  <data name="Memory" xml:space="preserve"><value>Memory</value></data>
+  <data name="Disk" xml:space="preserve"><value>Disk</value></data>
+  <data name="Network" xml:space="preserve"><value>Network</value></data>
+  <data name="HostHistory" xml:space="preserve"><value>{0}   ·   60-second history</value></data>
+  <data name="Uptime" xml:space="preserve"><value>Uptime   {0}d {1:00}h {2:00}m</value></data>
+  <data name="LastUpdate" xml:space="preserve"><value>Updated at {0:T}   ·   {1:N0} threads</value></data>
+  <data name="SampleError" xml:space="preserve"><value>Could not collect a sample</value></data>
+  <data name="RetryStatus" xml:space="preserve"><value>Waiting for the next sample</value></data>
+  <data name="CpuCount" xml:space="preserve"><value>Logical processors   {0}</value></data>
+  <data name="TopCpu" xml:space="preserve"><value>Highest CPU   ·   {0} ({1}) · {2}</value></data>
+  <data name="MemoryUsage" xml:space="preserve"><value>{0} of {1}</value></data>
+  <data name="TopMemory" xml:space="preserve"><value>Largest working set   ·   {0} ({1}) · {2}</value></data>
+  <data name="DiskRates" xml:space="preserve"><value>Read {0}   ·   Write {1}</value></data>
+  <data name="NoMatches" xml:space="preserve"><value>No matching processes</value></data>
+  <data name="NoProcesses" xml:space="preserve"><value>No processes</value></data>
+  <data name="PausedAt" xml:space="preserve"><value>Paused   ·   Last updated at {0:T}</value></data>
+  <data name="Paused" xml:space="preserve"><value>Updates paused</value></data>
+  <data name="Name" xml:space="preserve"><value>Name</value></data>
+  <data name="InputOutput" xml:space="preserve"><value>I/O</value></data>
+  <data name="Threads" xml:space="preserve"><value>Threads</value></data>
+  <data name="SortDescending" xml:space="preserve"><value>{0}, descending</value></data>
+  <data name="SortAscending" xml:space="preserve"><value>{0}, ascending</value></data>
+  <data name="AccessDenied" xml:space="preserve"><value>Access restricted by Windows</value></data>
+  <data name="WorkingSet" xml:space="preserve"><value>Working set</value></data>
+  <data name="PrivateBytes" xml:space="preserve"><value>Private memory</value></data>
+  <data name="ReadRate" xml:space="preserve"><value>Read rate</value></data>
+  <data name="WriteRate" xml:space="preserve"><value>Write rate</value></data>
+  <data name="Handles" xml:space="preserve"><value>Handles</value></data>
+  <data name="Session" xml:space="preserve"><value>Session</value></data>
+  <data name="Started" xml:space="preserve"><value>Started</value></data>
+  <data name="Parent" xml:space="preserve"><value>Parent</value></data>
+  <data name="ProcessExited" xml:space="preserve"><value>PID {0}   ·   Process exited</value></data>
+  <data name="ParentExited" xml:space="preserve"><value>PID {0} · exited</value></data>
+  <data name="ConfirmEnd" xml:space="preserve"><value>End {0}?</value></data>
+  <data name="ConfirmEndBody" xml:space="preserve"><value>The process with PID {0} will stop. You may lose unsaved work.</value></data>
+  <data name="End" xml:space="preserve"><value>End process</value></data>
+  <data name="Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="EndRequested" xml:space="preserve"><value>PID {0}   ·   Termination requested</value></data>
+  <data name="EndError" xml:space="preserve"><value>Could not end the process</value></data>
+  <data name="PidReused" xml:space="preserve"><value>The process exited and Windows reused its PID.</value></data>
+  <data name="EndUnavailable" xml:space="preserve"><value>This process cannot be ended here.</value></data>
+  <data name="CriticalProcess" xml:space="preserve"><value>Windows identifies this process as critical.</value></data>
+  <data name="IncompleteRecord" xml:space="preserve"><value>Windows returned an incomplete process record.</value></data>
+  <data name="RowDescription" xml:space="preserve"><value>{0}, PID {1}, CPU {2}, memory {3}, I/O {4}</value></data>
+  <data name="ExpandBranch" xml:space="preserve"><value>Expand branch</value></data>
+  <data name="CollapseBranch" xml:space="preserve"><value>Collapse branch</value></data>
+  <data name="NoSample" xml:space="preserve"><value>No sample</value></data>
+  <data name="NoData" xml:space="preserve"><value>No data</value></data>
+  <data name="Bytes" xml:space="preserve"><value>B</value></data>
+  <data name="Kibibytes" xml:space="preserve"><value>KiB</value></data>
+  <data name="Mebibytes" xml:space="preserve"><value>MiB</value></data>
+  <data name="Gibibytes" xml:space="preserve"><value>GiB</value></data>
+  <data name="Tebibytes" xml:space="preserve"><value>TiB</value></data>
+  <data name="RateUnit" xml:space="preserve"><value>{0}/s</value></data>
+  <data name="About" xml:space="preserve"><value>About Pulse</value></data>
+  <data name="AboutDescription" xml:space="preserve"><value>A process and resource monitor for Windows 11.</value></data>
+  <data name="DevelopedBy" xml:space="preserve"><value>Developed by {0}</value></data>
+  <data name="Version" xml:space="preserve"><value>Version {0}</value></data>
+  <data name="Close" xml:space="preserve"><value>Close</value></data>
+</root>

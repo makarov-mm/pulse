@@ -1,0 +1,152 @@
+<Window x:Class="Pulse.MainWindow" Title="{loc:Localize Key=WindowTitle}"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:loc="using:Pulse.Localization"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Pulse.Controls" xmlns:m="using:Pulse.Models">
+    <Grid x:Name="Root" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Loaded="OnLoaded" SizeChanged="RootSizeChanged">
+        <Grid.RowDefinitions><RowDefinition Height="38"/><RowDefinition Height="*"/><RowDefinition Height="32"/></Grid.RowDefinitions>
+        <Grid x:Name="DragRegion" Background="Transparent">
+            <StackPanel Orientation="Horizontal" Spacing="9" Margin="18,0,0,0" VerticalAlignment="Center">
+                <Border Width="22" Height="22" CornerRadius="6" Background="{ThemeResource AccentFillColorDefaultBrush}">
+                    <Path Data="M 2,9 L 5,9 7,4 10,14 12,8 16,8" Stroke="{ThemeResource TextOnAccentFillColorPrimaryBrush}" StrokeThickness="1.7" StrokeLineJoin="Round" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <TextBlock Text="Pulse" FontWeight="SemiBold" FontSize="13"/>
+                <Border Height="13" Width="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" VerticalAlignment="Center"/>
+                <TextBlock Text="{loc:Localize Key=AppSubtitle}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+            </StackPanel>
+        </Grid>
+        <Grid Grid.Row="1" x:Name="Workspace" Margin="24,12,24,12" RowSpacing="12">
+            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+            <Grid>
+                <StackPanel Spacing="2" VerticalAlignment="Center">
+                    <TextBlock Text="{loc:Localize Key=Overview}" Style="{StaticResource TitleTextBlockStyle}"/>
+                    <TextBlock x:Name="HostText" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button x:Name="AboutButton" Click="AboutClicked" AutomationProperties.Name="{loc:Localize Key=About}"
+                            ToolTipService.ToolTip="{loc:Localize Key=About}" Padding="10,6">
+                        <FontIcon Glyph="&#xE946;" FontSize="16"/>
+                    </Button>
+                    <ComboBox x:Name="IntervalBox" SelectedIndex="1" SelectionChanged="IntervalChanged" AutomationProperties.Name="{loc:Localize Key=Interval}" ToolTipService.ToolTip="{loc:Localize Key=Interval}">
+                        <ComboBoxItem Content="{loc:Localize Key=IntervalOne}"/><ComboBoxItem Content="{loc:Localize Key=IntervalTwo}"/><ComboBoxItem Content="{loc:Localize Key=IntervalFive}"/>
+                    </ComboBox>
+                    <ToggleButton x:Name="PauseButton" Click="PauseClicked" AutomationProperties.Name="{loc:Localize Key=PauseUpdates}">
+                        <StackPanel Orientation="Horizontal" Spacing="7"><FontIcon x:Name="PauseIcon" Glyph="&#xE769;" FontSize="13"/><TextBlock x:Name="PauseLabel" Text="{loc:Localize Key=Pause}"/></StackPanel>
+                    </ToggleButton>
+                </StackPanel>
+            </Grid>
+            <Grid Grid.Row="1" x:Name="Cards" ColumnSpacing="10" RowSpacing="0">
+                <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <local:MetricCard x:Name="CpuCard" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
+                <local:MetricCard Grid.Column="1" x:Name="MemoryCard" Foreground="{ThemeResource MemoryInk}"/>
+                <local:MetricCard Grid.Column="2" x:Name="DiskCard" Foreground="{ThemeResource DiskInk}"/>
+                <local:MetricCard Grid.Column="3" x:Name="NetworkCard" Foreground="{ThemeResource NetworkInk}"/>
+            </Grid>
+            <InfoBar Grid.Row="2" x:Name="ErrorBar" IsOpen="False" IsClosable="True" Severity="Warning"/>
+            <Border Grid.Row="3" Style="{StaticResource Surface}">
+                <Grid>
+                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                    <Grid Padding="15,12" ColumnSpacing="10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <TextBlock Text="{loc:Localize Key=Processes}" FontSize="20" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="CountText" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        </StackPanel>
+                        <TextBox Grid.Column="2" x:Name="SearchBox" Width="214" PlaceholderText="{loc:Localize Key=Search}" AutomationProperties.Name="{loc:Localize Key=Search}" TextChanged="SearchChanged">
+                            <TextBox.KeyboardAccelerators><KeyboardAccelerator Key="F" Modifiers="Control" Invoked="SearchInvoked"/></TextBox.KeyboardAccelerators>
+                        </TextBox>
+                        <ToggleButton Grid.Column="3" x:Name="TreeButton" Click="TreeClicked" AutomationProperties.Name="{loc:Localize Key=ProcessTree}" ToolTipService.ToolTip="{loc:Localize Key=TreeTip}">
+                            <StackPanel Orientation="Horizontal" Spacing="7"><FontIcon Glyph="&#xE8FD;" FontSize="14"/><TextBlock x:Name="TreeLabel" Text="{loc:Localize Key=Tree}"/></StackPanel>
+                        </ToggleButton>
+                    </Grid>
+                    <SplitView Grid.Row="1" x:Name="Inspector" PanePlacement="Right" DisplayMode="Inline" OpenPaneLength="290" IsPaneOpen="False">
+                        <SplitView.Pane>
+                            <Border BorderThickness="1,1,0,0" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" Background="{ThemeResource LayerFillColorDefaultBrush}">
+                                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                    <StackPanel Padding="16" Spacing="12">
+                                        <Grid>
+                                            <TextBlock Text="{loc:Localize Key=Details}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
+                                            <Button HorizontalAlignment="Right" Style="{StaticResource SubtleButtonStyle}" Click="CloseInspector" AutomationProperties.Name="{loc:Localize Key=CloseDetails}" ToolTipService.ToolTip="{loc:Localize Key=CloseDetails}"><FontIcon Glyph="&#xE711;" FontSize="12"/></Button>
+                                        </Grid>
+                                        <TextBlock x:Name="DetailName" FontSize="21" FontWeight="SemiBold" TextWrapping="Wrap" IsTextSelectionEnabled="True"/>
+                                        <TextBlock x:Name="DetailPid" Margin="0,-8,0,0" Style="{StaticResource CaptionTextBlockStyle}"/>
+                                        <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
+                                        <StackPanel x:Name="DetailFacts" Spacing="6"/>
+                                        <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="{loc:Localize Key=Executable}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                            <TextBlock x:Name="DetailPath" FontSize="13" TextWrapping="Wrap" IsTextSelectionEnabled="True"/>
+                                        </StackPanel>
+                                        <Button x:Name="EndButton" Click="EndClicked" HorizontalAlignment="Stretch"><StackPanel Orientation="Horizontal" Spacing="7"><FontIcon Glyph="&#xE71A;" FontSize="14"/><TextBlock Text="{loc:Localize Key=EndTask}"/></StackPanel></Button>
+                                    </StackPanel>
+                                </ScrollViewer>
+                            </Border>
+                        </SplitView.Pane>
+                        <Grid x:Name="TableViewport" SizeChanged="TableSizeChanged">
+                            <ScrollViewer HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Enabled" VerticalScrollBarVisibility="Disabled" VerticalScrollMode="Disabled">
+                                <Grid x:Name="TableBody" HorizontalAlignment="Left">
+                                    <Grid.RowDefinitions><RowDefinition Height="36"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                                    <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,1">
+                                        <Grid Padding="12,0,16,0">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="60"/><ColumnDefinition Width="80"/><ColumnDefinition Width="106"/><ColumnDefinition Width="122"/><ColumnDefinition Width="70"/></Grid.ColumnDefinitions>
+                                            <Button x:Name="NameHeader" HorizontalContentAlignment="Left" Tag="Name" Click="SortClicked" Style="{StaticResource TableHeader}"/>
+                                            <Button x:Name="PidHeader" Grid.Column="1" Tag="Pid" Click="SortClicked" Style="{StaticResource TableHeader}"/>
+                                            <Button x:Name="CpuHeader" Grid.Column="2" Tag="Cpu" Click="SortClicked" Style="{StaticResource TableHeader}"/>
+                                            <Button x:Name="RamHeader" Grid.Column="3" Tag="Ram" Click="SortClicked" Style="{StaticResource TableHeader}"/>
+                                            <Button x:Name="IoHeader" Grid.Column="4" Tag="Io" Click="SortClicked" Style="{StaticResource TableHeader}" ToolTipService.ToolTip="{loc:Localize Key=IoTip}"/>
+                                            <Button x:Name="ThreadsHeader" Grid.Column="5" Tag="Threads" Click="SortClicked" Style="{StaticResource TableHeader}"/>
+                                        </Grid>
+                                    </Border>
+                                    <ListView Grid.Row="1" x:Name="TaskList" SelectionMode="Single" SelectionChanged="TaskSelected" AutomationProperties.Name="{loc:Localize Key=ProcessList}"
+                                        ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollMode="Disabled" Padding="0">
+                                        <ListView.ItemContainerStyle>
+                                            <Style TargetType="ListViewItem">
+                                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="Padding" Value="0"/>
+                                                <Setter Property="Margin" Value="0"/><Setter Property="MinHeight" Value="36"/>
+                                            </Style>
+                                        </ListView.ItemContainerStyle>
+                                        <ListView.ItemTemplate>
+                                            <DataTemplate x:DataType="m:ProcessRow">
+                                                <Grid Padding="12,0,16,0" MinHeight="36" AutomationProperties.Name="{x:Bind Accessible, Mode=OneWay}">
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="60"/><ColumnDefinition Width="80"/><ColumnDefinition Width="106"/><ColumnDefinition Width="122"/><ColumnDefinition Width="70"/></Grid.ColumnDefinitions>
+                                                    <Grid Margin="{x:Bind Indent, Mode=OneWay}" ColumnSpacing="6">
+                                                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                                        <Grid Width="21" Visibility="{x:Bind BranchSpace, Mode=OneWay}">
+                                                            <Button Visibility="{x:Bind ArrowVisibility, Mode=OneWay}" IsEnabled="{x:Bind CanExpand, Mode=OneWay}" Tag="{x:Bind}" Click="BranchClicked" MinWidth="20" Width="20" Height="27" Padding="0" Style="{StaticResource SubtleButtonStyle}" AutomationProperties.Name="{x:Bind BranchAction, Mode=OneWay}">
+                                                                <FontIcon Glyph="{x:Bind Arrow, Mode=OneWay}" FontSize="10"/>
+                                                            </Button>
+                                                        </Grid>
+                                                        <FontIcon Grid.Column="1" Glyph="{x:Bind Glyph, Mode=OneWay}" FontSize="15" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                                        <TextBlock Grid.Column="2" Text="{x:Bind Name}" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{x:Bind Name}"/>
+                                                    </Grid>
+                                                    <TextBlock Grid.Column="1" Text="{x:Bind Pid}" Style="{StaticResource NumberCell}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                                    <Border Grid.Column="2" Width="{x:Bind CpuWidth, Mode=OneWay}" Height="21" HorizontalAlignment="Right" Margin="0,0,3,0" CornerRadius="3" Background="{ThemeResource AccentFillColorDefaultBrush}" Opacity="0.2"/>
+                                                    <TextBlock Grid.Column="2" Text="{x:Bind Cpu, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
+                                                    <TextBlock Grid.Column="3" Text="{x:Bind Ram, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
+                                                    <TextBlock Grid.Column="4" Text="{x:Bind Io, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
+                                                    <TextBlock Grid.Column="5" Text="{x:Bind Threads, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ListView.ItemTemplate>
+                                    </ListView>
+                                </Grid>
+                            </ScrollViewer>
+                            <TextBlock x:Name="EmptyText" VerticalAlignment="Center" HorizontalAlignment="Center" Text="{loc:Localize Key=Collecting}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" IsHitTestVisible="False"/>
+                        </Grid>
+                    </SplitView>
+                </Grid>
+            </Border>
+        </Grid>
+        <Border Grid.Row="2" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,1,0,0" Padding="24,0">
+            <Grid>
+                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <FontIcon x:Name="StatusIcon" Glyph="&#xE9D9;" FontSize="12" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
+                    <TextBlock x:Name="Status" Text="{loc:Localize Key=Collecting}" Style="{StaticResource CaptionTextBlockStyle}"/>
+                </StackPanel>
+                <TextBlock x:Name="Uptime" HorizontalAlignment="Right" VerticalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
+
