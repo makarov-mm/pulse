@@ -137,4 +137,15 @@
   <data name="ParentPid" xml:space="preserve"><value>Родительский PID</value></data>
   <data name="SessionName" xml:space="preserve"><value>Сеанс {0}</value></data>
   <data name="SearchUsers" xml:space="preserve"><value>Поиск по имени пользователя</value></data>
+  <data name="StartupTab" xml:space="preserve"><value>Автозагрузка</value></data>
+  <data name="StartupCommand" xml:space="preserve"><value>Команда</value></data>
+  <data name="StartupSource" xml:space="preserve"><value>Источник</value></data>
+  <data name="StartupEnabled" xml:space="preserve"><value>Включено</value></data>
+  <data name="StartupDisabled" xml:space="preserve"><value>Отключено</value></data>
+  <data name="StartupUserFolder" xml:space="preserve"><value>Папка автозагрузки (пользователь)</value></data>
+  <data name="StartupCommonFolder" xml:space="preserve"><value>Папка автозагрузки (все пользователи)</value></data>
+  <data name="StartupCount" xml:space="preserve"><value>{0} из {1} включено</value></data>
+  <data name="SearchStartup" xml:space="preserve"><value>Поиск по имени или команде</value></data>
+  <data name="StartupHint" xml:space="preserve"><value>Двойной щелчок открывает раздел реестра или папку записи</value></data>
+  <data name="OpenError" xml:space="preserve"><value>Не удалось открыть запись</value></data>
 </root>

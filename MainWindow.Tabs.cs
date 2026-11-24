@@ -9,14 +9,15 @@ using Pulse.Telemetry;
 
 namespace Pulse;
 
-// The tabs of the lower pane: Processes, Details, Users and Services.
+// The tabs of the lower pane: Processes, Details, Users, Startup apps and Services.
 public sealed partial class MainWindow
 {
     // In the order of the tab bar.
-    private enum LowerTab { Processes, Details, Users, Services }
+    private enum LowerTab { Processes, Details, Users, Startup, Services }
 
     private readonly ObservableCollection<DetailRow> _detailRows = [];
     private readonly ObservableCollection<UserRow> _userRows = [];
+    private readonly ObservableCollection<StartupRow> _startupRows = [];
     private readonly ObservableCollection<ServiceRow> _serviceRows = [];
     private List<ServiceInfo> _services = [];
     private LowerTab _tab;
@@ -25,10 +26,12 @@ public sealed partial class MainWindow
     {
         DetailList.ItemsSource = _detailRows;
         UserList.ItemsSource = _userRows;
+        StartupList.ItemsSource = _startupRows;
         ServiceList.ItemsSource = _serviceRows;
         ProcessesTab.Text = UiText.Get("Processes");
         DetailsTab.Text = UiText.Get("DetailsTab");
         UsersTab.Text = UiText.Get("Users");
+        StartupTab.Text = UiText.Get("StartupTab");
         ServicesTab.Text = UiText.Get("Services");
         Tabs.SelectedItem = ProcessesTab;
     }
@@ -36,17 +39,19 @@ public sealed partial class MainWindow
     private void TabChanged(SelectorBar sender, SelectorBarSelectionChangedEventArgs args)
     {
         // A selection can be raised while the window is still being built.
-        if (ServicesView is null || DetailsView is null || UsersView is null || Inspector is null || TreeButton is null) return;
+        if (ServicesView is null || DetailsView is null || UsersView is null || StartupView is null || Inspector is null || TreeButton is null) return;
         int index = sender.SelectedItem is { } selected ? sender.Items.IndexOf(selected) : 0;
         _tab = index is >= 0 and <= (int)LowerTab.Services ? (LowerTab)index : LowerTab.Processes;
         Inspector.Visibility = Shown(LowerTab.Processes);
         DetailsView.Visibility = Shown(LowerTab.Details);
         UsersView.Visibility = Shown(LowerTab.Users);
+        StartupView.Visibility = Shown(LowerTab.Startup);
         ServicesView.Visibility = Shown(LowerTab.Services);
         TreeButton.Visibility = Shown(LowerTab.Processes);
         SearchBox.PlaceholderText = UiText.Get(_tab switch
         {
             LowerTab.Users => "SearchUsers",
+            LowerTab.Startup => "SearchStartup",
             LowerTab.Services => "SearchServices",
             _ => "Search"
         });
@@ -65,6 +70,7 @@ public sealed partial class MainWindow
         {
             case LowerTab.Details: UpdateDetailRows(_frame.Tasks); break;
             case LowerTab.Users: UpdateUserRows(_frame.Tasks); break;
+            case LowerTab.Startup: UpdateStartupRows(_frame.Tasks); break;
             case LowerTab.Services: UpdateServiceRows(); break;
         }
     }
@@ -112,6 +118,35 @@ public sealed partial class MainWindow
         return user.Length != 0 ? user : session == 0 ? UiText.Get("Services") : UiText.Format("SessionName", session);
     }
 
+    private void UpdateStartupRows(IReadOnlyList<TaskSample> tasks)
+    {
+        string search = SearchBox.Text.Trim();
+        var items = StartupItems.Read();
+        var running = tasks.Select(t => t.Info.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var matches = items
+            .Where(i => search.Length == 0 ||
+                i.Name.Contains(search, StringComparison.CurrentCultureIgnoreCase) ||
+                i.Command.Contains(search, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(i => i.Name, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+        Fill(_startupRows, matches, () => new StartupRow(), (row, item) =>
+        {
+            string program = StartupItems.Executable(item.Command);
+            row.Update(item, running.Contains(program) ? program : "");
+        });
+        CountText.Text = UiText.Format("StartupCount", items.Count(i => i.Enabled), items.Count);
+    }
+
+    private void StartupDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+    {
+        if (StartupList.SelectedItem is not StartupRow { Item: { } item }) return;
+        try { StartupItems.Open(item); }
+        catch (Exception error) when (error is Win32Exception or UnauthorizedAccessException or IOException)
+        {
+            ShowError(UiText.Get("OpenError"), error.Message);
+        }
+    }
+
     // Services are only queried while something displays them.
     private void RefreshServices()
     {
@@ -153,7 +188,7 @@ public sealed partial class MainWindow
     }
 
     private void DetailsSizeChanged(object sender, SizeChangedEventArgs e) =>
-        DetailsBody.Width = Math.Max(1150, e.NewSize.Width);
+        DetailsBody.Width = Math.Max(1190, e.NewSize.Width);
 
     private string HostedServices(int pid)
     {

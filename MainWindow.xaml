@@ -77,6 +77,7 @@
                                 <SelectorBarItem x:Name="ProcessesTab"/>
                                 <SelectorBarItem x:Name="DetailsTab"/>
                                 <SelectorBarItem x:Name="UsersTab"/>
+                                <SelectorBarItem x:Name="StartupTab"/>
                                 <SelectorBarItem x:Name="ServicesTab"/>
                             </SelectorBar>
                             <TextBlock x:Name="CountText" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
@@ -170,7 +171,7 @@
                         <Grid.RowDefinitions><RowDefinition Height="36"/><RowDefinition Height="*"/></Grid.RowDefinitions>
                         <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,1">
                             <Grid Padding="18,0,16,0" ColumnSpacing="12">
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="64"/><ColumnDefinition Width="64"/><ColumnDefinition Width="64"/><ColumnDefinition Width="74"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="70"/><ColumnDefinition Width="76"/><ColumnDefinition Width="150"/></Grid.ColumnDefinitions>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="64"/><ColumnDefinition Width="96"/><ColumnDefinition Width="72"/><ColumnDefinition Width="74"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="70"/><ColumnDefinition Width="76"/><ColumnDefinition Width="150"/></Grid.ColumnDefinitions>
                                 <TextBlock Text="{loc:Localize Key=Name}" Style="{StaticResource ColumnTitle}"/>
                                 <TextBlock Grid.Column="1" Text="PID" HorizontalAlignment="Right" Margin="0,0,6,0" Style="{StaticResource ColumnTitle}"/>
                                 <TextBlock Grid.Column="2" Text="{loc:Localize Key=ParentPid}" HorizontalAlignment="Right" Margin="0,0,6,0" Style="{StaticResource ColumnTitle}"/>
@@ -197,7 +198,7 @@
                             <ListView.ItemTemplate>
                                 <DataTemplate x:DataType="m:DetailRow">
                                     <Grid Padding="18,0,16,0" MinHeight="34" ColumnSpacing="12">
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="64"/><ColumnDefinition Width="64"/><ColumnDefinition Width="64"/><ColumnDefinition Width="74"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="70"/><ColumnDefinition Width="76"/><ColumnDefinition Width="150"/></Grid.ColumnDefinitions>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="64"/><ColumnDefinition Width="96"/><ColumnDefinition Width="72"/><ColumnDefinition Width="74"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="100"/><ColumnDefinition Width="70"/><ColumnDefinition Width="76"/><ColumnDefinition Width="150"/></Grid.ColumnDefinitions>
                                         <TextBlock Text="{x:Bind Name, Mode=OneWay}" Style="{StaticResource TextCell}"/>
                                         <TextBlock Grid.Column="1" Text="{x:Bind Pid, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
                                         <TextBlock Grid.Column="2" Text="{x:Bind Parent, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
@@ -251,6 +252,41 @@
                                         <TextBlock Grid.Column="4" Text="{x:Bind Memory, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
                                         <TextBlock Grid.Column="5" Text="{x:Bind Io, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
                                         <TextBlock Grid.Column="6" Text="{x:Bind Threads, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </Grid>
+                    <Grid Grid.Row="1" x:Name="StartupView" Visibility="Collapsed">
+                        <Grid.RowDefinitions><RowDefinition Height="36"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                        <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,1">
+                            <Grid Padding="18,0,16,0" ColumnSpacing="12">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="4*"/><ColumnDefinition Width="2*"/><ColumnDefinition Width="110"/><ColumnDefinition Width="2*"/></Grid.ColumnDefinitions>
+                                <TextBlock Text="{loc:Localize Key=Name}" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="1" Text="{loc:Localize Key=StartupCommand}" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="2" Text="{loc:Localize Key=StartupSource}" Style="{StaticResource ColumnTitle}" ToolTipService.ToolTip="{loc:Localize Key=StartupHint}"/>
+                                <TextBlock Grid.Column="3" Text="{loc:Localize Key=ServiceStatus}" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="4" Text="{loc:Localize Key=ServiceProcess}" Style="{StaticResource ColumnTitle}"/>
+                            </Grid>
+                        </Border>
+                        <ListView Grid.Row="1" x:Name="StartupList" SelectionMode="Single" DoubleTapped="StartupDoubleTapped" Padding="0"
+                            AutomationProperties.Name="{loc:Localize Key=StartupTab}">
+                            <ListView.ItemContainerTransitions><TransitionCollection/></ListView.ItemContainerTransitions>
+                            <ListView.ItemContainerStyle>
+                                <Style TargetType="ListViewItem">
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="Padding" Value="0"/>
+                                    <Setter Property="Margin" Value="0"/><Setter Property="MinHeight" Value="34"/>
+                                </Style>
+                            </ListView.ItemContainerStyle>
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="m:StartupRow">
+                                    <Grid Padding="18,0,16,0" MinHeight="34" ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="4*"/><ColumnDefinition Width="2*"/><ColumnDefinition Width="110"/><ColumnDefinition Width="2*"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="{x:Bind Name, Mode=OneWay}" Style="{StaticResource TextCell}"/>
+                                        <TextBlock Grid.Column="1" Text="{x:Bind Command, Mode=OneWay}" Style="{StaticResource TextCell}" ToolTipService.ToolTip="{x:Bind Command, Mode=OneWay}"/>
+                                        <TextBlock Grid.Column="2" Text="{x:Bind Source, Mode=OneWay}" Style="{StaticResource TextCell}"/>
+                                        <TextBlock Grid.Column="3" Text="{x:Bind State, Mode=OneWay}" Style="{StaticResource TextCell}"/>
+                                        <TextBlock Grid.Column="4" Text="{x:Bind Host, Mode=OneWay}" Style="{StaticResource TextCell}"/>
                                     </Grid>
                                 </DataTemplate>
                             </ListView.ItemTemplate>

@@ -137,4 +137,15 @@
   <data name="ParentPid" xml:space="preserve"><value>Parent PID</value></data>
   <data name="SessionName" xml:space="preserve"><value>Session {0}</value></data>
   <data name="SearchUsers" xml:space="preserve"><value>Search by user name</value></data>
+  <data name="StartupTab" xml:space="preserve"><value>Startup apps</value></data>
+  <data name="StartupCommand" xml:space="preserve"><value>Command</value></data>
+  <data name="StartupSource" xml:space="preserve"><value>Source</value></data>
+  <data name="StartupEnabled" xml:space="preserve"><value>Enabled</value></data>
+  <data name="StartupDisabled" xml:space="preserve"><value>Disabled</value></data>
+  <data name="StartupUserFolder" xml:space="preserve"><value>Startup folder (user)</value></data>
+  <data name="StartupCommonFolder" xml:space="preserve"><value>Startup folder (all users)</value></data>
+  <data name="StartupCount" xml:space="preserve"><value>{0} of {1} enabled</value></data>
+  <data name="SearchStartup" xml:space="preserve"><value>Search by name or command</value></data>
+  <data name="StartupHint" xml:space="preserve"><value>Double-click an entry to open its registry key or folder</value></data>
+  <data name="OpenError" xml:space="preserve"><value>The entry could not be opened</value></data>
 </root>

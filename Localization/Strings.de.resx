@@ -137,4 +137,15 @@
   <data name="ParentPid" xml:space="preserve"><value>Übergeordnete PID</value></data>
   <data name="SessionName" xml:space="preserve"><value>Sitzung {0}</value></data>
   <data name="SearchUsers" xml:space="preserve"><value>Nach Benutzername suchen</value></data>
+  <data name="StartupTab" xml:space="preserve"><value>Autostart</value></data>
+  <data name="StartupCommand" xml:space="preserve"><value>Befehl</value></data>
+  <data name="StartupSource" xml:space="preserve"><value>Quelle</value></data>
+  <data name="StartupEnabled" xml:space="preserve"><value>Aktiviert</value></data>
+  <data name="StartupDisabled" xml:space="preserve"><value>Deaktiviert</value></data>
+  <data name="StartupUserFolder" xml:space="preserve"><value>Autostart-Ordner (Benutzer)</value></data>
+  <data name="StartupCommonFolder" xml:space="preserve"><value>Autostart-Ordner (alle Benutzer)</value></data>
+  <data name="StartupCount" xml:space="preserve"><value>{0} von {1} aktiviert</value></data>
+  <data name="SearchStartup" xml:space="preserve"><value>Nach Name oder Befehl suchen</value></data>
+  <data name="StartupHint" xml:space="preserve"><value>Doppelklick öffnet den Registrierungsschlüssel oder Ordner des Eintrags</value></data>
+  <data name="OpenError" xml:space="preserve"><value>Der Eintrag konnte nicht geöffnet werden</value></data>
 </root>
