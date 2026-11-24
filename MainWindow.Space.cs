@@ -167,7 +167,12 @@ public sealed partial class MainWindow
 
         var items = folder.Children.Select(node => (Node: node, Size: node.Size))
             .OrderByDescending(item => item.Size).ThenBy(item => item.Node.Name, StringComparer.CurrentCultureIgnoreCase).ToList();
-        UpdateSpaceList(folder, items, size);
+        var listItems = SortItems(LowerTab.Space, items, (item, column) => column switch
+        {
+            "Name" => SpaceRow.Label(item.Node), "Size" or "Share" => item.Size,
+            _ => throw new ArgumentOutOfRangeException(nameof(column))
+        });
+        UpdateSpaceList(folder, listItems, size);
 
         double width = SpaceMap.ActualWidth, height = SpaceMap.ActualHeight;
         if (width < 20 || height < 20) return;
@@ -210,14 +215,14 @@ public sealed partial class MainWindow
         }
     }
 
-    private void UpdateSpaceList(SpaceNode folder, List<(SpaceNode Node, long Size)> items, long total)
+    private void UpdateSpaceList(SpaceNode folder, IEnumerable<(SpaceNode Node, long Size)> items, long total)
     {
         if (!ReferenceEquals(folder, _listedFolder))
         {
             _listedFolder = folder;
             _spaceRows.Clear();
         }
-        var rows = new List<SpaceRow>(items.Count);
+        var rows = new List<SpaceRow>();
         foreach (var (node, size) in items)
         {
             if (!_spaceRows.TryGetValue(node, out var row)) _spaceRows[node] = row = new SpaceRow(node);

@@ -221,4 +221,6 @@
   <data name="NeighborStatic" xml:space="preserve"><value>Static</value></data>
   <data name="NetworkCount" xml:space="preserve"><value>{0} of {1} connected</value></data>
   <data name="ElevateButton" xml:space="preserve"><value>Restart as administrator</value></data>
+  <data name="SpaceSize" xml:space="preserve"><value>Size</value></data>
+  <data name="SpaceShare" xml:space="preserve"><value>Share</value></data>
 </root>

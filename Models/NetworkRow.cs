@@ -12,6 +12,7 @@ public sealed class NetworkRow : ObservableRow
     private Thickness _indent;
 
     internal NetworkRow() { }
+    internal (string Adapter, string? Device) Key { get; private set; }
 
     public string Glyph => _glyph;
     public Thickness Indent => _indent;
@@ -28,6 +29,7 @@ public sealed class NetworkRow : ObservableRow
 
     internal void Update(NetworkAdapter adapter, AdapterSample? sample)
     {
+        Key = (adapter.Id, null);
         var lines = new List<string> { adapter.Description };
         AddLine(lines, UiText.Get("NetworkAddress"), adapter.Addresses);
         AddLine(lines, UiText.Get("NetworkGateway"), adapter.Gateways);
@@ -46,16 +48,12 @@ public sealed class NetworkRow : ObservableRow
     }
 
     // host is the device's name on the network, or empty when it has none.
-    internal void Update(NetworkNeighbor device, string host)
+    internal void Update(string adapterId, NetworkNeighbor device, string host)
     {
+        Key = (adapterId, device.Mac);
         string address = device.Addresses[0].ToString();
-        Show(device.Gateway ? "" : "", 26, host.Length != 0 ? host : address,
-            UiText.Get(device.Gateway ? "NetworkGateway" : "NetworkDevice"), address, device.Mac, UiText.Get(device.State switch
-            {
-                NeighborState.Reachable => "NeighborReachable",
-                NeighborState.Permanent => "NeighborStatic",
-                _ => "NeighborIdle"
-            }), "", "", string.Join(Environment.NewLine, device.Addresses));
+        Show(device.Gateway ? "" : "", 26, DeviceName(device, host),
+            UiText.Get(device.Gateway ? "NetworkGateway" : "NetworkDevice"), address, device.Mac, StateLabel(device.State), "", "", string.Join(Environment.NewLine, device.Addresses));
     }
 
     private void Show(string glyph, double indent, string name, string type, string address, string mac, string state,
@@ -78,8 +76,10 @@ public sealed class NetworkRow : ObservableRow
         if (values.Count != 0) lines.Add($"{label}: {string.Join(", ", values)}");
     }
 
+    internal static string DeviceName(NetworkNeighbor device, string host) => host.Length != 0 ? host : device.Addresses[0].ToString();
+
     // Technology names are identifiers and stay untranslated.
-    private static string TypeName(NetworkInterfaceType type) => type switch
+    internal static string TypeName(NetworkInterfaceType type) => type switch
     {
         NetworkInterfaceType.Wireless80211 => "Wi-Fi",
         NetworkInterfaceType.Ethernet or NetworkInterfaceType.GigabitEthernet or NetworkInterfaceType.FastEthernetT or
@@ -89,4 +89,11 @@ public sealed class NetworkRow : ObservableRow
         NetworkInterfaceType.Wwanpp or NetworkInterfaceType.Wwanpp2 => UiText.Get("AdapterMobile"),
         _ => UiText.Get("AdapterOther")
     };
+
+    internal static string StateLabel(NeighborState state) => UiText.Get(state switch
+        {
+            NeighborState.Reachable => "NeighborReachable",
+            NeighborState.Permanent => "NeighborStatic",
+            _ => "NeighborIdle"
+        });
 }

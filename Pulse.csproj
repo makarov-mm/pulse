@@ -26,5 +26,6 @@
   <ItemGroup Condition="'$(PulseWindowChecks)' == 'true'">
     <Compile Remove="App.xaml.cs" />
     <Compile Include="tests\WindowChecks.cs" />
+    <Compile Include="tests\TableChecks.cs" />
   </ItemGroup>
 </Project>

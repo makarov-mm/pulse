@@ -115,6 +115,7 @@ public sealed partial class MainWindow
         for (int second = 0; second <= 1000; second++) RecordMoment(sample with { Time = second });
         Require(_moments.Count == 901 && _moments[0].Time == 100, "Unexpected 15-minute retention boundary.");
         CheckMonitorTabs();
+        await CheckTableHeadersAsync();
         await CheckDiskSpaceAsync();
         PauseButton.IsChecked = false;
         PauseClicked(this, new());
@@ -300,11 +301,25 @@ public sealed partial class MainWindow
             Require(Math.Abs(fraction - 1024.0 / root.Size) < 0.001, "The treemap excluded the smaller items from its scale.");
 
             var nested = root.Children.Single(n => n.Name == "Nested");
+            await ClickHeaderAsync(SpaceHeaders, "Name");
+            var names = SpaceItems.Items.Cast<SpaceRow>().Select(r => r.Name).ToList();
+            Require(names.SequenceEqual(names.Order(StringComparer.CurrentCultureIgnoreCase)), "Disk names did not sort alphabetically.");
+            var tile = SpaceMap.Children.OfType<Border>().First();
+            Require(Math.Abs(tile.Width - first.Width) < 0.01, "Sorting the list changed the treemap.");
+            await ClickHeaderAsync(SpaceHeaders, "Share");
+            Require(((SpaceRow)SpaceItems.Items[0]).Node == nested, "Disk share did not sort by byte count.");
             var row = _spaceRows[nested];
             SpaceItems.SelectedItem = row;
             SpaceItems.ScrollIntoView(row);
             SpaceItems.UpdateLayout();
-            Require(((ListViewItem)SpaceItems.ContainerFromItem(row)).Focus(FocusState.Keyboard), "Could not focus a folder.");
+            var folderContainer = (ListViewItem)SpaceItems.ContainerFromItem(row);
+            var cells = (Grid)folderContainer.ContentTemplateRoot;
+            var amount = (TextBlock)cells.Children[2];
+            double rightEdge = amount.TransformToVisual(SpaceHeaders).TransformPoint(new(amount.ActualWidth, 0)).X;
+            var sizeHeader = (Button)SpaceHeaders.Children[1];
+            double headingEdge = sizeHeader.TransformToVisual(SpaceHeaders).TransformPoint(new(sizeHeader.ActualWidth, 0)).X;
+            Require(Math.Abs(rightEdge - headingEdge) <= 2, $"Disk size cell ends at {rightEdge} DIP, heading at {headingEdge}; row width {cells.ActualWidth}, header width {SpaceHeaders.ActualWidth}, list width {SpaceItems.ActualWidth}, container width {folderContainer.ActualWidth}.");
+            Require(folderContainer.Focus(FocusState.Keyboard), "Could not focus a folder.");
             root.Children.Single(n => n.Name == "Small0").Add(2048);
             DrawSpace();
             Require((FocusManager.GetFocusedElement(Root.XamlRoot) as ListViewItem)?.Content == row &&

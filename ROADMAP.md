@@ -75,7 +75,7 @@ TaskExplorer's thread and socket panels inform the inspector. Task Manager's Ser
 - Start with a directory walk at the user's access level. Consider reading the NTFS master file table for speed only if Pulse gains an elevated mode.
 - **Acceptance.** The totals for a test folder match File Explorer's properties. Folders the user cannot read are listed as unread instead of counted as empty. Cancelling a scan of a large volume returns control within a second.
 
-**Status.** The Disk space tab scans a selected drive or folder in the background. The treemap and list support drill-down, cancellation retains partial results, and the current folder opens in File Explorer. Regression checks cover logical byte totals, unread entries, keyboard focus during list reordering and the area assigned to smaller items. Remaining work:
+**Status.** The Disk space tab scans a selected drive or folder in the background. The treemap and list support drill-down. The list sorts by name, size or share. Cancelling retains partial results, and the current folder opens in File Explorer. Regression checks cover logical byte totals, unread entries, keyboard focus during list reordering and the area assigned to smaller items. Remaining work:
 
 - Run the acceptance checks against File Explorer and on a large volume.
 - Report allocated size beside file length.

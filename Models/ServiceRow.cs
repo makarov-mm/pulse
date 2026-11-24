@@ -23,15 +23,17 @@ public sealed class ServiceRow : ObservableRow
         Info = service;
         Set(ref _name, service.Name, nameof(Name));
         Set(ref _title, service.DisplayName, nameof(Title));
-        Set(ref _state, UiText.Get(service.State switch
-        {
-            ServiceState.Running => "ServiceRunning",
-            ServiceState.Stopped => "ServiceStopped",
-            ServiceState.StartPending or ServiceState.ContinuePending => "ServiceStarting",
-            ServiceState.StopPending => "ServiceStopping",
-            _ => "ServicePaused"
-        }), nameof(State));
+        Set(ref _state, StateLabel(service.State), nameof(State));
         Set(ref _pid, service.Pid == 0 ? "" : service.Pid.ToString(), nameof(Pid));
         Set(ref _host, process, nameof(Host));
     }
+
+    internal static string StateLabel(ServiceState state) => UiText.Get(state switch
+    {
+        ServiceState.Running => "ServiceRunning",
+        ServiceState.Stopped => "ServiceStopped",
+        ServiceState.StartPending or ServiceState.ContinuePending => "ServiceStarting",
+        ServiceState.StopPending => "ServiceStopping",
+        _ => "ServicePaused"
+    });
 }

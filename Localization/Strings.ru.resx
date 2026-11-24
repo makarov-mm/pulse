@@ -221,4 +221,6 @@
   <data name="NeighborStatic" xml:space="preserve"><value>Статическая</value></data>
   <data name="NetworkCount" xml:space="preserve"><value>{0} из {1} подключено</value></data>
   <data name="ElevateButton" xml:space="preserve"><value>От имени администратора</value></data>
+  <data name="SpaceSize" xml:space="preserve"><value>Размер</value></data>
+  <data name="SpaceShare" xml:space="preserve"><value>Доля</value></data>
 </root>

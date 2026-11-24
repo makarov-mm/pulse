@@ -11,7 +11,8 @@ public sealed class DetailRow : ObservableRow
     private string? _commandTip;
 
     internal DetailRow() { }
-    internal int ProcessId { get; private set; }
+    internal ProcessKey Key { get; private set; }
+    internal int ProcessId => Key.Pid;
 
     public string Name => _name;
     public string Pid => _pid;
@@ -35,7 +36,7 @@ public sealed class DetailRow : ObservableRow
     internal void Update(TaskSample task, ProcessIdentity? identity)
     {
         var info = task.Info;
-        ProcessId = info.Key.Pid;
+        Key = info.Key;
         Set(ref _name, info.Name, nameof(Name));
         Set(ref _pid, info.Key.Pid.ToString(), nameof(Pid));
         Set(ref _parent, info.ParentId == 0 ? "" : info.ParentId.ToString(), nameof(Parent));

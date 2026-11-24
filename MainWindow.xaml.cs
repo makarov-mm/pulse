@@ -58,6 +58,7 @@ public sealed partial class MainWindow : Window
         }
         TaskList.ItemsSource = _visible;
         CreateTabs();
+        ConfigureTableHeaders();
         Inspector.PaneClosed += (_, _) => { if (!Inspector.IsPaneOpen) ClearSelection(); };
         CpuCard.Configure(UiText.Get("Processor"), "\uE950", true, v => Format.Percent(v));
         MemoryCard.Configure(UiText.Get("Memory"), "\uE964", true, v => Format.Percent(v));
@@ -260,6 +261,7 @@ public sealed partial class MainWindow : Window
 
     private void UpdateHeaders()
     {
+        UpdateTabHeaders();
         foreach (var (button, label) in new[] { (NameHeader, UiText.Get("Name")), (PidHeader, "PID"), (CpuHeader, UiText.Get("CPU")),
                      (RamHeader, UiText.Get("Memory")), (IoHeader, UiText.Get("InputOutput")), (ThreadsHeader, UiText.Get("Threads")) })
         {
@@ -414,9 +416,6 @@ public sealed partial class MainWindow : Window
         ErrorBar.Message = message;
         ErrorBar.IsOpen = true;
     }
-
-    private void TableSizeChanged(object sender, SizeChangedEventArgs e) =>
-        TableBody.Width = Math.Max(650, e.NewSize.Width);
 
     private void RootSizeChanged(object sender, SizeChangedEventArgs e)
     {
