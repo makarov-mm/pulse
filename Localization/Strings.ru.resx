@@ -182,4 +182,15 @@
   <data name="PriorityAboveNormal" xml:space="preserve"><value>Выше среднего</value></data>
   <data name="PriorityHigh" xml:space="preserve"><value>Высокий</value></data>
   <data name="PriorityRealtime" xml:space="preserve"><value>Реального времени</value></data>
+  <data name="SpaceTab" xml:space="preserve"><value>Место на диске</value></data>
+  <data name="SpaceScan" xml:space="preserve"><value>Сканировать</value></data>
+  <data name="SpaceUpLabel" xml:space="preserve"><value>На уровень выше</value></data>
+  <data name="SpaceOpenLabel" xml:space="preserve"><value>Открыть в Проводнике</value></data>
+  <data name="SpaceDriveLabel" xml:space="preserve"><value>Диск</value></data>
+  <data name="SpaceDrive" xml:space="preserve"><value>{0}   ·   свободно {1} из {2}</value></data>
+  <data name="SpaceMoreFiles" xml:space="preserve"><value>ещё файлов: {0}</value></data>
+  <data name="SpaceOther" xml:space="preserve"><value>мелких элементов: {0}</value></data>
+  <data name="SpaceUnread" xml:space="preserve"><value>нет доступа</value></data>
+  <data name="SpaceScanning" xml:space="preserve"><value>сканирование…</value></data>
+  <data name="SpacePrompt" xml:space="preserve"><value>Выберите диск и нажмите «Сканировать»</value></data>
 </root>

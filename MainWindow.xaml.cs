@@ -68,6 +68,7 @@ public sealed partial class MainWindow : Window
         MemoryCard.SampleSelected += (_, time) => ShowMoment(MemoryCard, time);
         UpdateSpanText();
         CreateDeviceViews();
+        CreateSpace();
         CreateFacts();
         UpdateHeaders();
         ApplySystemTheme();

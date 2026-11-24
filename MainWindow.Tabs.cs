@@ -9,11 +9,11 @@ using Pulse.Telemetry;
 
 namespace Pulse;
 
-// The tabs of the lower pane: Processes, Details, Users, Connections, Startup apps and Services.
+// The tabs of the lower pane: Processes, Details, Users, Connections, Startup apps, Services and Disk space.
 public sealed partial class MainWindow
 {
     // In the order of the tab bar.
-    private enum LowerTab { Processes, Details, Users, Connections, Startup, Services }
+    private enum LowerTab { Processes, Details, Users, Connections, Startup, Services, Space }
 
     private readonly ObservableCollection<DetailRow> _detailRows = [];
     private readonly ObservableCollection<UserRow> _userRows = [];
@@ -37,21 +37,25 @@ public sealed partial class MainWindow
         ConnectionsTab.Text = UiText.Get("Connections");
         StartupTab.Text = UiText.Get("StartupTab");
         ServicesTab.Text = UiText.Get("Services");
+        SpaceTab.Text = UiText.Get("SpaceTab");
         Tabs.SelectedItem = ProcessesTab;
     }
 
     private void TabChanged(SelectorBar sender, SelectorBarSelectionChangedEventArgs args)
     {
         // A selection can be raised while the window is still being built.
-        if (ServicesView is null || DetailsView is null || UsersView is null || ConnectionsView is null || StartupView is null || Inspector is null || TreeButton is null) return;
+        if (ServicesView is null || DetailsView is null || UsersView is null || ConnectionsView is null || StartupView is null || SpaceView is null || Inspector is null || TreeButton is null) return;
         int index = sender.SelectedItem is { } selected ? sender.Items.IndexOf(selected) : 0;
-        _tab = index is >= 0 and <= (int)LowerTab.Services ? (LowerTab)index : LowerTab.Processes;
+        _tab = index is >= 0 and <= (int)LowerTab.Space ? (LowerTab)index : LowerTab.Processes;
         Inspector.Visibility = Shown(LowerTab.Processes);
         DetailsView.Visibility = Shown(LowerTab.Details);
         UsersView.Visibility = Shown(LowerTab.Users);
         ConnectionsView.Visibility = Shown(LowerTab.Connections);
         StartupView.Visibility = Shown(LowerTab.Startup);
         ServicesView.Visibility = Shown(LowerTab.Services);
+        SpaceView.Visibility = Shown(LowerTab.Space);
+        // The disk space tab has nothing to search.
+        SearchBox.Visibility = _tab == LowerTab.Space ? Visibility.Collapsed : Visibility.Visible;
         TreeButton.Visibility = Shown(LowerTab.Processes);
         SearchBox.PlaceholderText = UiText.Get(_tab switch
         {
@@ -64,6 +68,7 @@ public sealed partial class MainWindow
         RefreshInspectorSources();
         UpdateRows();
         UpdateTabRows();
+        DrawSpace();
     }
 
     private Visibility Shown(LowerTab tab) => _tab == tab ? Visibility.Visible : Visibility.Collapsed;
@@ -79,6 +84,7 @@ public sealed partial class MainWindow
             case LowerTab.Connections: UpdateConnectionRows(); break;
             case LowerTab.Startup: UpdateStartupRows(_frame.Tasks); break;
             case LowerTab.Services: UpdateServiceRows(); break;
+            case LowerTab.Space: if (_spaceRoot is { } root) CountText.Text = Format.Bytes(root.Size); else CountText.Text = ""; break;
         }
     }
 

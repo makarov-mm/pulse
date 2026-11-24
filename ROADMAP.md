@@ -75,6 +75,13 @@ TaskExplorer's thread and socket panels inform the inspector. Task Manager's Ser
 - Start with a directory walk at the user's access level. Consider reading the NTFS master file table for speed only if Pulse gains an elevated mode.
 - **Acceptance.** The totals for a test folder match File Explorer's properties. Folders the user cannot read are listed as unread instead of counted as empty. Cancelling a scan of a large volume returns control within a second.
 
+**Status.** The Disk space tab scans a drive in the background with a directory walk, shows partial results, can be cancelled and drills down through a treemap and a list. It opens the current folder in File Explorer. Remaining work:
+
+- Run the acceptance checks against File Explorer and on a large volume.
+- Scan a chosen folder as well as a whole drive.
+- Report allocated size beside file length.
+- Keep keyboard focus in the list while a running scan redraws it.
+
 WinDirStat and WizTree inform the views. A registry editor is out of scope. Startup entries link to Registry Editor instead. [WinDirStat](https://windirstat.net/) · [WizTree](https://diskanalyzer.com/)
 
 Before releasing each milestone, exercise its keyboard path, light and dark themes, high contrast, and the shipped translations. Measure idle overhead and memory growth using the same process count and refresh interval as the baseline.
