@@ -9,6 +9,7 @@ public sealed class ServiceRow : ObservableRow
 
     internal ServiceRow() { }
     internal int ProcessId { get; private set; }
+    internal ServiceInfo? Info { get; private set; }
 
     public string Name => _name;
     public string Title => _title;
@@ -19,6 +20,7 @@ public sealed class ServiceRow : ObservableRow
     internal void Update(ServiceInfo service, string process)
     {
         ProcessId = service.Pid;
+        Info = service;
         Set(ref _name, service.Name, nameof(Name));
         Set(ref _title, service.DisplayName, nameof(Title));
         Set(ref _state, UiText.Get(service.State switch

@@ -130,7 +130,7 @@
   <data name="ServicePaused" xml:space="preserve"><value>Angehalten</value></data>
   <data name="ServiceCount" xml:space="preserve"><value>{0} von {1} aktiv</value></data>
   <data name="SearchServices" xml:space="preserve"><value>Nach Name, Beschreibung oder PID suchen</value></data>
-  <data name="ServiceHint" xml:space="preserve"><value>Doppelklick auf einen laufenden Dienst zeigt seinen Prozess</value></data>
+  <data name="ServiceHint" xml:space="preserve"><value>Rechtsklick zeigt Aktionen. Doppelklick auf einen laufenden Dienst zeigt seinen Prozess</value></data>
   <data name="DetailsTab" xml:space="preserve"><value>Details</value></data>
   <data name="Users" xml:space="preserve"><value>Benutzer</value></data>
   <data name="User" xml:space="preserve"><value>Benutzer</value></data>
@@ -146,11 +146,31 @@
   <data name="StartupCommonFolder" xml:space="preserve"><value>Autostart-Ordner (alle Benutzer)</value></data>
   <data name="StartupCount" xml:space="preserve"><value>{0} von {1} aktiviert</value></data>
   <data name="SearchStartup" xml:space="preserve"><value>Nach Name oder Befehl suchen</value></data>
-  <data name="StartupHint" xml:space="preserve"><value>Doppelklick öffnet den Registrierungsschlüssel oder Ordner des Eintrags</value></data>
+  <data name="StartupHint" xml:space="preserve"><value>Rechtsklick zeigt Aktionen. Doppelklick öffnet den Registrierungsschlüssel oder Ordner des Eintrags</value></data>
   <data name="OpenError" xml:space="preserve"><value>Der Eintrag konnte nicht geöffnet werden</value></data>
   <data name="Connections" xml:space="preserve"><value>Verbindungen</value></data>
   <data name="ConnectionProtocol" xml:space="preserve"><value>Protokoll</value></data>
   <data name="LocalEndpoint" xml:space="preserve"><value>Lokale Adresse</value></data>
   <data name="RemoteEndpoint" xml:space="preserve"><value>Remoteadresse</value></data>
   <data name="SearchConnections" xml:space="preserve"><value>Nach Prozess, PID, Adresse oder Port suchen</value></data>
+  <data name="MenuEnable" xml:space="preserve"><value>Aktivieren</value></data>
+  <data name="MenuDisable" xml:space="preserve"><value>Deaktivieren</value></data>
+  <data name="MenuEditCommand" xml:space="preserve"><value>Befehl bearbeiten…</value></data>
+  <data name="MenuDelete" xml:space="preserve"><value>Löschen…</value></data>
+  <data name="MenuOpenLocation" xml:space="preserve"><value>Speicherort öffnen</value></data>
+  <data name="MenuElevate" xml:space="preserve"><value>Pulse als Administrator neu starten</value></data>
+  <data name="MenuStart" xml:space="preserve"><value>Starten</value></data>
+  <data name="MenuStop" xml:space="preserve"><value>Beenden</value></data>
+  <data name="MenuRestart" xml:space="preserve"><value>Neu starten</value></data>
+  <data name="MenuStartType" xml:space="preserve"><value>Starttyp</value></data>
+  <data name="StartAutomatic" xml:space="preserve"><value>Automatisch</value></data>
+  <data name="StartManual" xml:space="preserve"><value>Manuell</value></data>
+  <data name="MenuShowProcess" xml:space="preserve"><value>Prozess anzeigen</value></data>
+  <data name="ConfirmDelete" xml:space="preserve"><value>{0} löschen?</value></data>
+  <data name="ConfirmDeleteBody" xml:space="preserve"><value>Der Autostart-Eintrag wird aus {0} entfernt. Dies kann nicht rückgängig gemacht werden.</value></data>
+  <data name="EditCommandTitle" xml:space="preserve"><value>Befehl für {0}</value></data>
+  <data name="Save" xml:space="preserve"><value>Speichern</value></data>
+  <data name="DeleteButton" xml:space="preserve"><value>Löschen</value></data>
+  <data name="ActionError" xml:space="preserve"><value>Die Aktion konnte nicht abgeschlossen werden</value></data>
+  <data name="ActionTimeout" xml:space="preserve"><value>Der Dienst wurde nicht rechtzeitig beendet.</value></data>
 </root>

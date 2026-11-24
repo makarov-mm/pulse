@@ -130,7 +130,7 @@
   <data name="ServicePaused" xml:space="preserve"><value>Приостановлена</value></data>
   <data name="ServiceCount" xml:space="preserve"><value>{0} из {1} выполняется</value></data>
   <data name="SearchServices" xml:space="preserve"><value>Поиск по имени, описанию или PID</value></data>
-  <data name="ServiceHint" xml:space="preserve"><value>Дважды щёлкните выполняющуюся службу, чтобы показать её процесс</value></data>
+  <data name="ServiceHint" xml:space="preserve"><value>Правый щелчок открывает действия. Двойной щелчок по выполняющейся службе показывает её процесс</value></data>
   <data name="DetailsTab" xml:space="preserve"><value>Подробности</value></data>
   <data name="Users" xml:space="preserve"><value>Пользователи</value></data>
   <data name="User" xml:space="preserve"><value>Пользователь</value></data>
@@ -146,11 +146,31 @@
   <data name="StartupCommonFolder" xml:space="preserve"><value>Папка автозагрузки (все пользователи)</value></data>
   <data name="StartupCount" xml:space="preserve"><value>{0} из {1} включено</value></data>
   <data name="SearchStartup" xml:space="preserve"><value>Поиск по имени или команде</value></data>
-  <data name="StartupHint" xml:space="preserve"><value>Двойной щелчок открывает раздел реестра или папку записи</value></data>
+  <data name="StartupHint" xml:space="preserve"><value>Правый щелчок открывает действия. Двойной щелчок открывает раздел реестра или папку записи</value></data>
   <data name="OpenError" xml:space="preserve"><value>Не удалось открыть запись</value></data>
   <data name="Connections" xml:space="preserve"><value>Соединения</value></data>
   <data name="ConnectionProtocol" xml:space="preserve"><value>Протокол</value></data>
   <data name="LocalEndpoint" xml:space="preserve"><value>Локальный адрес</value></data>
   <data name="RemoteEndpoint" xml:space="preserve"><value>Удалённый адрес</value></data>
   <data name="SearchConnections" xml:space="preserve"><value>Поиск по процессу, PID, адресу или порту</value></data>
+  <data name="MenuEnable" xml:space="preserve"><value>Включить</value></data>
+  <data name="MenuDisable" xml:space="preserve"><value>Отключить</value></data>
+  <data name="MenuEditCommand" xml:space="preserve"><value>Изменить команду…</value></data>
+  <data name="MenuDelete" xml:space="preserve"><value>Удалить…</value></data>
+  <data name="MenuOpenLocation" xml:space="preserve"><value>Открыть расположение</value></data>
+  <data name="MenuElevate" xml:space="preserve"><value>Перезапустить Pulse от имени администратора</value></data>
+  <data name="MenuStart" xml:space="preserve"><value>Запустить</value></data>
+  <data name="MenuStop" xml:space="preserve"><value>Остановить</value></data>
+  <data name="MenuRestart" xml:space="preserve"><value>Перезапустить</value></data>
+  <data name="MenuStartType" xml:space="preserve"><value>Тип запуска</value></data>
+  <data name="StartAutomatic" xml:space="preserve"><value>Автоматически</value></data>
+  <data name="StartManual" xml:space="preserve"><value>Вручную</value></data>
+  <data name="MenuShowProcess" xml:space="preserve"><value>Показать процесс</value></data>
+  <data name="ConfirmDelete" xml:space="preserve"><value>Удалить «{0}»?</value></data>
+  <data name="ConfirmDeleteBody" xml:space="preserve"><value>Запись автозагрузки будет удалена из {0}. Это действие нельзя отменить.</value></data>
+  <data name="EditCommandTitle" xml:space="preserve"><value>Команда для «{0}»</value></data>
+  <data name="Save" xml:space="preserve"><value>Сохранить</value></data>
+  <data name="DeleteButton" xml:space="preserve"><value>Удалить</value></data>
+  <data name="ActionError" xml:space="preserve"><value>Не удалось выполнить действие</value></data>
+  <data name="ActionTimeout" xml:space="preserve"><value>Служба не остановилась вовремя.</value></data>
 </root>

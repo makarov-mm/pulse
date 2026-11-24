@@ -307,7 +307,7 @@
                                 <TextBlock Grid.Column="4" Text="{loc:Localize Key=ServiceProcess}" Style="{StaticResource ColumnTitle}"/>
                             </Grid>
                         </Border>
-                        <ListView Grid.Row="1" x:Name="StartupList" SelectionMode="Single" DoubleTapped="StartupDoubleTapped" Padding="0"
+                        <ListView Grid.Row="1" x:Name="StartupList" SelectionMode="Single" DoubleTapped="StartupDoubleTapped" RightTapped="StartupRightTapped" KeyDown="StartupKeyDown" Padding="0"
                             AutomationProperties.Name="{loc:Localize Key=StartupTab}">
                             <ListView.ItemContainerTransitions><TransitionCollection/></ListView.ItemContainerTransitions>
                             <ListView.ItemContainerStyle>
@@ -342,7 +342,7 @@
                                 <TextBlock Grid.Column="4" Text="{loc:Localize Key=ServiceProcess}" Style="{StaticResource ColumnTitle}" ToolTipService.ToolTip="{loc:Localize Key=ServiceHint}"/>
                             </Grid>
                         </Border>
-                        <ListView Grid.Row="1" x:Name="ServiceList" SelectionMode="Single" DoubleTapped="ServiceDoubleTapped" Padding="0"
+                        <ListView Grid.Row="1" x:Name="ServiceList" SelectionMode="Single" DoubleTapped="ServiceDoubleTapped" RightTapped="ServiceRightTapped" KeyDown="ServiceKeyDown" Padding="0"
                             AutomationProperties.Name="{loc:Localize Key=Services}">
                             <ListView.ItemContainerTransitions><TransitionCollection/></ListView.ItemContainerTransitions>
                             <ListView.ItemContainerStyle>

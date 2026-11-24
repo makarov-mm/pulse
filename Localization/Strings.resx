@@ -130,7 +130,7 @@
   <data name="ServicePaused" xml:space="preserve"><value>Paused</value></data>
   <data name="ServiceCount" xml:space="preserve"><value>{0} of {1} running</value></data>
   <data name="SearchServices" xml:space="preserve"><value>Search by name, description or PID</value></data>
-  <data name="ServiceHint" xml:space="preserve"><value>Double-click a running service to show its process</value></data>
+  <data name="ServiceHint" xml:space="preserve"><value>Right-click a service for actions. Double-click a running service to show its process</value></data>
   <data name="DetailsTab" xml:space="preserve"><value>Details</value></data>
   <data name="Users" xml:space="preserve"><value>Users</value></data>
   <data name="User" xml:space="preserve"><value>User</value></data>
@@ -146,11 +146,31 @@
   <data name="StartupCommonFolder" xml:space="preserve"><value>Startup folder (all users)</value></data>
   <data name="StartupCount" xml:space="preserve"><value>{0} of {1} enabled</value></data>
   <data name="SearchStartup" xml:space="preserve"><value>Search by name or command</value></data>
-  <data name="StartupHint" xml:space="preserve"><value>Double-click an entry to open its registry key or folder</value></data>
+  <data name="StartupHint" xml:space="preserve"><value>Right-click an entry for actions. Double-click opens its registry key or folder</value></data>
   <data name="OpenError" xml:space="preserve"><value>The entry could not be opened</value></data>
   <data name="Connections" xml:space="preserve"><value>Connections</value></data>
   <data name="ConnectionProtocol" xml:space="preserve"><value>Protocol</value></data>
   <data name="LocalEndpoint" xml:space="preserve"><value>Local address</value></data>
   <data name="RemoteEndpoint" xml:space="preserve"><value>Remote address</value></data>
   <data name="SearchConnections" xml:space="preserve"><value>Search by process, PID, address or port</value></data>
+  <data name="MenuEnable" xml:space="preserve"><value>Enable</value></data>
+  <data name="MenuDisable" xml:space="preserve"><value>Disable</value></data>
+  <data name="MenuEditCommand" xml:space="preserve"><value>Edit command…</value></data>
+  <data name="MenuDelete" xml:space="preserve"><value>Delete…</value></data>
+  <data name="MenuOpenLocation" xml:space="preserve"><value>Open location</value></data>
+  <data name="MenuElevate" xml:space="preserve"><value>Restart Pulse as administrator</value></data>
+  <data name="MenuStart" xml:space="preserve"><value>Start</value></data>
+  <data name="MenuStop" xml:space="preserve"><value>Stop</value></data>
+  <data name="MenuRestart" xml:space="preserve"><value>Restart</value></data>
+  <data name="MenuStartType" xml:space="preserve"><value>Startup type</value></data>
+  <data name="StartAutomatic" xml:space="preserve"><value>Automatic</value></data>
+  <data name="StartManual" xml:space="preserve"><value>Manual</value></data>
+  <data name="MenuShowProcess" xml:space="preserve"><value>Show process</value></data>
+  <data name="ConfirmDelete" xml:space="preserve"><value>Delete {0}?</value></data>
+  <data name="ConfirmDeleteBody" xml:space="preserve"><value>The startup entry is removed from {0}. This cannot be undone.</value></data>
+  <data name="EditCommandTitle" xml:space="preserve"><value>Command for {0}</value></data>
+  <data name="Save" xml:space="preserve"><value>Save</value></data>
+  <data name="DeleteButton" xml:space="preserve"><value>Delete</value></data>
+  <data name="ActionError" xml:space="preserve"><value>The action could not be completed</value></data>
+  <data name="ActionTimeout" xml:space="preserve"><value>The service did not stop in time.</value></data>
 </root>
