@@ -148,4 +148,9 @@
   <data name="SearchStartup" xml:space="preserve"><value>Поиск по имени или команде</value></data>
   <data name="StartupHint" xml:space="preserve"><value>Двойной щелчок открывает раздел реестра или папку записи</value></data>
   <data name="OpenError" xml:space="preserve"><value>Не удалось открыть запись</value></data>
+  <data name="Connections" xml:space="preserve"><value>Соединения</value></data>
+  <data name="ConnectionProtocol" xml:space="preserve"><value>Протокол</value></data>
+  <data name="LocalEndpoint" xml:space="preserve"><value>Локальный адрес</value></data>
+  <data name="RemoteEndpoint" xml:space="preserve"><value>Удалённый адрес</value></data>
+  <data name="SearchConnections" xml:space="preserve"><value>Поиск по процессу, PID, адресу или порту</value></data>
 </root>

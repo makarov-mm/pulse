@@ -9,28 +9,32 @@ using Pulse.Telemetry;
 
 namespace Pulse;
 
-// The tabs of the lower pane: Processes, Details, Users, Startup apps and Services.
+// The tabs of the lower pane: Processes, Details, Users, Connections, Startup apps and Services.
 public sealed partial class MainWindow
 {
     // In the order of the tab bar.
-    private enum LowerTab { Processes, Details, Users, Startup, Services }
+    private enum LowerTab { Processes, Details, Users, Connections, Startup, Services }
 
     private readonly ObservableCollection<DetailRow> _detailRows = [];
     private readonly ObservableCollection<UserRow> _userRows = [];
+    private readonly ObservableCollection<ConnectionRow> _connectionRows = [];
     private readonly ObservableCollection<StartupRow> _startupRows = [];
     private readonly ObservableCollection<ServiceRow> _serviceRows = [];
     private List<ServiceInfo> _services = [];
+    private List<TcpConnection> _connections = [];
     private LowerTab _tab;
 
     private void CreateTabs()
     {
         DetailList.ItemsSource = _detailRows;
         UserList.ItemsSource = _userRows;
+        ConnectionList.ItemsSource = _connectionRows;
         StartupList.ItemsSource = _startupRows;
         ServiceList.ItemsSource = _serviceRows;
         ProcessesTab.Text = UiText.Get("Processes");
         DetailsTab.Text = UiText.Get("DetailsTab");
         UsersTab.Text = UiText.Get("Users");
+        ConnectionsTab.Text = UiText.Get("Connections");
         StartupTab.Text = UiText.Get("StartupTab");
         ServicesTab.Text = UiText.Get("Services");
         Tabs.SelectedItem = ProcessesTab;
@@ -39,23 +43,25 @@ public sealed partial class MainWindow
     private void TabChanged(SelectorBar sender, SelectorBarSelectionChangedEventArgs args)
     {
         // A selection can be raised while the window is still being built.
-        if (ServicesView is null || DetailsView is null || UsersView is null || StartupView is null || Inspector is null || TreeButton is null) return;
+        if (ServicesView is null || DetailsView is null || UsersView is null || ConnectionsView is null || StartupView is null || Inspector is null || TreeButton is null) return;
         int index = sender.SelectedItem is { } selected ? sender.Items.IndexOf(selected) : 0;
         _tab = index is >= 0 and <= (int)LowerTab.Services ? (LowerTab)index : LowerTab.Processes;
         Inspector.Visibility = Shown(LowerTab.Processes);
         DetailsView.Visibility = Shown(LowerTab.Details);
         UsersView.Visibility = Shown(LowerTab.Users);
+        ConnectionsView.Visibility = Shown(LowerTab.Connections);
         StartupView.Visibility = Shown(LowerTab.Startup);
         ServicesView.Visibility = Shown(LowerTab.Services);
         TreeButton.Visibility = Shown(LowerTab.Processes);
         SearchBox.PlaceholderText = UiText.Get(_tab switch
         {
             LowerTab.Users => "SearchUsers",
+            LowerTab.Connections => "SearchConnections",
             LowerTab.Startup => "SearchStartup",
             LowerTab.Services => "SearchServices",
             _ => "Search"
         });
-        RefreshServices();
+        RefreshInspectorSources();
         UpdateRows();
         UpdateTabRows();
     }
@@ -70,6 +76,7 @@ public sealed partial class MainWindow
         {
             case LowerTab.Details: UpdateDetailRows(_frame.Tasks); break;
             case LowerTab.Users: UpdateUserRows(_frame.Tasks); break;
+            case LowerTab.Connections: UpdateConnectionRows(); break;
             case LowerTab.Startup: UpdateStartupRows(_frame.Tasks); break;
             case LowerTab.Services: UpdateServiceRows(); break;
         }
@@ -147,12 +154,52 @@ public sealed partial class MainWindow
         }
     }
 
-    // Services are only queried while something displays them.
-    private void RefreshServices()
+    // Services and connections are only queried while their tab or the process inspector displays them.
+    private void RefreshInspectorSources()
     {
-        if (_tab != LowerTab.Services && !Inspector.IsPaneOpen) return;
-        try { _services = ServiceSnapshot.Read(); }
-        catch (Win32Exception) { _services = []; }
+        bool inspecting = _tab == LowerTab.Processes && Inspector.IsPaneOpen;
+        if (_tab == LowerTab.Services || inspecting)
+        {
+            try { _services = ServiceSnapshot.Read(); }
+            catch (Win32Exception) { _services = []; }
+        }
+        if (_tab == LowerTab.Connections || inspecting) _connections = TcpConnections.Read();
+    }
+
+    private string ProcessName(int pid) => _byPid.TryGetValue(pid, out var task) ? task.Info.Name : "";
+
+    private void UpdateConnectionRows()
+    {
+        string search = SearchBox.Text.Trim();
+        var matches = _connections
+            .Select(c => (Connection: c, Process: ProcessName(c.Pid)))
+            .Where(m => search.Length == 0 ||
+                m.Process.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                m.Connection.Pid.ToString().Contains(search, StringComparison.Ordinal) ||
+                m.Connection.Local.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                m.Connection.Remote.Contains(search, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(m => m.Process, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(m => m.Connection.Pid)
+            .ThenBy(m => m.Connection.LocalPort)
+            .ToList();
+        Fill(_connectionRows, matches, () => new ConnectionRow(), (row, m) => row.Update(m.Connection, m.Process));
+        CountText.Text = matches.Count == _connections.Count ? $"{matches.Count}" : $"{matches.Count} / {_connections.Count}";
+    }
+
+    private void ConnectionDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+    {
+        if (ConnectionList.SelectedItem is ConnectionRow { ProcessId: not 0 } row) ShowProcess(row.ProcessId);
+    }
+
+    // The peers of a process's open connections, for the inspector.
+    private string RemoteEndpoints(int pid)
+    {
+        const int shown = 6;
+        var peers = _connections.Where(c => c.Pid == pid && c.State == TcpState.Established)
+            .Select(c => c.Remote).Distinct().ToList();
+        if (peers.Count == 0) return "—";
+        string text = string.Join(Environment.NewLine, peers.Take(shown));
+        return peers.Count > shown ? $"{text}{Environment.NewLine}+{peers.Count - shown}" : text;
     }
 
     private void UpdateServiceRows()
@@ -166,7 +213,7 @@ public sealed partial class MainWindow
             .OrderBy(s => s.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
         Fill(_serviceRows, matches, () => new ServiceRow(),
-            (row, service) => row.Update(service, _byPid.TryGetValue(service.Pid, out var host) ? host.Info.Name : ""));
+            (row, service) => row.Update(service, ProcessName(service.Pid)));
         CountText.Text = UiText.Format("ServiceCount", _services.Count(s => s.State == ServiceState.Running), _services.Count);
     }
 

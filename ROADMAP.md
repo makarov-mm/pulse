@@ -43,7 +43,7 @@ System Informer's history graphs link a point in time to the responsible process
 - Show what Windows makes available at the user's current access level. Close inspection handles when a tab closes or the selected process exits.
 - **Acceptance.** Select a known service host, find its hosted service, and identify a busy thread during a controlled workload. Rapidly switch between processes and verify that counters and connections always belong to the selected process instance.
 
-**Status.** The inspector lists the services hosted by the selected process, and the Services tab links each running service to its process. Thread CPU deltas and TCP connections are not started.
+**Status.** The inspector lists the services hosted by the selected process and the remote addresses of its open TCP connections. The Services and Connections tabs link each service and socket to its process. Thread CPU deltas are not started. UDP endpoints and per-connection byte rates are not shown.
 
 TaskExplorer's thread and socket panels inform the inspector. Task Manager's Services view supplies the service-to-process workflow. [TaskExplorer](https://github.com/DavidXanatos/TaskExplorer) · [Task Manager](https://learn.microsoft.com/en-us/troubleshoot/windows-server/support-tools/support-tools-task-manager)
 
@@ -60,8 +60,8 @@ TaskExplorer's thread and socket panels inform the inspector. Task Manager's Ser
 **Question.** Can Pulse replace both tools for everyday diagnosis?
 
 - Give the lower pane tabs that match Task Manager's pages and add what Resource Monitor shows per process.
-- **Done.** Processes with a collapsible tree and branch totals. Details with separate read and write rates. Users with per-session totals. Startup apps from the registry and Startup folders, with a jump to the key in Registry Editor. Services with status and host process.
-- **Next.** Priority, owner and command line on the Details tab. Enabling and disabling startup entries. Disk activity by file and network activity by connection need thread, file and socket inspection from milestone 3 or an ETW session.
+- **Done.** Processes with a collapsible tree and branch totals. Details with separate read and write rates. Users with per-session totals. Connections with TCP sockets and listening ports per process. Startup apps from the registry and Startup folders, with a jump to the key in Registry Editor. Services with status and host process.
+- **Next.** Priority, owner and command line on the Details tab. Enabling and disabling startup entries. Disk activity by file and byte rates per connection need an ETW session.
 - App history depends on data that Windows collects for packaged apps and stays out of scope until its source is confirmed.
 - **Acceptance.** For each tab, compare the listed items and values with Task Manager or Resource Monitor on the same machine.
 

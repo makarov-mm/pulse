@@ -148,4 +148,9 @@
   <data name="SearchStartup" xml:space="preserve"><value>Nach Name oder Befehl suchen</value></data>
   <data name="StartupHint" xml:space="preserve"><value>Doppelklick öffnet den Registrierungsschlüssel oder Ordner des Eintrags</value></data>
   <data name="OpenError" xml:space="preserve"><value>Der Eintrag konnte nicht geöffnet werden</value></data>
+  <data name="Connections" xml:space="preserve"><value>Verbindungen</value></data>
+  <data name="ConnectionProtocol" xml:space="preserve"><value>Protokoll</value></data>
+  <data name="LocalEndpoint" xml:space="preserve"><value>Lokale Adresse</value></data>
+  <data name="RemoteEndpoint" xml:space="preserve"><value>Remoteadresse</value></data>
+  <data name="SearchConnections" xml:space="preserve"><value>Nach Prozess, PID, Adresse oder Port suchen</value></data>
 </root>

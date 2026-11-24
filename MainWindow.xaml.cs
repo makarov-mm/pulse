@@ -127,7 +127,7 @@ public sealed partial class MainWindow : Window
             UpdateCards(frame);
             UpdateDevices(frame);
             RecordMoment(frame);
-            RefreshServices();
+            RefreshInspectorSources();
             UpdateRows();
             UpdateTabRows();
             var uptime = TimeSpan.FromMilliseconds(Environment.TickCount64);
@@ -273,13 +273,13 @@ public sealed partial class MainWindow : Window
         catch (Win32Exception ex) { _path = ex.NativeErrorCode == 5 ? UiText.Get("AccessDenied") : ex.Message; }
         catch (InvalidOperationException ex) { _path = ex.Message; }
         Inspector.IsPaneOpen = true;
-        RefreshServices();
+        RefreshInspectorSources();
         UpdateDetails();
     }
 
     private void CreateFacts()
     {
-        foreach (var key in new[] { "CPU", "WorkingSet", "PrivateBytes", "ReadRate", "WriteRate", "Threads", "Handles", "Session", "Started", "Parent", "Services" })
+        foreach (var key in new[] { "CPU", "WorkingSet", "PrivateBytes", "ReadRate", "WriteRate", "Threads", "Handles", "Session", "Started", "Parent", "Services", "Connections" })
         {
             var grid = new Grid { ColumnSpacing = 8 };
             grid.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
@@ -318,6 +318,7 @@ public sealed partial class MainWindow : Window
         _facts["Parent"].Text = parent is not null ? $"{parent.Info.Name} ({t.Info.ParentId})" :
             t.Info.ParentId == 0 ? "—" : UiText.Format("ParentExited", t.Info.ParentId);
         _facts["Services"].Text = HostedServices(key.Pid);
+        _facts["Connections"].Text = RemoteEndpoints(key.Pid);
         EndButton.IsEnabled = key.Pid > 4 && key.Pid != Environment.ProcessId;
     }
 
