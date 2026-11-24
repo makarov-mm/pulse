@@ -146,8 +146,7 @@
   <data name="StartupCommonFolder" xml:space="preserve"><value>Папка автозагрузки (все пользователи)</value></data>
   <data name="StartupCount" xml:space="preserve"><value>{0} из {1} включено</value></data>
   <data name="SearchStartup" xml:space="preserve"><value>Поиск по имени или команде</value></data>
-  <data name="StartupHint" xml:space="preserve"><value>Правый щелчок открывает действия. Двойной щелчок открывает раздел реестра или папку записи</value></data>
-  <data name="OpenError" xml:space="preserve"><value>Не удалось открыть запись</value></data>
+  <data name="StartupHint" xml:space="preserve"><value>Двойной щелчок или Enter открывает редактор записи. Правый щелчок открывает остальные действия</value></data>
   <data name="Connections" xml:space="preserve"><value>Соединения</value></data>
   <data name="ConnectionProtocol" xml:space="preserve"><value>Протокол</value></data>
   <data name="LocalEndpoint" xml:space="preserve"><value>Локальный адрес</value></data>
@@ -155,9 +154,7 @@
   <data name="SearchConnections" xml:space="preserve"><value>Поиск по процессу, PID, адресу или порту</value></data>
   <data name="MenuEnable" xml:space="preserve"><value>Включить</value></data>
   <data name="MenuDisable" xml:space="preserve"><value>Отключить</value></data>
-  <data name="MenuEditCommand" xml:space="preserve"><value>Изменить команду…</value></data>
   <data name="MenuDelete" xml:space="preserve"><value>Удалить…</value></data>
-  <data name="MenuOpenLocation" xml:space="preserve"><value>Открыть расположение</value></data>
   <data name="MenuElevate" xml:space="preserve"><value>Перезапустить Pulse от имени администратора</value></data>
   <data name="MenuStart" xml:space="preserve"><value>Запустить</value></data>
   <data name="MenuStop" xml:space="preserve"><value>Остановить</value></data>
@@ -168,7 +165,6 @@
   <data name="MenuShowProcess" xml:space="preserve"><value>Показать процесс</value></data>
   <data name="ConfirmDelete" xml:space="preserve"><value>Удалить «{0}»?</value></data>
   <data name="ConfirmDeleteBody" xml:space="preserve"><value>Запись автозагрузки будет удалена из {0}. Это действие нельзя отменить.</value></data>
-  <data name="EditCommandTitle" xml:space="preserve"><value>Команда для «{0}»</value></data>
   <data name="Save" xml:space="preserve"><value>Сохранить</value></data>
   <data name="DeleteButton" xml:space="preserve"><value>Удалить</value></data>
   <data name="ActionError" xml:space="preserve"><value>Не удалось выполнить действие</value></data>
@@ -200,4 +196,28 @@
   <data name="ServicesUnavailable" xml:space="preserve"><value>Не удалось прочитать список служб. {0}</value></data>
   <data name="ConnectionsUnavailable" xml:space="preserve"><value>Соединения недоступны</value></data>
   <data name="ProtocolUnavailable" xml:space="preserve"><value>{0} недоступен</value></data>
+  <data name="MenuEdit" xml:space="preserve"><value>Изменить…</value></data>
+  <data name="MenuShowFile" xml:space="preserve"><value>Показать в Проводнике</value></data>
+  <data name="EditStartupTitle" xml:space="preserve"><value>Запись автозагрузки «{0}»</value></data>
+  <data name="StartupNameTaken" xml:space="preserve"><value>Запись с именем «{0}» уже есть в этом разделе</value></data>
+  <data name="StartupNeedsAdmin" xml:space="preserve"><value>Для изменения этой записи нужны права администратора</value></data>
+  <data name="SearchNetwork" xml:space="preserve"><value>Поиск по имени, адресу или MAC</value></data>
+  <data name="NetworkHint" xml:space="preserve"><value>Под адаптером перечислены устройства, с которыми Windows недавно обменивалась пакетами в этой сети</value></data>
+  <data name="NetworkType" xml:space="preserve"><value>Тип</value></data>
+  <data name="NetworkAddress" xml:space="preserve"><value>Адрес</value></data>
+  <data name="NetworkMac" xml:space="preserve"><value>MAC-адрес</value></data>
+  <data name="NetworkSpeed" xml:space="preserve"><value>Канал</value></data>
+  <data name="NetworkActivity" xml:space="preserve"><value>Активность</value></data>
+  <data name="NetworkGateway" xml:space="preserve"><value>Шлюз</value></data>
+  <data name="NetworkDevice" xml:space="preserve"><value>Устройство</value></data>
+  <data name="AdapterTunnel" xml:space="preserve"><value>Туннель</value></data>
+  <data name="AdapterMobile" xml:space="preserve"><value>Сотовая сеть</value></data>
+  <data name="AdapterOther" xml:space="preserve"><value>Другое</value></data>
+  <data name="AdapterConnected" xml:space="preserve"><value>Подключено</value></data>
+  <data name="AdapterDisconnected" xml:space="preserve"><value>Не подключено</value></data>
+  <data name="NeighborReachable" xml:space="preserve"><value>Доступно</value></data>
+  <data name="NeighborIdle" xml:space="preserve"><value>Неактивно</value></data>
+  <data name="NeighborStatic" xml:space="preserve"><value>Статическая</value></data>
+  <data name="NetworkCount" xml:space="preserve"><value>{0} из {1} подключено</value></data>
+  <data name="ElevateButton" xml:space="preserve"><value>От имени администратора</value></data>
 </root>

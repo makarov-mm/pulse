@@ -130,6 +130,8 @@ public sealed partial class MainWindow
         Tabs.SelectedItem = StartupTab;
         Require(_tab == LowerTab.Startup && CountText.Text == UiText.Format("StartupCount",
             _startupRows.Count(row => row.Item!.Enabled), _startupRows.Count), "Incorrect startup summary.");
+        Tabs.SelectedItem = NetworkTab;
+        Require(_tab == LowerTab.Network && SearchBox.PlaceholderText == UiText.Get("SearchNetwork"), "Missing network tab.");
         using var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
         listener.Start();
         Tabs.SelectedItem = ConnectionsTab;

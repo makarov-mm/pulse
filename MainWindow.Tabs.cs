@@ -9,21 +9,27 @@ using Pulse.Telemetry;
 
 namespace Pulse;
 
-// The tabs of the lower pane: Processes, Details, Users, Connections, Startup apps, Services and Disk space.
+// The tabs of the lower pane: Processes, Details, Users, Connections, Network, Startup apps, Services and Disk space.
 public sealed partial class MainWindow
 {
     // In the order of the tab bar.
-    private enum LowerTab { Processes, Details, Users, Connections, Startup, Services, Space }
+    private enum LowerTab { Processes, Details, Users, Connections, Network, Startup, Services, Space }
+
+    // A row of the Network tab: an adapter, or one of the devices on its network.
+    private readonly record struct NetworkEntry(NetworkAdapter Adapter, NetworkNeighbor? Device);
 
     private readonly ObservableCollection<DetailRow> _detailRows = [];
     private readonly ObservableCollection<UserRow> _userRows = [];
     private readonly ObservableCollection<ConnectionRow> _connectionRows = [];
+    private readonly ObservableCollection<NetworkRow> _networkRows = [];
     private readonly ObservableCollection<StartupRow> _startupRows = [];
     private readonly ObservableCollection<ServiceRow> _serviceRows = [];
     private List<ServiceInfo> _services = [];
     private string? _serviceReadError;
     private List<TcpConnection> _connections = [];
     private bool _ipv4Available, _ipv6Available;
+    private List<NetworkAdapter> _adapters = [];
+    private bool _networkLoading;
     private LowerTab _tab;
 
     private void CreateTabs()
@@ -31,12 +37,14 @@ public sealed partial class MainWindow
         DetailList.ItemsSource = _detailRows;
         UserList.ItemsSource = _userRows;
         ConnectionList.ItemsSource = _connectionRows;
+        NetworkList.ItemsSource = _networkRows;
         StartupList.ItemsSource = _startupRows;
         ServiceList.ItemsSource = _serviceRows;
         ProcessesTab.Text = UiText.Get("Processes");
         DetailsTab.Text = UiText.Get("DetailsTab");
         UsersTab.Text = UiText.Get("Users");
         ConnectionsTab.Text = UiText.Get("Connections");
+        NetworkTab.Text = UiText.Get("Network");
         StartupTab.Text = UiText.Get("StartupTab");
         ServicesTab.Text = UiText.Get("Services");
         SpaceTab.Text = UiText.Get("SpaceTab");
@@ -46,13 +54,14 @@ public sealed partial class MainWindow
     private void TabChanged(SelectorBar sender, SelectorBarSelectionChangedEventArgs args)
     {
         // A selection can be raised while the window is still being built.
-        if (ServicesView is null || DetailsView is null || UsersView is null || ConnectionsView is null || StartupView is null || SpaceView is null || Inspector is null || TreeButton is null) return;
+        if (ServicesView is null || DetailsView is null || UsersView is null || ConnectionsView is null || NetworkView is null || StartupView is null || SpaceView is null || Inspector is null || TreeButton is null) return;
         int index = sender.SelectedItem is { } selected ? sender.Items.IndexOf(selected) : 0;
         _tab = index is >= 0 and <= (int)LowerTab.Space ? (LowerTab)index : LowerTab.Processes;
         Inspector.Visibility = Shown(LowerTab.Processes);
         DetailsView.Visibility = Shown(LowerTab.Details);
         UsersView.Visibility = Shown(LowerTab.Users);
         ConnectionsView.Visibility = Shown(LowerTab.Connections);
+        NetworkView.Visibility = Shown(LowerTab.Network);
         StartupView.Visibility = Shown(LowerTab.Startup);
         ServicesView.Visibility = Shown(LowerTab.Services);
         SpaceView.Visibility = Shown(LowerTab.Space);
@@ -63,6 +72,7 @@ public sealed partial class MainWindow
         {
             LowerTab.Users => "SearchUsers",
             LowerTab.Connections => "SearchConnections",
+            LowerTab.Network => "SearchNetwork",
             LowerTab.Startup => "SearchStartup",
             LowerTab.Services => "SearchServices",
             _ => "Search"
@@ -84,6 +94,7 @@ public sealed partial class MainWindow
             case LowerTab.Details: UpdateDetailRows(_frame.Tasks); break;
             case LowerTab.Users: UpdateUserRows(_frame.Tasks); break;
             case LowerTab.Connections: UpdateConnectionRows(); break;
+            case LowerTab.Network: UpdateNetworkRows(); break;
             case LowerTab.Startup: UpdateStartupRows(_frame.Tasks); break;
             case LowerTab.Services: UpdateServiceRows(); break;
             case LowerTab.Space: if (_spaceRoot is { } root) CountText.Text = Format.Bytes(root.Size); else CountText.Text = ""; break;
@@ -154,12 +165,8 @@ public sealed partial class MainWindow
 
     private void StartupDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
     {
-        if (StartupList.SelectedItem is not StartupRow { Item: { } item }) return;
-        try { StartupItems.Open(item); }
-        catch (Exception error) when (error is Win32Exception or UnauthorizedAccessException or IOException)
-        {
-            ShowError(UiText.Get("OpenError"), error.Message);
-        }
+        // A double-click below the last row must not act on the selected one.
+        if ((e.OriginalSource as FrameworkElement)?.DataContext is StartupRow { Item: { } item }) _ = EditStartupAsync(item);
     }
 
     // Services and connections are only queried while their tab or the process inspector displays them.
@@ -180,6 +187,48 @@ public sealed partial class MainWindow
             }
         }
         if (_tab == LowerTab.Connections || inspecting) _connections = TcpConnections.Read(out _ipv4Available, out _ipv6Available);
+        if (_tab == LowerTab.Network) _ = LoadNetworkAsync();
+    }
+
+    // Adapter configuration is slower to read than the other lists, so it is collected off the UI thread.
+    private async Task LoadNetworkAsync()
+    {
+        if (_networkLoading) return;
+        _networkLoading = true;
+        try
+        {
+            var adapters = await Task.Run(NetworkDevices.Read);
+            if (_closed) return;
+            _adapters = adapters;
+            if (_tab == LowerTab.Network) UpdateNetworkRows();
+        }
+        finally { _networkLoading = false; }
+    }
+
+    private void UpdateNetworkRows()
+    {
+        string search = SearchBox.Text.Trim();
+        bool Found(string text) => text.Contains(search, StringComparison.CurrentCultureIgnoreCase);
+        bool FoundAny(IEnumerable<System.Net.IPAddress> addresses) => addresses.Any(a => Found(a.ToString()));
+        var rates = _frame?.Adapters?.ToDictionary(a => a.Id);
+        var entries = new List<NetworkEntry>();
+        foreach (var adapter in _adapters)
+        {
+            // An adapter that matches keeps all its devices. Otherwise it is listed for the devices that match.
+            bool all = search.Length == 0 || Found(adapter.Name) || Found(adapter.Description) || Found(adapter.Mac) ||
+                FoundAny(adapter.Addresses);
+            var devices = all ? adapter.Neighbors : adapter.Neighbors
+                .Where(d => Found(d.Mac) || FoundAny(d.Addresses) || Found(HostNames.Find(d.Addresses[0]))).ToList();
+            if (!all && devices.Count == 0) continue;
+            entries.Add(new(adapter, null));
+            entries.AddRange(devices.Select(device => new NetworkEntry(adapter, device)));
+        }
+        Fill(_networkRows, entries, () => new NetworkRow(), (row, entry) =>
+        {
+            if (entry.Device is { } device) row.Update(device, HostNames.Find(device.Addresses[0]));
+            else row.Update(entry.Adapter, rates?.GetValueOrDefault(entry.Adapter.Id));
+        });
+        CountText.Text = UiText.Format("NetworkCount", _adapters.Count(a => a.Connected), _adapters.Count);
     }
 
     private string ProcessName(int pid) => _byPid.TryGetValue(pid, out var task) ? task.Info.Name : "";

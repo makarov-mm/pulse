@@ -146,8 +146,7 @@
   <data name="StartupCommonFolder" xml:space="preserve"><value>Autostart-Ordner (alle Benutzer)</value></data>
   <data name="StartupCount" xml:space="preserve"><value>{0} von {1} aktiviert</value></data>
   <data name="SearchStartup" xml:space="preserve"><value>Nach Name oder Befehl suchen</value></data>
-  <data name="StartupHint" xml:space="preserve"><value>Rechtsklick zeigt Aktionen. Doppelklick öffnet den Registrierungsschlüssel oder Ordner des Eintrags</value></data>
-  <data name="OpenError" xml:space="preserve"><value>Der Eintrag konnte nicht geöffnet werden</value></data>
+  <data name="StartupHint" xml:space="preserve"><value>Doppelklick oder Eingabetaste öffnet den Editor des Eintrags. Rechtsklick zeigt weitere Aktionen</value></data>
   <data name="Connections" xml:space="preserve"><value>Verbindungen</value></data>
   <data name="ConnectionProtocol" xml:space="preserve"><value>Protokoll</value></data>
   <data name="LocalEndpoint" xml:space="preserve"><value>Lokale Adresse</value></data>
@@ -155,9 +154,7 @@
   <data name="SearchConnections" xml:space="preserve"><value>Nach Prozess, PID, Adresse oder Port suchen</value></data>
   <data name="MenuEnable" xml:space="preserve"><value>Aktivieren</value></data>
   <data name="MenuDisable" xml:space="preserve"><value>Deaktivieren</value></data>
-  <data name="MenuEditCommand" xml:space="preserve"><value>Befehl bearbeiten…</value></data>
   <data name="MenuDelete" xml:space="preserve"><value>Löschen…</value></data>
-  <data name="MenuOpenLocation" xml:space="preserve"><value>Speicherort öffnen</value></data>
   <data name="MenuElevate" xml:space="preserve"><value>Pulse als Administrator neu starten</value></data>
   <data name="MenuStart" xml:space="preserve"><value>Starten</value></data>
   <data name="MenuStop" xml:space="preserve"><value>Beenden</value></data>
@@ -168,7 +165,6 @@
   <data name="MenuShowProcess" xml:space="preserve"><value>Prozess anzeigen</value></data>
   <data name="ConfirmDelete" xml:space="preserve"><value>{0} löschen?</value></data>
   <data name="ConfirmDeleteBody" xml:space="preserve"><value>Der Autostart-Eintrag wird aus {0} entfernt. Dies kann nicht rückgängig gemacht werden.</value></data>
-  <data name="EditCommandTitle" xml:space="preserve"><value>Befehl für {0}</value></data>
   <data name="Save" xml:space="preserve"><value>Speichern</value></data>
   <data name="DeleteButton" xml:space="preserve"><value>Löschen</value></data>
   <data name="ActionError" xml:space="preserve"><value>Die Aktion konnte nicht abgeschlossen werden</value></data>
@@ -200,4 +196,28 @@
   <data name="ServicesUnavailable" xml:space="preserve"><value>Dienste konnten nicht gelesen werden. {0}</value></data>
   <data name="ConnectionsUnavailable" xml:space="preserve"><value>Verbindungen nicht verfügbar</value></data>
   <data name="ProtocolUnavailable" xml:space="preserve"><value>{0} nicht verfügbar</value></data>
+  <data name="MenuEdit" xml:space="preserve"><value>Bearbeiten…</value></data>
+  <data name="MenuShowFile" xml:space="preserve"><value>Im Explorer anzeigen</value></data>
+  <data name="EditStartupTitle" xml:space="preserve"><value>Autostart-Eintrag „{0}“</value></data>
+  <data name="StartupNameTaken" xml:space="preserve"><value>In diesem Schlüssel gibt es bereits einen Eintrag namens „{0}“</value></data>
+  <data name="StartupNeedsAdmin" xml:space="preserve"><value>Zum Ändern dieses Eintrags sind Administratorrechte erforderlich</value></data>
+  <data name="SearchNetwork" xml:space="preserve"><value>Nach Name, Adresse oder MAC suchen</value></data>
+  <data name="NetworkHint" xml:space="preserve"><value>Unter einem Adapter stehen die Geräte, mit denen Windows in diesem Netzwerk zuletzt Pakete ausgetauscht hat</value></data>
+  <data name="NetworkType" xml:space="preserve"><value>Typ</value></data>
+  <data name="NetworkAddress" xml:space="preserve"><value>Adresse</value></data>
+  <data name="NetworkMac" xml:space="preserve"><value>MAC-Adresse</value></data>
+  <data name="NetworkSpeed" xml:space="preserve"><value>Verbindung</value></data>
+  <data name="NetworkActivity" xml:space="preserve"><value>Aktivität</value></data>
+  <data name="NetworkGateway" xml:space="preserve"><value>Gateway</value></data>
+  <data name="NetworkDevice" xml:space="preserve"><value>Gerät</value></data>
+  <data name="AdapterTunnel" xml:space="preserve"><value>Tunnel</value></data>
+  <data name="AdapterMobile" xml:space="preserve"><value>Mobilfunk</value></data>
+  <data name="AdapterOther" xml:space="preserve"><value>Sonstige</value></data>
+  <data name="AdapterConnected" xml:space="preserve"><value>Verbunden</value></data>
+  <data name="AdapterDisconnected" xml:space="preserve"><value>Nicht verbunden</value></data>
+  <data name="NeighborReachable" xml:space="preserve"><value>Erreichbar</value></data>
+  <data name="NeighborIdle" xml:space="preserve"><value>Inaktiv</value></data>
+  <data name="NeighborStatic" xml:space="preserve"><value>Statisch</value></data>
+  <data name="NetworkCount" xml:space="preserve"><value>{0} von {1} verbunden</value></data>
+  <data name="ElevateButton" xml:space="preserve"><value>Als Administrator starten</value></data>
 </root>

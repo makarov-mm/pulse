@@ -146,8 +146,7 @@
   <data name="StartupCommonFolder" xml:space="preserve"><value>Startup folder (all users)</value></data>
   <data name="StartupCount" xml:space="preserve"><value>{0} of {1} enabled</value></data>
   <data name="SearchStartup" xml:space="preserve"><value>Search by name or command</value></data>
-  <data name="StartupHint" xml:space="preserve"><value>Right-click an entry for actions. Double-click opens its registry key or folder</value></data>
-  <data name="OpenError" xml:space="preserve"><value>The entry could not be opened</value></data>
+  <data name="StartupHint" xml:space="preserve"><value>Double-click an entry or press Enter to edit it. Right-click for more actions</value></data>
   <data name="Connections" xml:space="preserve"><value>Connections</value></data>
   <data name="ConnectionProtocol" xml:space="preserve"><value>Protocol</value></data>
   <data name="LocalEndpoint" xml:space="preserve"><value>Local address</value></data>
@@ -155,9 +154,7 @@
   <data name="SearchConnections" xml:space="preserve"><value>Search by process, PID, address or port</value></data>
   <data name="MenuEnable" xml:space="preserve"><value>Enable</value></data>
   <data name="MenuDisable" xml:space="preserve"><value>Disable</value></data>
-  <data name="MenuEditCommand" xml:space="preserve"><value>Edit command…</value></data>
   <data name="MenuDelete" xml:space="preserve"><value>Delete…</value></data>
-  <data name="MenuOpenLocation" xml:space="preserve"><value>Open location</value></data>
   <data name="MenuElevate" xml:space="preserve"><value>Restart Pulse as administrator</value></data>
   <data name="MenuStart" xml:space="preserve"><value>Start</value></data>
   <data name="MenuStop" xml:space="preserve"><value>Stop</value></data>
@@ -168,7 +165,6 @@
   <data name="MenuShowProcess" xml:space="preserve"><value>Show process</value></data>
   <data name="ConfirmDelete" xml:space="preserve"><value>Delete {0}?</value></data>
   <data name="ConfirmDeleteBody" xml:space="preserve"><value>The startup entry is removed from {0}. This cannot be undone.</value></data>
-  <data name="EditCommandTitle" xml:space="preserve"><value>Command for {0}</value></data>
   <data name="Save" xml:space="preserve"><value>Save</value></data>
   <data name="DeleteButton" xml:space="preserve"><value>Delete</value></data>
   <data name="ActionError" xml:space="preserve"><value>The action could not be completed</value></data>
@@ -200,4 +196,28 @@
   <data name="ServicesUnavailable" xml:space="preserve"><value>Could not read services. {0}</value></data>
   <data name="ConnectionsUnavailable" xml:space="preserve"><value>Connections unavailable</value></data>
   <data name="ProtocolUnavailable" xml:space="preserve"><value>{0} unavailable</value></data>
+  <data name="MenuEdit" xml:space="preserve"><value>Edit…</value></data>
+  <data name="MenuShowFile" xml:space="preserve"><value>Show in File Explorer</value></data>
+  <data name="EditStartupTitle" xml:space="preserve"><value>Startup entry {0}</value></data>
+  <data name="StartupNameTaken" xml:space="preserve"><value>An entry named {0} already exists in this key</value></data>
+  <data name="StartupNeedsAdmin" xml:space="preserve"><value>Changing this entry needs administrator rights</value></data>
+  <data name="SearchNetwork" xml:space="preserve"><value>Search by name, address or MAC</value></data>
+  <data name="NetworkHint" xml:space="preserve"><value>The devices under an adapter are the ones Windows has recently exchanged packets with on that network</value></data>
+  <data name="NetworkType" xml:space="preserve"><value>Type</value></data>
+  <data name="NetworkAddress" xml:space="preserve"><value>Address</value></data>
+  <data name="NetworkMac" xml:space="preserve"><value>MAC address</value></data>
+  <data name="NetworkSpeed" xml:space="preserve"><value>Link</value></data>
+  <data name="NetworkActivity" xml:space="preserve"><value>Activity</value></data>
+  <data name="NetworkGateway" xml:space="preserve"><value>Gateway</value></data>
+  <data name="NetworkDevice" xml:space="preserve"><value>Device</value></data>
+  <data name="AdapterTunnel" xml:space="preserve"><value>Tunnel</value></data>
+  <data name="AdapterMobile" xml:space="preserve"><value>Cellular</value></data>
+  <data name="AdapterOther" xml:space="preserve"><value>Other</value></data>
+  <data name="AdapterConnected" xml:space="preserve"><value>Connected</value></data>
+  <data name="AdapterDisconnected" xml:space="preserve"><value>Not connected</value></data>
+  <data name="NeighborReachable" xml:space="preserve"><value>Reachable</value></data>
+  <data name="NeighborIdle" xml:space="preserve"><value>Idle</value></data>
+  <data name="NeighborStatic" xml:space="preserve"><value>Static</value></data>
+  <data name="NetworkCount" xml:space="preserve"><value>{0} of {1} connected</value></data>
+  <data name="ElevateButton" xml:space="preserve"><value>Restart as administrator</value></data>
 </root>

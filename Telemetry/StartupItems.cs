@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Security;
 using Microsoft.Win32;
+using Pulse.Localization;
 
 namespace Pulse.Telemetry;
 
@@ -103,13 +104,16 @@ internal static class StartupItems
         _ => "Run"
     };
 
+    // StartupApproved always lives in the 64-bit view, including for 32-bit Run entries.
+    private static RegistryKey ApprovalRoot(StartupItem item) => item.MachineWide
+        ? RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64)
+        : RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default);
+
     // Switches the entry on or off the way Task Manager does, without removing it.
     public static void SetEnabled(StartupItem item, bool enabled)
     {
         if (!item.CanToggle) throw new InvalidOperationException();
-        // StartupApproved always lives in the 64-bit view, including for 32-bit Run entries.
-        using var root = RegistryKey.OpenBaseKey(item.MachineWide ? RegistryHive.LocalMachine : RegistryHive.CurrentUser,
-            item.MachineWide ? RegistryView.Registry64 : RegistryView.Default);
+        using var root = ApprovalRoot(item);
         using var key = root.CreateSubKey(ApprovalKey(item));
         // Four status bytes, then the time the entry was disabled as a FILETIME.
         var state = new byte[12];
@@ -118,13 +122,40 @@ internal static class StartupItems
         key.SetValue(item.Entry, state, RegistryValueKind.Binary);
     }
 
-    public static void SetCommand(StartupItem item, string command)
+    // Applies the changes made in the entry editor. A file in a Startup folder only takes the enabled state.
+    public static void Save(StartupItem item, string name, string command, bool enabled)
     {
-        if (!item.InRegistry) throw new InvalidOperationException();
-        using var root = Root(item);
-        using var key = root.OpenSubKey(RunKey(item), true) ?? throw new IOException();
-        var kind = key.GetValue(item.Entry) is null ? RegistryValueKind.String : key.GetValueKind(item.Entry);
-        key.SetValue(item.Entry, command, kind == RegistryValueKind.ExpandString ? kind : RegistryValueKind.String);
+        var saved = item;
+        if (item.InRegistry && (name != item.Entry || command != item.Command))
+        {
+            using var root = Root(item);
+            using var key = root.OpenSubKey(RunKey(item), true) ?? throw new IOException();
+            // Value names ignore case, so a change of case alone is not a move to another value.
+            bool moved = !name.Equals(item.Entry, StringComparison.OrdinalIgnoreCase);
+            if (moved && key.GetValue(name) is not null)
+                throw new InvalidOperationException(UiText.Format("StartupNameTaken", name));
+            var kind = key.GetValue(item.Entry) is not null && key.GetValueKind(item.Entry) == RegistryValueKind.ExpandString
+                ? RegistryValueKind.ExpandString : RegistryValueKind.String;
+            if (!moved && name != item.Entry) key.DeleteValue(item.Entry, false);
+            key.SetValue(name, command, kind);
+            if (moved)
+            {
+                key.DeleteValue(item.Entry, false);
+                if (item.CanToggle) MoveApproval(item, name);
+            }
+            saved = item with { Name = name, Entry = name, Command = command };
+        }
+        if (saved.CanToggle && enabled != item.Enabled) SetEnabled(saved, enabled);
+    }
+
+    // Carries the enabled state over to the new name of a renamed entry.
+    private static void MoveApproval(StartupItem item, string name)
+    {
+        using var root = ApprovalRoot(item);
+        using var key = root.OpenSubKey(ApprovalKey(item), true);
+        if (key?.GetValue(item.Entry) is not byte[] state) return;
+        key.SetValue(name, state, RegistryValueKind.Binary);
+        key.DeleteValue(item.Entry, false);
     }
 
     // Removes the entry and its enabled state. A file in a Startup folder is deleted.
@@ -138,8 +169,7 @@ internal static class StartupItems
         }
         else File.Delete(item.Location);
         if (!item.CanToggle) return;
-        using var approvalRoot = RegistryKey.OpenBaseKey(item.MachineWide ? RegistryHive.LocalMachine : RegistryHive.CurrentUser,
-            item.MachineWide ? RegistryView.Registry64 : RegistryView.Default);
+        using var approvalRoot = ApprovalRoot(item);
         using var approval = approvalRoot.OpenSubKey(ApprovalKey(item), true);
         approval?.DeleteValue(item.Entry, false);
     }
@@ -163,19 +193,10 @@ internal static class StartupItems
         catch (ArgumentException) { return ""; }
     }
 
-    // Opens Registry Editor at the entry's key, or File Explorer with the file selected.
-    public static void Open(StartupItem item)
+    // Shows the file of a Startup folder entry in File Explorer.
+    public static void ShowFile(StartupItem item)
     {
-        if (item.InRegistry)
-        {
-            // Registry Editor starts at the key stored in LastKey.
-            using (var key = Registry.CurrentUser.CreateSubKey(Windows + @"Applets\Regedit"))
-                key.SetValue("LastKey", @"Computer\" + item.Location);
-            Process.Start(new ProcessStartInfo("regedit.exe", "/m") { UseShellExecute = true })?.Dispose();
-        }
-        else
-        {
-            Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{item.Location}\"") { UseShellExecute = true })?.Dispose();
-        }
+        if (item.InRegistry) throw new InvalidOperationException();
+        Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{item.Location}\"") { UseShellExecute = true })?.Dispose();
     }
 }

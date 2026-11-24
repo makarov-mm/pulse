@@ -60,7 +60,7 @@ TaskExplorer's thread and socket panels inform the inspector. Task Manager's Ser
 **Question.** Can Pulse replace both tools for everyday diagnosis?
 
 - Give the lower pane tabs that match Task Manager's pages and add what Resource Monitor shows per process.
-- **Done.** Processes with a collapsible tree and branch totals. Details with separate read and write rates. Users with per-session totals. Connections with TCP sockets and listening ports per process. Startup apps from the registry and Startup folders, with enabling, disabling, editing and deleting. Services with status, host process, start, stop, restart and startup type.
+- **Done.** Processes with a collapsible tree and branch totals. Details with separate read and write rates. Users with per-session totals. Connections with TCP sockets and listening ports per process. Network with adapters and the devices on their networks. Startup apps from the registry and Startup folders, with enabling, disabling, deleting and an editor for the name and command. Services with status, host process, start, stop, restart and startup type.
 - **Next.** Priority, owner and command line are shown in the process inspector and still missing as columns on the Details tab. Disk activity by file and byte rates per connection need an ETW session.
 - App history depends on data that Windows collects for packaged apps and stays out of scope until its source is confirmed.
 - **Acceptance.** For each tab, compare the listed items and values with Task Manager or Resource Monitor on the same machine.
@@ -80,6 +80,6 @@ TaskExplorer's thread and socket panels inform the inspector. Task Manager's Ser
 - Run the acceptance checks against File Explorer and on a large volume.
 - Report allocated size beside file length.
 
-WinDirStat and WizTree inform the views. A registry editor is out of scope. Startup entries link to Registry Editor instead. [WinDirStat](https://windirstat.net/) · [WizTree](https://diskanalyzer.com/)
+WinDirStat and WizTree inform the views. A general registry editor is out of scope. Startup entries are edited in Pulse. [WinDirStat](https://windirstat.net/) · [WizTree](https://diskanalyzer.com/)
 
 Before releasing each milestone, exercise its keyboard path, light and dark themes, high contrast, and the shipped translations. Measure idle overhead and memory growth using the same process count and refresh interval as the baseline.

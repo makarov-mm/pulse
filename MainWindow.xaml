@@ -78,6 +78,7 @@
                                 <SelectorBarItem x:Name="DetailsTab"/>
                                 <SelectorBarItem x:Name="UsersTab"/>
                                 <SelectorBarItem x:Name="ConnectionsTab"/>
+                                <SelectorBarItem x:Name="NetworkTab"/>
                                 <SelectorBarItem x:Name="StartupTab"/>
                                 <SelectorBarItem x:Name="ServicesTab"/>
                                 <SelectorBarItem x:Name="SpaceTab"/>
@@ -291,6 +292,49 @@
                                         <TextBlock Grid.Column="3" Text="{x:Bind Local, Mode=OneWay}" Style="{StaticResource TextCell}"/>
                                         <TextBlock Grid.Column="4" Text="{x:Bind Remote, Mode=OneWay}" Style="{StaticResource TextCell}"/>
                                         <TextBlock Grid.Column="5" Text="{x:Bind State, Mode=OneWay}" Style="{StaticResource TextCell}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </Grid>
+                    <Grid Grid.Row="1" x:Name="NetworkView" Visibility="Collapsed">
+                        <Grid.RowDefinitions><RowDefinition Height="36"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                        <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,1">
+                            <Grid Padding="18,0,16,0" ColumnSpacing="12">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="3*"/><ColumnDefinition Width="100"/><ColumnDefinition Width="2*"/><ColumnDefinition Width="135"/><ColumnDefinition Width="110"/><ColumnDefinition Width="100"/><ColumnDefinition Width="2*"/></Grid.ColumnDefinitions>
+                                <TextBlock Text="{loc:Localize Key=Name}" Style="{StaticResource ColumnTitle}" ToolTipService.ToolTip="{loc:Localize Key=NetworkHint}"/>
+                                <TextBlock Grid.Column="1" Text="{loc:Localize Key=NetworkType}" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="2" Text="{loc:Localize Key=NetworkAddress}" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="3" Text="{loc:Localize Key=NetworkMac}" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="4" Text="{loc:Localize Key=ServiceStatus}" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="5" Text="{loc:Localize Key=NetworkSpeed}" Style="{StaticResource ColumnTitle}"/>
+                                <TextBlock Grid.Column="6" Text="{loc:Localize Key=NetworkActivity}" Style="{StaticResource ColumnTitle}"/>
+                            </Grid>
+                        </Border>
+                        <ListView Grid.Row="1" x:Name="NetworkList" SelectionMode="Single" Padding="0"
+                            AutomationProperties.Name="{loc:Localize Key=Network}">
+                            <ListView.ItemContainerTransitions><TransitionCollection/></ListView.ItemContainerTransitions>
+                            <ListView.ItemContainerStyle>
+                                <Style TargetType="ListViewItem">
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="Padding" Value="0"/>
+                                    <Setter Property="Margin" Value="0"/><Setter Property="MinHeight" Value="34"/>
+                                </Style>
+                            </ListView.ItemContainerStyle>
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="m:NetworkRow">
+                                    <Grid Padding="18,0,16,0" MinHeight="34" ColumnSpacing="12" Background="Transparent" ToolTipService.ToolTip="{x:Bind Details, Mode=OneWay}">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="3*"/><ColumnDefinition Width="100"/><ColumnDefinition Width="2*"/><ColumnDefinition Width="135"/><ColumnDefinition Width="110"/><ColumnDefinition Width="100"/><ColumnDefinition Width="2*"/></Grid.ColumnDefinitions>
+                                        <Grid Margin="{x:Bind Indent, Mode=OneWay}" ColumnSpacing="8">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                            <FontIcon Glyph="{x:Bind Glyph, Mode=OneWay}" FontSize="14" Foreground="{ThemeResource TextFillColorSecondaryBrush}" AutomationProperties.AccessibilityView="Raw"/>
+                                            <TextBlock Grid.Column="1" Text="{x:Bind Name, Mode=OneWay}" Style="{StaticResource TextCell}"/>
+                                        </Grid>
+                                        <TextBlock Grid.Column="1" Text="{x:Bind Type, Mode=OneWay}" Style="{StaticResource TextCell}"/>
+                                        <TextBlock Grid.Column="2" Text="{x:Bind Address, Mode=OneWay}" Style="{StaticResource TextCell}"/>
+                                        <TextBlock Grid.Column="3" Text="{x:Bind Mac, Mode=OneWay}" Style="{StaticResource TextCell}"/>
+                                        <TextBlock Grid.Column="4" Text="{x:Bind State, Mode=OneWay}" Style="{StaticResource TextCell}"/>
+                                        <TextBlock Grid.Column="5" Text="{x:Bind Speed, Mode=OneWay}" Style="{StaticResource TextCell}"/>
+                                        <TextBlock Grid.Column="6" Text="{x:Bind Activity, Mode=OneWay}" Style="{StaticResource TextCell}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                                     </Grid>
                                 </DataTemplate>
                             </ListView.ItemTemplate>
