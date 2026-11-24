@@ -20,7 +20,8 @@ Open the portable `Pulse.exe` on Windows 11 x64. It bundles .NET and the Windows
 ## Using the monitor
 
 - Press **Ctrl+F** to search by process name or PID. Click a column heading to sort, and click it again to reverse the order.
-- Toggle **Tree** to follow parent and child processes. Select a row to inspect its executable path, start time and counters.
+- The process list opens as a tree of parent and child processes. Collapse a branch to see the number of processes in it and their combined CPU, memory, I/O and threads. Toggle **Tree** for a flat list. Select a row to inspect its executable path, start time, counters and the services it hosts.
+- Switch to **Services** to list Windows services with their status and host process. Search by name, description or PID. Double-click a running service to show its process on the **Processes** tab.
 - Use the chevron on the CPU, disk or network card to open its device view, and again to close it. The buttons are reachable with **Tab**. Device history is collected while the view is closed, so the tiles open with the available history already drawn.
 - Click a device tile, or press **Enter** or **Space** on it, to expand it into a larger graph with its maximum and time span labelled. Arrow keys move between tiles. Select the tile again to shrink it.
 - Choose a history window of 1 or 15 minutes beside the refresh interval. Pulse always keeps the last 15 minutes, so switching does not lose samples.

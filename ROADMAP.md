@@ -43,6 +43,8 @@ System Informer's history graphs link a point in time to the responsible process
 - Show what Windows makes available at the user's current access level. Close inspection handles when a tab closes or the selected process exits.
 - **Acceptance.** Select a known service host, find its hosted service, and identify a busy thread during a controlled workload. Rapidly switch between processes and verify that counters and connections always belong to the selected process instance.
 
+**Status.** The inspector lists the services hosted by the selected process, and the Services tab links each running service to its process. Thread CPU deltas and TCP connections are not started.
+
 TaskExplorer's thread and socket panels inform the inspector. Task Manager's Services view supplies the service-to-process workflow. [TaskExplorer](https://github.com/DavidXanatos/TaskExplorer) · [Task Manager](https://learn.microsoft.com/en-us/troubleshoot/windows-server/support-tools/support-tools-task-manager)
 
 ## 4. Compare two runs
@@ -52,5 +54,15 @@ TaskExplorer's thread and socket panels inform the inspector. Task Manager's Ser
 - Build on the history model from milestone 2. Export a selected time range with timestamps, units and sample intervals. Document the capture schema.
 - Open a saved capture offline, compare two ranges, and flag differences in hardware or sampling intervals that affect interpretation.
 - **Acceptance.** Capture a repeatable workload twice, reopen both files on another machine, and reproduce the peak CPU and memory values shown during capture. Missing samples survive the round trip.
+
+## 5. Cover Task Manager and Resource Monitor
+
+**Question.** Can Pulse replace both tools for everyday diagnosis?
+
+- Give the lower pane tabs that match Task Manager's pages and add what Resource Monitor shows per process.
+- **Done.** Processes with a collapsible tree and branch totals. Services with status and host process.
+- **Next.** Details with separate read and write rates, priority, user and command line. Users with per-session totals. Startup apps from the registry and Startup folders. Disk activity by file and network activity by connection need thread, file and socket inspection from milestone 3 or an ETW session.
+- App history depends on data that Windows collects for packaged apps and stays out of scope until its source is confirmed.
+- **Acceptance.** For each tab, compare the listed items and values with Task Manager or Resource Monitor on the same machine.
 
 Before releasing each milestone, exercise its keyboard path, light and dark themes, high contrast, and the shipped translations. Measure idle overhead and memory growth using the same process count and refresh interval as the baseline.
