@@ -88,4 +88,26 @@
   <data name="DevelopedBy" xml:space="preserve"><value>Entwickelt von {0}</value></data>
   <data name="Version" xml:space="preserve"><value>Version {0}</value></data>
   <data name="Close" xml:space="preserve"><value>Schließen</value></data>
+  <data name="LogicalProcessors" xml:space="preserve"><value>Logische Prozessoren</value></data>
+  <data name="PhysicalDisks" xml:space="preserve"><value>Physische Datenträger</value></data>
+  <data name="NetworkAdapters" xml:space="preserve"><value>Netzwerkadapter</value></data>
+  <data name="ShowProcessors" xml:space="preserve"><value>Logische Prozessoren anzeigen</value></data>
+  <data name="ShowDisks" xml:space="preserve"><value>Physische Datenträger anzeigen</value></data>
+  <data name="ShowAdapters" xml:space="preserve"><value>Netzwerkadapter anzeigen</value></data>
+  <data name="HideDevices" xml:space="preserve"><value>Geräteansicht ausblenden</value></data>
+  <data name="CloseDevices" xml:space="preserve"><value>Geräteansicht schließen</value></data>
+  <data name="DeviceSpanPercent" xml:space="preserve"><value>Letzte 60 Sekunden   ·   0–100 %</value></data>
+  <data name="DeviceSpanPeak" xml:space="preserve"><value>Letzte 60 Sekunden   ·   jedes Diagramm ist auf seinen eigenen Spitzenwert skaliert</value></data>
+  <data name="CoreName" xml:space="preserve"><value>CPU {0}</value></data>
+  <data name="CoreGroupName" xml:space="preserve"><value>Gruppe {0} · CPU {1}</value></data>
+  <data name="DiskName" xml:space="preserve"><value>Datenträger {0}</value></data>
+  <data name="DiskVolumes" xml:space="preserve"><value>Datenträger {0} ({1})</value></data>
+  <data name="DiskDetail" xml:space="preserve"><value>Lesen {0} · Schreiben {1} · Aktiv {2} · Antwortzeit {3}</value></data>
+  <data name="AdapterDetail" xml:space="preserve"><value>↓ {0} · ↑ {1} · Verbindung {2}</value></data>
+  <data name="Milliseconds" xml:space="preserve"><value>ms</value></data>
+  <data name="BitsPerSecond" xml:space="preserve"><value>Bit/s</value></data>
+  <data name="KilobitsPerSecond" xml:space="preserve"><value>kBit/s</value></data>
+  <data name="MegabitsPerSecond" xml:space="preserve"><value>MBit/s</value></data>
+  <data name="GigabitsPerSecond" xml:space="preserve"><value>GBit/s</value></data>
+  <data name="NoDevices" xml:space="preserve"><value>Noch keine Gerätemesswerte</value></data>
 </root>

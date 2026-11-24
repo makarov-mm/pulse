@@ -1,10 +1,13 @@
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 
 namespace Pulse.Controls;
 
 public sealed partial class MetricCard : UserControl
 {
+    private string _showLabel = "", _hideLabel = "";
+
     public MetricCard() => InitializeComponent();
 
     public void Configure(string title, string glyph, bool percent, Func<double, string> format)
@@ -24,6 +27,29 @@ public sealed partial class MetricCard : UserControl
     }
 
     public void ClearHistory() => Plot.Clear();
+
+    // Raised when the user asks to open or close the device view behind this card.
+    public event EventHandler? DetailsRequested;
+
+    public void EnableDetails(string showLabel, string hideLabel)
+    {
+        _showLabel = showLabel;
+        _hideLabel = hideLabel;
+        Expand.Visibility = Visibility.Visible;
+        SetExpanded(false);
+    }
+
+    public void SetExpanded(bool expanded)
+    {
+        string label = expanded ? _hideLabel : _showLabel;
+        ExpandIcon.Glyph = expanded ? "\uE70E" : "\uE70D";
+        AutomationProperties.SetName(Expand, label);
+        ToolTipService.SetToolTip(Expand, label);
+    }
+
+    public void FocusDetails() => Expand.Focus(FocusState.Programmatic);
+
+    private void ExpandClicked(object sender, RoutedEventArgs e) => DetailsRequested?.Invoke(this, EventArgs.Empty);
 
     public void SetCompact(bool compact)
     {

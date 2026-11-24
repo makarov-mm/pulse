@@ -6,10 +6,15 @@
     <Border Style="{StaticResource Surface}" Padding="15,11,15,10">
         <Grid RowSpacing="3">
             <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition x:Name="PlotRow" Height="42"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-            <StackPanel Orientation="Horizontal" Spacing="8">
-                <FontIcon x:Name="Symbol" FontSize="15" Foreground="{Binding Foreground, ElementName=Card}"/>
-                <TextBlock x:Name="Heading" Style="{StaticResource BodyStrongTextBlockStyle}" Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
-            </StackPanel>
+            <Grid>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon x:Name="Symbol" FontSize="15" Foreground="{Binding Foreground, ElementName=Card}"/>
+                    <TextBlock x:Name="Heading" Style="{StaticResource BodyStrongTextBlockStyle}" Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
+                </StackPanel>
+                <Button x:Name="Expand" Visibility="Collapsed" Click="ExpandClicked" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,-6,-8,-6" Padding="7,5" MinWidth="0" Style="{StaticResource SubtleButtonStyle}">
+                    <FontIcon x:Name="ExpandIcon" Glyph="&#xE70D;" FontSize="11"/>
+                </Button>
+            </Grid>
             <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="5">
                 <TextBlock x:Name="Number" Text="—" FontSize="29" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
                 <TextBlock x:Name="Unit" Margin="0,0,0,5" VerticalAlignment="Bottom" FontSize="14" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>

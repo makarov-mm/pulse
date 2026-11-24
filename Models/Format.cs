@@ -6,6 +6,7 @@ namespace Pulse.Models;
 internal static class Format
 {
     private static readonly string[] UnitKeys = ["Bytes", "Kibibytes", "Mebibytes", "Gibibytes", "Tebibytes"];
+    private static readonly string[] BitRateKeys = ["BitsPerSecond", "KilobitsPerSecond", "MegabitsPerSecond", "GigabitsPerSecond"];
     public static string Number(double value, int digits = 0) => value.ToString($"N{digits}", CultureInfo.CurrentCulture);
     public static string Percent(double? value) => value is { } v ? $"{Number(v, 1)} %" : "—";
 
@@ -24,5 +25,17 @@ internal static class Format
         var (value, unit) = Size(bytes, rate);
         return unit.Length > 0 ? $"{value} {unit}" : value;
     }
-}
 
+    public static string Milliseconds(double? seconds) => seconds is { } s
+        ? $"{Number(s * 1000, s < 0.01 ? 1 : 0)} {UiText.Get("Milliseconds")}" : "—";
+
+    // Link speeds use decimal prefixes, unlike byte sizes.
+    public static string BitRate(long? bitsPerSecond)
+    {
+        if (bitsPerSecond is null) return "—";
+        double value = bitsPerSecond.Value;
+        int i = 0;
+        while (value >= 1000 && i < BitRateKeys.Length - 1) { value /= 1000; i++; }
+        return $"{Number(value, i != 0 && value < 10 && value % 1 != 0 ? 1 : 0)} {UiText.Get(BitRateKeys[i])}";
+    }
+}

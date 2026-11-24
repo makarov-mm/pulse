@@ -88,4 +88,26 @@
   <data name="DevelopedBy" xml:space="preserve"><value>Разработчик — {0}</value></data>
   <data name="Version" xml:space="preserve"><value>Версия {0}</value></data>
   <data name="Close" xml:space="preserve"><value>Закрыть</value></data>
+  <data name="LogicalProcessors" xml:space="preserve"><value>Логические процессоры</value></data>
+  <data name="PhysicalDisks" xml:space="preserve"><value>Физические диски</value></data>
+  <data name="NetworkAdapters" xml:space="preserve"><value>Сетевые адаптеры</value></data>
+  <data name="ShowProcessors" xml:space="preserve"><value>Показать логические процессоры</value></data>
+  <data name="ShowDisks" xml:space="preserve"><value>Показать физические диски</value></data>
+  <data name="ShowAdapters" xml:space="preserve"><value>Показать сетевые адаптеры</value></data>
+  <data name="HideDevices" xml:space="preserve"><value>Скрыть устройства</value></data>
+  <data name="CloseDevices" xml:space="preserve"><value>Закрыть список устройств</value></data>
+  <data name="DeviceSpanPercent" xml:space="preserve"><value>Последние 60 секунд   ·   0–100 %</value></data>
+  <data name="DeviceSpanPeak" xml:space="preserve"><value>Последние 60 секунд   ·   масштаб каждого графика — по его пику</value></data>
+  <data name="CoreName" xml:space="preserve"><value>ЦП {0}</value></data>
+  <data name="CoreGroupName" xml:space="preserve"><value>Группа {0} · ЦП {1}</value></data>
+  <data name="DiskName" xml:space="preserve"><value>Диск {0}</value></data>
+  <data name="DiskVolumes" xml:space="preserve"><value>Диск {0} ({1})</value></data>
+  <data name="DiskDetail" xml:space="preserve"><value>Чт. {0} · Зап. {1} · Активность {2} · Отклик {3}</value></data>
+  <data name="AdapterDetail" xml:space="preserve"><value>↓ {0} · ↑ {1} · Канал {2}</value></data>
+  <data name="Milliseconds" xml:space="preserve"><value>мс</value></data>
+  <data name="BitsPerSecond" xml:space="preserve"><value>бит/с</value></data>
+  <data name="KilobitsPerSecond" xml:space="preserve"><value>кбит/с</value></data>
+  <data name="MegabitsPerSecond" xml:space="preserve"><value>Мбит/с</value></data>
+  <data name="GigabitsPerSecond" xml:space="preserve"><value>Гбит/с</value></data>
+  <data name="NoDevices" xml:space="preserve"><value>Данных по устройствам пока нет</value></data>
 </root>

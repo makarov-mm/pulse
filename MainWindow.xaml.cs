@@ -62,6 +62,7 @@ public sealed partial class MainWindow : Window
         DiskCard.Configure(UiText.Get("Disk"), "\uEDA2", false, v => Format.Bytes(v, true));
         NetworkCard.Configure(UiText.Get("Network"), "\uE968", false, v => Format.Bytes(v, true));
         HostText.Text = UiText.Format("HostHistory", Environment.MachineName);
+        CreateDeviceViews();
         CreateFacts();
         UpdateHeaders();
         ApplySystemTheme();
@@ -121,6 +122,7 @@ public sealed partial class MainWindow : Window
             foreach (var key in _rows.Keys.Where(k => !live.Contains(k)).ToArray()) _rows.Remove(key);
             _collapsed.RemoveWhere(k => !live.Contains(k));
             UpdateCards(frame);
+            UpdateDevices(frame);
             UpdateRows();
             var uptime = TimeSpan.FromMilliseconds(Environment.TickCount64);
             Uptime.Text = UiText.Format("Uptime", uptime.Days, uptime.Hours, uptime.Minutes);
@@ -211,6 +213,7 @@ public sealed partial class MainWindow : Window
             return;
         }
         foreach (var card in new[] { CpuCard, MemoryCard, DiskCard, NetworkCard }) card.ClearHistory();
+        ClearDeviceHistory();
         _restart = true;
         SetInterval();
         await RefreshAsync();
@@ -384,6 +387,8 @@ public sealed partial class MainWindow : Window
         Workspace.Margin = new Thickness(narrow ? 12 : 24, 8, narrow ? 12 : 24, 12);
         Inspector.DisplayMode = e.NewSize.Width < 1060 ? SplitViewDisplayMode.Overlay : SplitViewDisplayMode.Inline;
         Cards.RowSpacing = narrow ? 6 : 0;
+        // Leave room for the process table in short windows.
+        DeviceScroll.MaxHeight = Math.Clamp(e.NewSize.Height - 620, 86, 190);
         var cards = new[] { CpuCard, MemoryCard, DiskCard, NetworkCard };
         for (int i = 0; i < cards.Length; i++)
         {

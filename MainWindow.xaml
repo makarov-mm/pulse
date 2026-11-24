@@ -35,13 +35,31 @@
                     </ToggleButton>
                 </StackPanel>
             </Grid>
-            <Grid Grid.Row="1" x:Name="Cards" ColumnSpacing="10" RowSpacing="0">
-                <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+            <Grid Grid.Row="1">
                 <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-                <local:MetricCard x:Name="CpuCard" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
-                <local:MetricCard Grid.Column="1" x:Name="MemoryCard" Foreground="{ThemeResource MemoryInk}"/>
-                <local:MetricCard Grid.Column="2" x:Name="DiskCard" Foreground="{ThemeResource DiskInk}"/>
-                <local:MetricCard Grid.Column="3" x:Name="NetworkCard" Foreground="{ThemeResource NetworkInk}"/>
+                <Grid x:Name="Cards" ColumnSpacing="10" RowSpacing="0">
+                    <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                    <local:MetricCard x:Name="CpuCard" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
+                    <local:MetricCard Grid.Column="1" x:Name="MemoryCard" Foreground="{ThemeResource MemoryInk}"/>
+                    <local:MetricCard Grid.Column="2" x:Name="DiskCard" Foreground="{ThemeResource DiskInk}"/>
+                    <local:MetricCard Grid.Column="3" x:Name="NetworkCard" Foreground="{ThemeResource NetworkInk}"/>
+                </Grid>
+                <Border Grid.Row="1" x:Name="DevicePanel" Visibility="Collapsed" Margin="0,10,0,0" Padding="15,10,15,12" Style="{StaticResource Surface}">
+                    <Grid RowSpacing="8">
+                        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                        <Grid ColumnSpacing="10">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <TextBlock x:Name="DeviceTitle" VerticalAlignment="Center" Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                            <TextBlock Grid.Column="1" x:Name="DeviceSpan" VerticalAlignment="Center" FontSize="12" TextTrimming="CharacterEllipsis" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            <Button Grid.Column="2" Margin="0,-4,-6,-4" Style="{StaticResource SubtleButtonStyle}" Click="CloseDevices" AutomationProperties.Name="{loc:Localize Key=CloseDevices}" ToolTipService.ToolTip="{loc:Localize Key=CloseDevices}"><FontIcon Glyph="&#xE711;" FontSize="12"/></Button>
+                        </Grid>
+                        <ScrollViewer Grid.Row="1" x:Name="DeviceScroll" MaxHeight="190" VerticalScrollBarVisibility="Auto">
+                            <Grid x:Name="DeviceGrid" ColumnSpacing="8" RowSpacing="8" SizeChanged="DeviceGridSizeChanged"/>
+                        </ScrollViewer>
+                        <TextBlock Grid.Row="1" x:Name="DeviceEmpty" Text="{loc:Localize Key=NoDevices}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    </Grid>
+                </Border>
             </Grid>
             <InfoBar Grid.Row="2" x:Name="ErrorBar" IsOpen="False" IsClosable="True" Severity="Warning"/>
             <Border Grid.Row="3" Style="{StaticResource Surface}">
