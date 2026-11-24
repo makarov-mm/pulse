@@ -186,11 +186,18 @@
   <data name="SpaceScan" xml:space="preserve"><value>Сканировать</value></data>
   <data name="SpaceUpLabel" xml:space="preserve"><value>На уровень выше</value></data>
   <data name="SpaceOpenLabel" xml:space="preserve"><value>Открыть в Проводнике</value></data>
-  <data name="SpaceDriveLabel" xml:space="preserve"><value>Диск</value></data>
+  <data name="SpaceDriveLabel" xml:space="preserve"><value>Диск или папка</value></data>
   <data name="SpaceDrive" xml:space="preserve"><value>{0}   ·   свободно {1} из {2}</value></data>
   <data name="SpaceMoreFiles" xml:space="preserve"><value>ещё файлов: {0}</value></data>
   <data name="SpaceOther" xml:space="preserve"><value>мелких элементов: {0}</value></data>
   <data name="SpaceUnread" xml:space="preserve"><value>нет доступа</value></data>
   <data name="SpaceScanning" xml:space="preserve"><value>сканирование…</value></data>
-  <data name="SpacePrompt" xml:space="preserve"><value>Выберите диск и нажмите «Сканировать»</value></data>
+  <data name="SpacePrompt" xml:space="preserve"><value>Просканируйте выбранный диск или выберите папку</value></data>
+  <data name="SpaceBrowseLabel" xml:space="preserve"><value>Выбрать папку для сканирования</value></data>
+  <data name="SpaceItemsLabel" xml:space="preserve"><value>Содержимое папки</value></data>
+  <data name="SpaceCancelled" xml:space="preserve"><value>Сканирование отменено · неполные результаты</value></data>
+  <data name="ServicesUnavailableShort" xml:space="preserve"><value>Службы недоступны</value></data>
+  <data name="ServicesUnavailable" xml:space="preserve"><value>Не удалось прочитать список служб. {0}</value></data>
+  <data name="ConnectionsUnavailable" xml:space="preserve"><value>Соединения недоступны</value></data>
+  <data name="ProtocolUnavailable" xml:space="preserve"><value>{0} недоступен</value></data>
 </root>

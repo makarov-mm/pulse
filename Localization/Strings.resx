@@ -186,11 +186,18 @@
   <data name="SpaceScan" xml:space="preserve"><value>Scan</value></data>
   <data name="SpaceUpLabel" xml:space="preserve"><value>Up one level</value></data>
   <data name="SpaceOpenLabel" xml:space="preserve"><value>Open in File Explorer</value></data>
-  <data name="SpaceDriveLabel" xml:space="preserve"><value>Drive</value></data>
+  <data name="SpaceDriveLabel" xml:space="preserve"><value>Drive or folder</value></data>
   <data name="SpaceDrive" xml:space="preserve"><value>{0}   ·   {1} free of {2}</value></data>
   <data name="SpaceMoreFiles" xml:space="preserve"><value>{0} more files</value></data>
   <data name="SpaceOther" xml:space="preserve"><value>{0} smaller items</value></data>
   <data name="SpaceUnread" xml:space="preserve"><value>not readable</value></data>
   <data name="SpaceScanning" xml:space="preserve"><value>scanning…</value></data>
-  <data name="SpacePrompt" xml:space="preserve"><value>Choose a drive and select Scan</value></data>
+  <data name="SpacePrompt" xml:space="preserve"><value>Select a drive and scan it, or choose a folder</value></data>
+  <data name="SpaceBrowseLabel" xml:space="preserve"><value>Choose a folder to scan</value></data>
+  <data name="SpaceItemsLabel" xml:space="preserve"><value>Folder contents</value></data>
+  <data name="SpaceCancelled" xml:space="preserve"><value>Scan cancelled · partial results</value></data>
+  <data name="ServicesUnavailableShort" xml:space="preserve"><value>Services unavailable</value></data>
+  <data name="ServicesUnavailable" xml:space="preserve"><value>Could not read services. {0}</value></data>
+  <data name="ConnectionsUnavailable" xml:space="preserve"><value>Connections unavailable</value></data>
+  <data name="ProtocolUnavailable" xml:space="preserve"><value>{0} unavailable</value></data>
 </root>

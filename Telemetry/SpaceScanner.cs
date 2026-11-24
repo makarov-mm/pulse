@@ -2,8 +2,7 @@ using System.Security;
 
 namespace Pulse.Telemetry;
 
-// A folder or file in a disk space scan. The scanner publishes children and sizes while it runs,
-// so another thread can read a consistent, possibly incomplete, picture at any time.
+// The scanner publishes each folder's children once. Sizes and read errors can change as it walks the tree.
 internal sealed class SpaceNode(string name, SpaceNode? parent, bool isFile, long size = 0)
 {
     private long _size = size;
@@ -13,15 +12,20 @@ internal sealed class SpaceNode(string name, SpaceNode? parent, bool isFile, lon
     public string Name => name;
     public SpaceNode? Parent => parent;
     public bool IsFile => isFile;
-    // Greater than zero for a node that stands for this many smaller files of its folder.
     public int Grouped { get; init; }
     public long Size => Interlocked.Read(ref _size);
     public SpaceNode[] Children { get => _children; set => _children = value; }
-    // The folder could not be listed, so its size is incomplete.
     public bool Unread { get => _unread; set => _unread = value; }
-    public string Path => parent is null ? name : System.IO.Path.Combine(parent.Path, name);
+    public string Path
+    {
+        get
+        {
+            var parts = new Stack<string>();
+            for (SpaceNode? node = this; node is not null; node = node.Parent) parts.Push(node.Name);
+            return System.IO.Path.Combine(parts.ToArray());
+        }
+    }
 
-    // Adds bytes to this folder and every folder above it.
     public void Add(long bytes)
     {
         for (SpaceNode? node = this; node is not null; node = node.Parent) Interlocked.Add(ref node._size, bytes);
@@ -30,44 +34,62 @@ internal sealed class SpaceNode(string name, SpaceNode? parent, bool isFile, lon
 
 internal static class SpaceScanner
 {
-    // Each folder keeps its largest files as separate nodes and groups the rest.
     private const int LargestFiles = 20;
+    private const FileAttributes Skip = FileAttributes.ReparsePoint | FileAttributes.Offline;
 
-    // Walks the folder tree below node. Sizes are logical file lengths. Reparse points are skipped,
-    // which leaves out junctions, symbolic links and cloud files that are not stored locally.
-    public static void Scan(SpaceNode node, CancellationToken cancel)
+    public static void Scan(SpaceNode root, CancellationToken cancel)
     {
-        cancel.ThrowIfCancellationRequested();
-        var folders = new List<SpaceNode>();
-        var files = new List<(string Name, long Size)>();
-        try
+        var options = new EnumerationOptions { AttributesToSkip = Skip, IgnoreInaccessible = false };
+        var pending = new Stack<SpaceNode>();
+        pending.Push(root);
+        while (pending.TryPop(out var folder))
         {
-            var options = new EnumerationOptions { AttributesToSkip = FileAttributes.ReparsePoint, IgnoreInaccessible = false };
-            foreach (var entry in new DirectoryInfo(node.Path).EnumerateFileSystemInfos("*", options))
+            cancel.ThrowIfCancellationRequested();
+            var directories = new List<SpaceNode>();
+            var largest = new PriorityQueue<string, long>();
+            int count = 0;
+            long total = 0;
+            try
             {
-                if (entry is FileInfo file) files.Add((file.Name, file.Length));
-                else folders.Add(new SpaceNode(entry.Name, node, false));
+                var directory = new DirectoryInfo(folder.Path);
+                // A chosen root can itself be a link. A child can also disappear or become a link after discovery.
+                if ((directory.Attributes & Skip) != 0) { folder.Unread = true; continue; }
+                foreach (var entry in directory.EnumerateFileSystemInfos("*", options))
+                {
+                    if (cancel.IsCancellationRequested) break;
+                    if (entry is not FileInfo file)
+                    {
+                        directories.Add(new SpaceNode(entry.Name, folder, false));
+                        continue;
+                    }
+                    try
+                    {
+                        long length = file.Length;
+                        total += length;
+                        count++;
+                        if (largest.Count < LargestFiles) largest.Enqueue(file.Name, length);
+                        else largest.EnqueueDequeue(file.Name, length);
+                    }
+                    catch (Exception error) when (IsReadError(error)) { folder.Unread = true; }
+                }
             }
-        }
-        catch (Exception error) when (error is UnauthorizedAccessException or IOException or SecurityException)
-        {
-            node.Unread = true;
-        }
+            catch (Exception error) when (IsReadError(error)) { folder.Unread = true; }
 
-        files.Sort((a, b) => b.Size.CompareTo(a.Size));
-        var children = new List<SpaceNode>(folders);
-        long total = 0, grouped = 0;
-        for (int i = 0; i < files.Count; i++)
-        {
-            total += files[i].Size;
-            if (i < LargestFiles) children.Add(new SpaceNode(files[i].Name, node, true, files[i].Size));
-            else grouped += files[i].Size;
+            var children = new List<SpaceNode>(directories);
+            long remaining = total;
+            foreach (var (name, length) in largest.UnorderedItems)
+            {
+                children.Add(new SpaceNode(name, folder, true, length));
+                remaining -= length;
+            }
+            if (count > LargestFiles)
+                children.Add(new SpaceNode("", folder, true, remaining) { Grouped = count - LargestFiles });
+            folder.Add(total);
+            folder.Children = children.ToArray();
+            cancel.ThrowIfCancellationRequested();
+            for (int i = directories.Count - 1; i >= 0; i--) pending.Push(directories[i]);
         }
-        if (files.Count > LargestFiles)
-            children.Add(new SpaceNode("", node, true, grouped) { Grouped = files.Count - LargestFiles });
-        node.Children = children.ToArray();
-        node.Add(total);
-
-        foreach (var folder in folders) Scan(folder, cancel);
     }
+
+    private static bool IsReadError(Exception error) => error is UnauthorizedAccessException or IOException or SecurityException;
 }

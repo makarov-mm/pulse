@@ -368,20 +368,38 @@
                     </Grid>
                     <Grid Grid.Row="1" x:Name="SpaceView" Visibility="Collapsed" Padding="16,10,16,12" RowSpacing="10">
                         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-                        <Grid ColumnSpacing="8">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <ComboBox x:Name="SpaceDrives" AutomationProperties.Name="{loc:Localize Key=SpaceDriveLabel}" ToolTipService.ToolTip="{loc:Localize Key=SpaceDriveLabel}"/>
-                            <Button Grid.Column="1" x:Name="SpaceScan" Click="SpaceScanClicked"/>
-                            <Button Grid.Column="2" x:Name="SpaceUp" IsEnabled="False" Click="SpaceUpClicked" AutomationProperties.Name="{loc:Localize Key=SpaceUpLabel}" ToolTipService.ToolTip="{loc:Localize Key=SpaceUpLabel}"><FontIcon Glyph="&#xE74A;" FontSize="14"/></Button>
-                            <Button Grid.Column="3" x:Name="SpaceOpen" IsEnabled="False" Click="SpaceOpenClicked" AutomationProperties.Name="{loc:Localize Key=SpaceOpenLabel}" ToolTipService.ToolTip="{loc:Localize Key=SpaceOpenLabel}"><FontIcon Glyph="&#xE8DA;" FontSize="14"/></Button>
-                            <TextBlock Grid.Column="4" x:Name="SpacePath" VerticalAlignment="Center" FontSize="13" TextTrimming="CharacterEllipsis"/>
+                        <Grid RowSpacing="4" ColumnSpacing="8">
+                            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <ComboBox x:Name="SpaceDrives" HorizontalAlignment="Stretch" AutomationProperties.Name="{loc:Localize Key=SpaceDriveLabel}"/>
+                            <Button Grid.Column="1" x:Name="SpaceBrowse" Click="SpaceBrowseClicked" AutomationProperties.Name="{loc:Localize Key=SpaceBrowseLabel}" ToolTipService.ToolTip="{loc:Localize Key=SpaceBrowseLabel}"><FontIcon Glyph="&#xE838;" FontSize="14"/></Button>
+                            <Button Grid.Column="2" x:Name="SpaceScan" Click="SpaceScanClicked"/>
+                            <Button Grid.Column="3" x:Name="SpaceUp" IsEnabled="False" Click="SpaceUpClicked" AutomationProperties.Name="{loc:Localize Key=SpaceUpLabel}" ToolTipService.ToolTip="{loc:Localize Key=SpaceUpLabel}"><FontIcon Glyph="&#xE74A;" FontSize="14"/></Button>
+                            <Button Grid.Column="4" x:Name="SpaceOpen" IsEnabled="False" Click="SpaceOpenClicked" AutomationProperties.Name="{loc:Localize Key=SpaceOpenLabel}" ToolTipService.ToolTip="{loc:Localize Key=SpaceOpenLabel}"><FontIcon Glyph="&#xE8DA;" FontSize="14"/></Button>
+                            <TextBlock Grid.Row="1" Grid.ColumnSpan="5" x:Name="SpacePath" FontSize="13" TextTrimming="CharacterEllipsis"/>
                         </Grid>
                         <Grid Grid.Row="1" ColumnSpacing="12">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="3*"/><ColumnDefinition Width="2*"/></Grid.ColumnDefinitions>
                             <Canvas x:Name="SpaceMap" SizeChanged="SpaceMapSizeChanged"/>
-                            <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
-                                <StackPanel x:Name="SpaceItems" Spacing="2"/>
-                            </ScrollViewer>
+                            <ListView Grid.Column="1" x:Name="SpaceItems" IsItemClickEnabled="True" ItemClick="SpaceItemClicked"
+                                      SelectionMode="Single" AutomationProperties.Name="{loc:Localize Key=SpaceItemsLabel}">
+                                <ListView.ItemContainerStyle>
+                                    <Style TargetType="ListViewItem">
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="Padding" Value="0"/><Setter Property="MinHeight" Value="32"/>
+                                    </Style>
+                                </ListView.ItemContainerStyle>
+                                <ListView.ItemTemplate>
+                                    <DataTemplate x:DataType="m:SpaceRow">
+                                        <Grid Padding="6,2" ColumnSpacing="6">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                            <FontIcon Glyph="{x:Bind Glyph}" FontSize="14" AutomationProperties.AccessibilityView="Raw"/>
+                                            <TextBlock Grid.Column="1" Text="{x:Bind Name, Mode=OneWay}" Style="{StaticResource TextCell}" ToolTipService.ToolTip="{x:Bind Name, Mode=OneWay}"/>
+                                            <TextBlock Grid.Column="2" Text="{x:Bind Amount, Mode=OneWay}" Style="{StaticResource TextCell}"/>
+                                            <TextBlock Grid.Column="3" Text="{x:Bind Share, Mode=OneWay}" Style="{StaticResource TextCell}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
                         </Grid>
                     </Grid>
                 </Grid>

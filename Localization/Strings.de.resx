@@ -186,11 +186,18 @@
   <data name="SpaceScan" xml:space="preserve"><value>Scannen</value></data>
   <data name="SpaceUpLabel" xml:space="preserve"><value>Eine Ebene nach oben</value></data>
   <data name="SpaceOpenLabel" xml:space="preserve"><value>Im Explorer öffnen</value></data>
-  <data name="SpaceDriveLabel" xml:space="preserve"><value>Laufwerk</value></data>
+  <data name="SpaceDriveLabel" xml:space="preserve"><value>Laufwerk oder Ordner</value></data>
   <data name="SpaceDrive" xml:space="preserve"><value>{0}   ·   {1} frei von {2}</value></data>
   <data name="SpaceMoreFiles" xml:space="preserve"><value>{0} weitere Dateien</value></data>
   <data name="SpaceOther" xml:space="preserve"><value>{0} kleinere Elemente</value></data>
   <data name="SpaceUnread" xml:space="preserve"><value>nicht lesbar</value></data>
   <data name="SpaceScanning" xml:space="preserve"><value>wird gescannt…</value></data>
-  <data name="SpacePrompt" xml:space="preserve"><value>Laufwerk wählen und „Scannen“ auswählen</value></data>
+  <data name="SpacePrompt" xml:space="preserve"><value>Ein Laufwerk scannen oder einen Ordner auswählen</value></data>
+  <data name="SpaceBrowseLabel" xml:space="preserve"><value>Ordner zum Scannen auswählen</value></data>
+  <data name="SpaceItemsLabel" xml:space="preserve"><value>Ordnerinhalt</value></data>
+  <data name="SpaceCancelled" xml:space="preserve"><value>Scan abgebrochen · Teilergebnis</value></data>
+  <data name="ServicesUnavailableShort" xml:space="preserve"><value>Dienste nicht verfügbar</value></data>
+  <data name="ServicesUnavailable" xml:space="preserve"><value>Dienste konnten nicht gelesen werden. {0}</value></data>
+  <data name="ConnectionsUnavailable" xml:space="preserve"><value>Verbindungen nicht verfügbar</value></data>
+  <data name="ProtocolUnavailable" xml:space="preserve"><value>{0} nicht verfügbar</value></data>
 </root>

@@ -29,15 +29,15 @@ internal static class TcpConnections
     private static extern uint GetExtendedTcpTable(nint table, ref uint bytes, bool sorted, int family, int tableClass, uint reserved);
 
     // Every TCP socket with the process that owns it. A family that cannot be read is left out.
-    public static List<TcpConnection> Read()
+    public static List<TcpConnection> Read(out bool ipv4Available, out bool ipv6Available)
     {
         var connections = new List<TcpConnection>();
-        ReadFamily(connections, IPv4Family);
-        ReadFamily(connections, IPv6Family);
+        ipv4Available = ReadFamily(connections, IPv4Family);
+        ipv6Available = ReadFamily(connections, IPv6Family);
         return connections;
     }
 
-    private static void ReadFamily(List<TcpConnection> connections, int family)
+    private static bool ReadFamily(List<TcpConnection> connections, int family)
     {
         nint table = 0;
         try
@@ -53,7 +53,8 @@ internal static class TcpConnections
                 table = Marshal.AllocHGlobal((nint)bytes);
                 status = GetExtendedTcpTable(table, ref bytes, false, family, OwnerPidAll, 0);
             }
-            if (status != 0 || table == 0) return;
+            if (status != 0) return false;
+            if (table == 0 || bytes < 4) return true;
 
             int size = family == IPv6Family ? IPv6Row : IPv4Row;
             long count = Math.Min((uint)Marshal.ReadInt32(table), (bytes - 4) / (uint)size);
@@ -66,6 +67,7 @@ internal static class TcpConnections
                     : new TcpConnection(Marshal.ReadInt32(row, 20), false, Address(row, 4, 4), Port(row, 8),
                         Address(row, 12, 4), Port(row, 16), (TcpState)Marshal.ReadInt32(row, 0)));
             }
+            return true;
         }
         finally { Marshal.FreeHGlobal(table); }
     }

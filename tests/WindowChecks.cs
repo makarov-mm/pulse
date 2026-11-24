@@ -6,6 +6,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Pulse.Controls;
 using Pulse.Localization;
+using Pulse.Models;
 using Pulse.Telemetry;
 
 namespace Pulse;
@@ -107,8 +108,119 @@ public sealed partial class MainWindow
         _moments.Clear();
         for (int second = 0; second <= 1000; second++) RecordMoment(sample with { Time = second });
         Require(_moments.Count == 901 && _moments[0].Time == 100, "Unexpected 15-minute retention boundary.");
+        CheckMonitorTabs();
+        await CheckDiskSpaceAsync();
         PauseButton.IsChecked = false;
         PauseClicked(this, new());
         Require(!_paused && _moments.Count <= 1, "Resuming retained the paused history.");
     }
+    private void CheckMonitorTabs()
+    {
+        int pid = Environment.ProcessId;
+        Tabs.SelectedItem = DetailsTab;
+        Require(_detailRows.Any(row => row.ProcessId == pid), "The Details tab lost the test process.");
+        Tabs.SelectedItem = UsersTab;
+        Require(_userRows.Count != 0, "The Users tab did not list any sessions.");
+        Tabs.SelectedItem = ServicesTab;
+        if (_serviceReadError is null)
+            Require(_serviceRows.Any(row => row.ProcessId > 0), "The Services tab did not show a running service.");
+        else
+            Require(_serviceRows.Count == 0 && CountText.Text == UiText.Get("ServicesUnavailableShort") &&
+                HostedServices(pid) == _serviceReadError, "An unreadable service list was displayed as empty.");
+        Tabs.SelectedItem = StartupTab;
+        Require(_tab == LowerTab.Startup && CountText.Text == UiText.Format("StartupCount",
+            _startupRows.Count(row => row.Item!.Enabled), _startupRows.Count), "Incorrect startup summary.");
+        using var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
+        listener.Start();
+        Tabs.SelectedItem = ConnectionsTab;
+        if (_ipv4Available)
+            Require(_connectionRows.Any(row => row.ProcessId == pid && row.Local == listener.LocalEndpoint.ToString()
+                && row.State == "LISTENING"), "The Connections tab missed a live local listening socket.");
+        else
+            Require(CountText.Text.Contains(UiText.Get("ConnectionsUnavailable")) ||
+                CountText.Text.Contains(UiText.Format("ProtocolUnavailable", "IPv4")), "The missing IPv4 table was counted as empty.");
+
+        _ipv4Available = true;
+        _ipv6Available = false;
+        Require(WithConnectionStatus("3", " · ") == "3 · " + UiText.Format("ProtocolUnavailable", "IPv6"),
+            "Partial access hid the available connection count.");
+        _ipv4Available = false;
+        Require(RemoteEndpoints(pid) == UiText.Get("ConnectionsUnavailable"), "The inspector hid a failed socket query.");
+    }
+
+    private async Task CheckDiskSpaceAsync()
+    {
+        Tabs.SelectedItem = SpaceTab;
+        Require(_tab == LowerTab.Space && SpaceBrowse.IsEnabled, "Missing disk space tab or folder picker.");
+        var fixture = Directory.CreateTempSubdirectory("Pulse-space-");
+        try
+        {
+            var large = fixture.CreateSubdirectory("Nested");
+            File.WriteAllBytes(Path.Combine(large.FullName, "payload"), new byte[1024]);
+            fixture.CreateSubdirectory("Empty");
+            for (int i = 1; i <= 30; i++)
+                File.WriteAllBytes(Path.Combine(fixture.FullName, $"file{i}"), new byte[i]);
+            File.SetAttributes(Path.Combine(fixture.FullName, "file1"), FileAttributes.Hidden);
+            for (int i = 0; i < 65; i++)
+            {
+                var small = fixture.CreateSubdirectory($"Small{i}");
+                File.WriteAllBytes(Path.Combine(small.FullName, "one"), [1]);
+            }
+
+            string path = fixture.FullName;
+            SelectSpaceTarget(path);
+            SelectSpaceTarget(path);
+            Require(_spaceTargets.Count(target => target == path) == 1 && _spaceTargets[SpaceDrives.SelectedIndex] == path,
+                "Selecting a folder did not set a reusable scan target.");
+            await ScanSpaceAsync(path);
+            var root = _spaceRoot!;
+            Require(root.Size == 1554 && root.Children.Sum(n => n.Size) == 1554, "The scanned file lengths do not add up.");
+            var group = root.Children.Single(n => n.Grouped != 0);
+            Require(group.Size == 55 && group.Grouped == 10 && root.Children.Count(n => n.IsFile) == 21,
+                "The scanner did not keep the 20 largest files and group the rest.");
+            Require(SpaceItems.Items.Count == root.Children.Length && _spaceRows.Keys.Any(n => n.Name == "Empty"),
+                "The list hid an empty folder or items below the treemap limit.");
+
+            var missing = new SpaceNode(Path.Combine(path, "missing"), null, false);
+            SpaceScanner.Scan(missing, CancellationToken.None);
+            Require(missing.Unread, "A missing folder was reported as successfully scanned.");
+            var unread = new SpaceNode("Unavailable", root, false) { Unread = true };
+            root.Children = [..root.Children, unread];
+            DrawSpace();
+            Require(_spaceRows[unread].Name.Contains(UiText.Get("SpaceUnread")), "An unread folder disappeared from the list.");
+
+            // The largest rectangle must represent its share of all bytes, including the smaller items.
+            Root.UpdateLayout();
+            DrawSpace();
+            var first = SpaceMap.Children.OfType<Border>().First();
+            double fraction = (first.Width + 2) * (first.Height + 2) / (SpaceMap.ActualWidth * SpaceMap.ActualHeight);
+            Require(Math.Abs(fraction - 1024.0 / root.Size) < 0.001, "The treemap excluded the smaller items from its scale.");
+
+            var nested = root.Children.Single(n => n.Name == "Nested");
+            var row = _spaceRows[nested];
+            SpaceItems.SelectedItem = row;
+            SpaceItems.ScrollIntoView(row);
+            SpaceItems.UpdateLayout();
+            Require(((ListViewItem)SpaceItems.ContainerFromItem(row)).Focus(FocusState.Keyboard), "Could not focus a folder.");
+            root.Children.Single(n => n.Name == "Small0").Add(2048);
+            DrawSpace();
+            Require((FocusManager.GetFocusedElement(Root.XamlRoot) as ListViewItem)?.Content == row &&
+                SpaceItems.SelectedItem == row, "Reordering the disk list moved focus away from the folder.");
+            OpenSpaceFolder(nested);
+            Require(_spaceCurrent == nested && SpaceUp.IsEnabled && SpaceItems.Items.Count == 1, "Folder drill-down failed.");
+            SpaceUpClicked(this, new());
+            Require(_spaceCurrent == root, "Up did not return to the scanned folder.");
+
+            var scan = ScanSpaceAsync(path);
+            SpaceScanClicked(this, new());
+            await scan;
+            Require(_spaceCancelled && SpacePath.Text.Contains(UiText.Get("SpaceCancelled")) && SpaceBrowse.IsEnabled,
+                "Cancelling a scan did not preserve and identify the partial result.");
+            await ScanSpaceAsync(path);
+            Require(!_spaceCancelled && _spaceRoot?.Size == 1554, "Rescanning did not replace the partial result.");
+        }
+        finally { fixture.Delete(true); }
+        Tabs.SelectedItem = ProcessesTab;
+    }
+
 }

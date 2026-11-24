@@ -1,7 +1,8 @@
 using System.Diagnostics;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Input;
+using Microsoft.Windows.Storage.Pickers;
 using Pulse.Localization;
 using Pulse.Models;
 using Pulse.Telemetry;
@@ -14,9 +15,13 @@ public sealed partial class MainWindow
 {
     private const int SpaceItemLimit = 60;
     private readonly DispatcherTimer _spaceTimer = new() { Interval = TimeSpan.FromSeconds(1) };
-    private readonly List<string> _spaceDrives = [];
+    private readonly List<string> _spaceTargets = [];
     private SpaceNode? _spaceRoot, _spaceCurrent;
     private CancellationTokenSource? _spaceCancel;
+
+    private bool _spaceCancelled;
+    private SpaceNode? _listedFolder;
+    private readonly Dictionary<SpaceNode, SpaceRow> _spaceRows = [];
 
     private void CreateSpace()
     {
@@ -26,16 +31,45 @@ public sealed partial class MainWindow
             {
                 if (!drive.IsReady || drive.DriveType is not (DriveType.Fixed or DriveType.Removable)) continue;
                 SpaceDrives.Items.Add(UiText.Format("SpaceDrive", drive.Name, Format.Bytes(drive.AvailableFreeSpace), Format.Bytes(drive.TotalSize)));
-                _spaceDrives.Add(drive.RootDirectory.FullName);
+                _spaceTargets.Add(drive.RootDirectory.FullName);
             }
             catch (Exception error) when (error is IOException or UnauthorizedAccessException) { }
         }
-        if (_spaceDrives.Count > 0) SpaceDrives.SelectedIndex = 0;
+        if (_spaceTargets.Count > 0) SpaceDrives.SelectedIndex = 0;
         SpaceScan.Content = UiText.Get("SpaceScan");
-        SpaceScan.IsEnabled = _spaceDrives.Count > 0;
+        SpaceScan.IsEnabled = _spaceTargets.Count > 0;
         SpacePath.Text = UiText.Get("SpacePrompt");
         _spaceTimer.Tick += (_, _) => DrawSpace();
         Closed += (_, _) => { _spaceTimer.Stop(); _spaceCancel?.Cancel(); };
+    }
+
+    private async void SpaceBrowseClicked(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var picker = new FolderPicker(AppWindow.Id);
+            var result = await picker.PickSingleFolderAsync();
+            if (result is null || _closed) return;
+            SelectSpaceTarget(result.Path);
+            await ScanSpaceAsync(result.Path);
+        }
+        catch (Exception error) when (error is System.Runtime.InteropServices.COMException or UnauthorizedAccessException)
+        {
+            if (!_closed) ShowError(UiText.Get("ActionError"), error.Message);
+        }
+    }
+
+    private void SelectSpaceTarget(string path)
+    {
+        int index = _spaceTargets.FindIndex(target => string.Equals(path, target, StringComparison.OrdinalIgnoreCase));
+        if (index < 0)
+        {
+            index = _spaceTargets.Count;
+            _spaceTargets.Add(path);
+            SpaceDrives.Items.Add(path);
+        }
+        SpaceDrives.SelectedIndex = index;
+        SpaceScan.IsEnabled = true;
     }
 
     private async void SpaceScanClicked(object sender, RoutedEventArgs e)
@@ -45,16 +79,24 @@ public sealed partial class MainWindow
             running.Cancel();
             return;
         }
-        if (SpaceDrives.SelectedIndex < 0 || SpaceDrives.SelectedIndex >= _spaceDrives.Count) return;
-        var root = new SpaceNode(_spaceDrives[SpaceDrives.SelectedIndex], null, false);
+        if (SpaceDrives.SelectedIndex < 0 || SpaceDrives.SelectedIndex >= _spaceTargets.Count) return;
+        await ScanSpaceAsync(_spaceTargets[SpaceDrives.SelectedIndex]);
+    }
+
+    private async Task ScanSpaceAsync(string path)
+    {
+        if (_spaceCancel is not null || _closed) return;
+        var root = new SpaceNode(path, null, false);
         var cancel = new CancellationTokenSource();
         _spaceRoot = _spaceCurrent = root;
         _spaceCancel = cancel;
+        _spaceCancelled = false;
+        SpaceBrowse.IsEnabled = SpaceDrives.IsEnabled = false;
         SpaceScan.Content = UiText.Get("Cancel");
         _spaceTimer.Start();
         DrawSpace();
         try { await Task.Run(() => SpaceScanner.Scan(root, cancel.Token)); }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException) when (cancel.IsCancellationRequested) { _spaceCancelled = true; }
         finally
         {
             cancel.Dispose();
@@ -62,6 +104,7 @@ public sealed partial class MainWindow
             if (!_closed)
             {
                 _spaceTimer.Stop();
+                SpaceBrowse.IsEnabled = SpaceDrives.IsEnabled = true;
                 SpaceScan.Content = UiText.Get("SpaceScan");
                 DrawSpace();
             }
@@ -78,8 +121,8 @@ public sealed partial class MainWindow
     private void SpaceOpenClicked(object sender, RoutedEventArgs e)
     {
         if (_spaceCurrent is not { } folder) return;
-        _ = RunActionAsync(() =>
-            Process.Start(new ProcessStartInfo("explorer.exe", $"\"{folder.Path}\"") { UseShellExecute = true })?.Dispose());
+        _ = RunActionAsync(() => Process.Start(new ProcessStartInfo("explorer.exe")
+            { UseShellExecute = true, ArgumentList = { folder.Path } })?.Dispose());
     }
 
     private void SpaceMapSizeChanged(object sender, SizeChangedEventArgs e) => DrawSpace();
@@ -91,54 +134,61 @@ public sealed partial class MainWindow
         DrawSpace();
     }
 
-    private static string SpaceName(SpaceNode node) =>
-        node.Grouped > 0 ? UiText.Format("SpaceMoreFiles", node.Grouped) :
-        node.Unread ? $"{node.Name} ({UiText.Get("SpaceUnread")})" : node.Name;
+    private void SpaceItemClicked(object sender, ItemClickEventArgs args)
+    {
+        if (args.ClickedItem is SpaceRow row) OpenSpaceFolder(row.Node);
+    }
 
     // Redraws the treemap and the list for the current folder. While a scan runs this is called every second.
     private void DrawSpace()
     {
         if (_tab != LowerTab.Space) return;
         SpaceMap.Children.Clear();
-        SpaceItems.Children.Clear();
         if (_spaceCurrent is not { } folder || _spaceRoot is not { } root)
         {
             CountText.Text = "";
             return;
         }
-        bool scanning = _spaceCancel is not null;
         long size = folder.Size;
-        SpacePath.Text = $"{folder.Path}   ·   {Format.Bytes(size)}{(scanning ? "   ·   " + UiText.Get("SpaceScanning") : "")}";
+        string status = _spaceCancel is not null ? UiText.Get("SpaceScanning") :
+            _spaceCancelled ? UiText.Get("SpaceCancelled") : "";
+        string path = folder.Unread ? $"{folder.Path} ({UiText.Get("SpaceUnread")})" : folder.Path;
+        SpacePath.Text = $"{path}   ·   {Format.Bytes(size)}{(status.Length == 0 ? "" : "   ·   " + status)}";
+        ToolTipService.SetToolTip(SpacePath, SpacePath.Text);
         SpaceUp.IsEnabled = folder.Parent is not null;
         SpaceOpen.IsEnabled = true;
         CountText.Text = Format.Bytes(root.Size);
 
-        var sized = folder.Children.Select(node => (Node: node, Size: node.Size)).Where(item => item.Size > 0)
-            .OrderByDescending(item => item.Size).ToList();
-        var shown = sized.Take(SpaceItemLimit).ToList();
-        long rest = sized.Skip(SpaceItemLimit).Sum(item => item.Size);
-
-        for (int i = 0; i < shown.Count; i++) SpaceItems.Children.Add(SpaceRow(shown[i].Node, shown[i].Size, size));
-        if (rest > 0)
-            SpaceItems.Children.Add(SpaceRowContent(UiText.Format("SpaceOther", sized.Count - SpaceItemLimit), rest, size));
+        var items = folder.Children.Select(node => (Node: node, Size: node.Size))
+            .OrderByDescending(item => item.Size).ThenBy(item => item.Node.Name, StringComparer.CurrentCultureIgnoreCase).ToList();
+        UpdateSpaceList(folder, items, size);
 
         double width = SpaceMap.ActualWidth, height = SpaceMap.ActualHeight;
         if (width < 20 || height < 20) return;
-        var boxes = Squarify(shown.Select(item => (item.Node, (double)item.Size)).ToList(), new Rect(0, 0, width, height));
+        var positive = items.TakeWhile(item => item.Size > 0).ToList();
+        var weights = positive.Take(SpaceItemLimit).Select(item => ((SpaceNode?)item.Node, (double)item.Size)).ToList();
+        long rest = positive.Skip(SpaceItemLimit).Sum(item => item.Size);
+        if (rest > 0)
+        {
+            weights.Add((null, rest));
+            weights.Sort((left, right) => right.Item2.CompareTo(left.Item2));
+        }
+        var boxes = Squarify(weights, new Rect(0, 0, width, height));
         for (int i = 0; i < boxes.Count; i++)
         {
             var (node, box) = boxes[i];
             if (box.Width < 3 || box.Height < 3) continue;
-            string label = $"{SpaceName(node)}{Environment.NewLine}{Format.Bytes(node.Size)}";
+            string name = node is null ? UiText.Format("SpaceOther", positive.Count - SpaceItemLimit) : SpaceRow.Label(node);
+            string label = $"{name}{Environment.NewLine}{Format.Bytes(node?.Size ?? rest)}";
             // Folders take the disk colour and files the memory colour. Larger items are drawn stronger.
             var tile = new Border
             {
                 Width = box.Width - 2, Height = box.Height - 2, CornerRadius = new CornerRadius(3),
-                Background = (node.IsFile ? MemoryCard : DiskCard).Foreground,
+                Background = (node?.IsFile == false ? DiskCard : MemoryCard).Foreground,
                 Opacity = 0.55 - 0.35 * i / Math.Max(1, boxes.Count)
             };
             ToolTipService.SetToolTip(tile, label);
-            if (!node.IsFile) tile.Tapped += (_, _) => OpenSpaceFolder(node);
+            if (node is { IsFile: false }) tile.Tapped += (_, _) => OpenSpaceFolder(node);
             Canvas.SetLeft(tile, box.X + 1);
             Canvas.SetTop(tile, box.Y + 1);
             SpaceMap.Children.Add(tile);
@@ -154,41 +204,35 @@ public sealed partial class MainWindow
         }
     }
 
-    private UIElement SpaceRow(SpaceNode node, long size, long total)
+    private void UpdateSpaceList(SpaceNode folder, List<(SpaceNode Node, long Size)> items, long total)
     {
-        var content = SpaceRowContent(SpaceName(node), size, total);
-        if (node.IsFile) return content;
-        // Folders are buttons so they can be opened with the keyboard as well as the pointer.
-        var button = new Button
+        if (!ReferenceEquals(folder, _listedFolder))
         {
-            Content = content, Padding = new Thickness(0), BorderThickness = new Thickness(0),
-            HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Stretch,
-            Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent)
-        };
-        button.Click += (_, _) => OpenSpaceFolder(node);
-        return button;
-    }
+            _listedFolder = folder;
+            _spaceRows.Clear();
+        }
+        var rows = new List<SpaceRow>(items.Count);
+        foreach (var (node, size) in items)
+        {
+            if (!_spaceRows.TryGetValue(node, out var row)) _spaceRows[node] = row = new SpaceRow(node);
+            row.Refresh(size, total);
+            rows.Add(row);
+        }
+        if (SpaceItems.ItemsSource is List<SpaceRow> current && current.SequenceEqual(rows)) return;
 
-    private static Grid SpaceRowContent(string name, long size, long total)
-    {
-        var grid = new Grid { ColumnSpacing = 10, Padding = new Thickness(8, 5, 8, 5) };
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(86) });
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(58) });
-        var label = new TextBlock { Text = name, FontSize = 13, TextTrimming = TextTrimming.CharacterEllipsis };
-        var amount = new TextBlock { Text = Format.Bytes(size), FontSize = 13, HorizontalAlignment = HorizontalAlignment.Right };
-        var share = new TextBlock
+        var selected = SpaceItems.SelectedItem as SpaceRow;
+        var container = FocusManager.GetFocusedElement(Root.XamlRoot) as ListViewItem;
+        var focusedRow = container?.Content as SpaceRow;
+        var state = container?.FocusState ?? FocusState.Unfocused;
+        SpaceItems.ItemsSource = rows;
+        if (selected is not null && _spaceRows.ContainsKey(selected.Node)) SpaceItems.SelectedItem = selected;
+        if (focusedRow is not null && _spaceRows.ContainsKey(focusedRow.Node))
         {
-            Text = total > 0 ? Format.Percent(100.0 * size / total) : "—", FontSize = 13, Opacity = 0.78,
-            HorizontalAlignment = HorizontalAlignment.Right
-        };
-        ToolTipService.SetToolTip(label, name);
-        Grid.SetColumn(amount, 1);
-        Grid.SetColumn(share, 2);
-        grid.Children.Add(label);
-        grid.Children.Add(amount);
-        grid.Children.Add(share);
-        return grid;
+            SpaceItems.ScrollIntoView(focusedRow);
+            SpaceItems.UpdateLayout();
+            (SpaceItems.ContainerFromItem(focusedRow) as ListViewItem)?.Focus(
+                state == FocusState.Unfocused ? FocusState.Programmatic : state);
+        }
     }
 
     // Squarified treemap layout: fills the area row by row, keeping each box as close to a square as it can.

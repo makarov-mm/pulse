@@ -10,6 +10,7 @@ A native Windows 11 task manager developed by Mykhailo Makarov. Pulse brings up 
 | Find a worker process and understand who launched it | Search by name or PID in **Tree** mode. The results retain the chain of parent processes. Typing a worker's PID can reveal the browser, editor or build tool that spawned it. |
 | Find the core, disk or adapter behind a busy overview graph | Open the device view from the CPU, disk or network card. Each logical processor, physical disk and network adapter has its own graph for the selected time window. Disk tiles separate throughput from active time and response time. |
 | Compare system load with the activity of one process | Keep CPU, memory, disk and network history visible while inspecting a process's working set, private memory, read and write rates, thread count and handles. Pause to investigate a busy moment without the rows reordering. |
+| Find what fills a drive or project folder | Scan it from **Disk space**, then open a tile to see which subfolders and files account for its size. |
 
 Windows Task Manager provides system-wide performance, process details and services in dedicated views. The table describes workflows available in the current Pulse build. [Windows Task Manager overview](https://learn.microsoft.com/en-us/troubleshoot/windows-server/support-tools/support-tools-task-manager)
 
@@ -30,7 +31,7 @@ Open the portable `Pulse.exe` on Windows 11 x64. It bundles .NET and the Windows
 - Click a device tile, or press **Enter** or **Space** on it, to expand it into a larger graph with its maximum and time span labelled. Arrow keys move between tiles. Select the tile again to shrink it.
 - Choose a history window of 1 or 15 minutes beside the refresh interval. Pulse always keeps the last 15 minutes, so switching does not lose samples.
 - Click the CPU or memory graph to list the five processes with the highest CPU use and the five largest working sets at that sample. Processes that have since exited are marked.
-- Switch to **Disk space**, choose a drive and select **Scan** to see what fills it. The treemap and the list beside it show the folders and largest files of the current folder and fill in while the scan runs. Click a folder to open it, and use the toolbar to go up a level, open the folder in File Explorer or cancel the scan. Sizes are file lengths, so compressed and sparse files count in full. Junctions, links and cloud files that are not stored locally are skipped. Folders Pulse cannot read are marked.
+- In **Disk space**, select a drive and click **Scan**, or use **Choose a folder to scan** to start from a directory. The treemap groups smaller items so that tile areas reflect their share of the whole folder. The list includes every subfolder, including empty and unreadable ones. It shows the 20 largest files individually and groups the rest. Click a folder to drill down and use **Up one level** to go back. Cancelling preserves the partial result. Sizes are logical file lengths, including the full length of compressed and sparse files. The scan skips reparse points and offline files.
 - Changing a service or a machine-wide startup entry needs administrator rights. The menus offer **Restart Pulse as administrator** when Pulse runs without them. Entries of the current user can be changed without elevation.
 - Choose a refresh interval of 1, 2 or 5 seconds. The default is 2 seconds. **Pause** freezes the view, including graph history. **Resume** starts a fresh history.
 - **End task** asks for confirmation. Pulse checks the selected process's creation time and critical status on the same handle it uses to end the process.
@@ -78,7 +79,7 @@ powershell -File .\publish.ps1
 
 ## Run the Windows regression checks
 
-From the project directory, run `powershell -File .\tests\Run.ps1`. The test build opens its own WinUI window for each shipped language. It checks live sampling, device removal and recovery, short-window layout, gaps in graphs, pause and the 15-minute history boundary. Device changes and missing time intervals are simulated in the test process. Build output and reports go under `obj/window-checks`.
+From the project directory, run `powershell -File .\tests\Run.ps1`. The test build opens its own WinUI window for each shipped language. It checks live sampling, device removal and recovery, short-window layout, gaps in graphs, pause and the 15-minute history boundary. The disk space checks create a temporary folder tree and verify byte totals, small-file grouping, treemap proportions, navigation, keyboard focus, cancellation and rescanning. The checks also open Details, Users, Startup apps, Services and Connections. Services and Connections report when Windows restricts access to their data. Device changes and missing time intervals are simulated in the test process. Build output and reports go under `obj/window-checks`.
 
 ## Development roadmap
 

@@ -21,7 +21,9 @@ public sealed partial class MainWindow
     private readonly ObservableCollection<StartupRow> _startupRows = [];
     private readonly ObservableCollection<ServiceRow> _serviceRows = [];
     private List<ServiceInfo> _services = [];
+    private string? _serviceReadError;
     private List<TcpConnection> _connections = [];
+    private bool _ipv4Available, _ipv6Available;
     private LowerTab _tab;
 
     private void CreateTabs()
@@ -166,10 +168,18 @@ public sealed partial class MainWindow
         bool inspecting = _tab == LowerTab.Processes && Inspector.IsPaneOpen;
         if (_tab == LowerTab.Services || inspecting)
         {
-            try { _services = ServiceSnapshot.Read(); }
-            catch (Win32Exception) { _services = []; }
+            try
+            {
+                _services = ServiceSnapshot.Read();
+                _serviceReadError = null;
+            }
+            catch (Win32Exception error)
+            {
+                _services = [];
+                _serviceReadError = UiText.Format("ServicesUnavailable", error.Message);
+            }
         }
-        if (_tab == LowerTab.Connections || inspecting) _connections = TcpConnections.Read();
+        if (_tab == LowerTab.Connections || inspecting) _connections = TcpConnections.Read(out _ipv4Available, out _ipv6Available);
     }
 
     private string ProcessName(int pid) => _byPid.TryGetValue(pid, out var task) ? task.Info.Name : "";
@@ -189,7 +199,16 @@ public sealed partial class MainWindow
             .ThenBy(m => m.Connection.LocalPort)
             .ToList();
         Fill(_connectionRows, matches, () => new ConnectionRow(), (row, m) => row.Update(m.Connection, m.Process));
-        CountText.Text = matches.Count == _connections.Count ? $"{matches.Count}" : $"{matches.Count} / {_connections.Count}";
+        string count = matches.Count == _connections.Count ? $"{matches.Count}" : $"{matches.Count} / {_connections.Count}";
+        CountText.Text = WithConnectionStatus(count, " · ");
+    }
+
+    private string WithConnectionStatus(string text, string separator)
+    {
+        if (_ipv4Available && _ipv6Available) return text;
+        if (!_ipv4Available && !_ipv6Available) return UiText.Get("ConnectionsUnavailable");
+        string missing = UiText.Format("ProtocolUnavailable", _ipv4Available ? "IPv6" : "IPv4");
+        return text.Length == 0 ? missing : text + separator + missing;
     }
 
     private void ConnectionDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
@@ -203,9 +222,10 @@ public sealed partial class MainWindow
         const int shown = 6;
         var peers = _connections.Where(c => c.Pid == pid && c.State == TcpState.Established)
             .Select(c => c.Remote).Distinct().ToList();
-        if (peers.Count == 0) return "—";
         string text = string.Join(Environment.NewLine, peers.Take(shown));
-        return peers.Count > shown ? $"{text}{Environment.NewLine}+{peers.Count - shown}" : text;
+        if (peers.Count > shown) text += $"{Environment.NewLine}+{peers.Count - shown}";
+        text = WithConnectionStatus(text, Environment.NewLine);
+        return text.Length == 0 ? "—" : text;
     }
 
     private void UpdateServiceRows()
@@ -220,7 +240,8 @@ public sealed partial class MainWindow
             .ToList();
         Fill(_serviceRows, matches, () => new ServiceRow(),
             (row, service) => row.Update(service, ProcessName(service.Pid)));
-        CountText.Text = UiText.Format("ServiceCount", _services.Count(s => s.State == ServiceState.Running), _services.Count);
+        CountText.Text = _serviceReadError is null ? UiText.Format("ServiceCount", _services.Count(s => s.State == ServiceState.Running), _services.Count) : UiText.Get("ServicesUnavailableShort");
+        ToolTipService.SetToolTip(ServiceList, _serviceReadError);
     }
 
     private void ServiceDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
@@ -245,6 +266,7 @@ public sealed partial class MainWindow
 
     private string HostedServices(int pid)
     {
+        if (_serviceReadError is not null) return _serviceReadError;
         string names = string.Join(", ", _services.Where(s => s.Pid == pid).Select(s => s.Name));
         return names.Length == 0 ? "—" : names;
     }
