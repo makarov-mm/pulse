@@ -28,6 +28,12 @@ Windows Task Manager's Performance view supplies the device-level model. btop4wi
 - Let a user select a point on a graph to see the top CPU consumers and largest working sets at that instant. Show the sampled values and indicate when a process has since exited.
 - **Acceptance.** Run a short-lived CPU-heavy process, let it exit, and select its peak five minutes later. The historical inspector still identifies the original process. Resuming from sleep leaves a visible gap in the timeline.
 
+**Status.** The history window switches between 1 and 15 minutes. Clicking the CPU or memory graph lists the leading processes of that sample, keyed by PID and creation time, and marks those that have exited. Remaining work:
+
+- Run the acceptance test with a short-lived CPU-heavy process and with a resume from sleep.
+- Reach a past sample from the keyboard.
+- Measure memory growth over a full 15-minute history at the 1-second interval.
+
 System Informer's history graphs link a point in time to the responsible process. This milestone builds on Pulse's existing sample tooltips. [System Informer](https://systeminformer.io/)
 
 ## 3. Inspect a process in context

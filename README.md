@@ -22,6 +22,8 @@ Open the portable `Pulse.exe` on Windows 11 x64. It bundles .NET and the Windows
 - Press **Ctrl+F** to search by process name or PID. Click a column heading to sort, and click it again to reverse the order.
 - Toggle **Tree** to follow parent and child processes. Select a row to inspect its executable path, start time and counters.
 - Use the chevron on the CPU, disk or network card to open its device view, and again to close it. The buttons are reachable with **Tab**. Device history is collected while the view is closed, so the tiles open with the last minute already drawn.
+- Choose a history window of 1 or 15 minutes beside the refresh interval. Pulse always keeps the last 15 minutes, so switching does not lose samples.
+- Click the CPU or memory graph to list the five processes with the highest CPU use and the five largest working sets at that sample. Processes that have since exited are marked.
 - Choose a refresh interval of 1, 2 or 5 seconds. The default is 2 seconds. **Pause** freezes the view, including graph history. **Resume** starts a fresh history.
 - **End task** asks for confirmation. Pulse checks the selected process's creation time and critical status on the same handle it uses to end the process.
 
@@ -38,7 +40,7 @@ Open the portable `Pulse.exe` on Windows 11 x64. It bundles .NET and the Windows
 | Network adapters | Receive and send rates per adapter, with the link speed Windows reports. |
 | Network | Receive and send rates summed across active interfaces, including virtual adapters. Loopback and tunnel interfaces are excluded. Traffic traversing multiple interfaces may be counted more than once. |
 
-A dash indicates that a counter is unavailable or another sample is needed. CPU and memory charts use a 0–100% scale. Throughput charts scale to the highest value in the visible minute. Disk and adapter tiles show that maximum in the corner of each graph. A tile disappears when Windows stops reporting its device, and the other tiles keep their history.
+A dash indicates that a counter is unavailable or another sample is needed. CPU and memory charts use a 0–100% scale. Throughput charts scale to the highest value in the visible window. Disk and adapter tiles show that maximum in the corner of each graph. A tile disappears when Windows stops reporting its device, and the other tiles keep their history.
 
 ## Languages
 
@@ -62,5 +64,5 @@ dotnet publish Pulse.csproj -c Release -p:PublishProfile=Portable -o publish
 
 ## Development roadmap
 
-The current milestone identifies a saturated CPU core, physical disk or network adapter. The device views are in place and their measurements still need checking against a recorded baseline. Later milestones cover longer history, process inspection and capture comparison. [Roadmap and acceptance criteria](ROADMAP.md)
+The current milestone identifies a saturated CPU core, physical disk or network adapter. The device views are in place and their measurements still need checking against a recorded baseline. The 15-minute window and the per-sample process list from milestone 2 are also in place. Later milestones cover longer history, process inspection and capture comparison. [Roadmap and acceptance criteria](ROADMAP.md)
 
