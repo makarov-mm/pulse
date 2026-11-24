@@ -79,7 +79,7 @@
                         <TextBox Grid.Column="2" x:Name="SearchBox" Width="214" PlaceholderText="{loc:Localize Key=Search}" AutomationProperties.Name="{loc:Localize Key=Search}" TextChanged="SearchChanged">
                             <TextBox.KeyboardAccelerators><KeyboardAccelerator Key="F" Modifiers="Control" Invoked="SearchInvoked"/></TextBox.KeyboardAccelerators>
                         </TextBox>
-                        <ToggleButton Grid.Column="3" x:Name="TreeButton" Click="TreeClicked" AutomationProperties.Name="{loc:Localize Key=ProcessTree}" ToolTipService.ToolTip="{loc:Localize Key=TreeTip}">
+                        <ToggleButton Grid.Column="3" x:Name="TreeButton" IsChecked="True" Click="TreeClicked" AutomationProperties.Name="{loc:Localize Key=ProcessTree}" ToolTipService.ToolTip="{loc:Localize Key=TreeTip}">
                             <StackPanel Orientation="Horizontal" Spacing="7"><FontIcon Glyph="&#xE8FD;" FontSize="14"/><TextBlock x:Name="TreeLabel" Text="{loc:Localize Key=Tree}"/></StackPanel>
                         </ToggleButton>
                     </Grid>
@@ -123,6 +123,7 @@
                                     </Border>
                                     <ListView Grid.Row="1" x:Name="TaskList" SelectionMode="Single" SelectionChanged="TaskSelected" AutomationProperties.Name="{loc:Localize Key=ProcessList}"
                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollMode="Disabled" Padding="0">
+                                        <ListView.ItemContainerTransitions><TransitionCollection/></ListView.ItemContainerTransitions>
                                         <ListView.ItemContainerStyle>
                                             <Style TargetType="ListViewItem">
                                                 <Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="Padding" Value="0"/>
@@ -141,9 +142,9 @@
                                                             </Button>
                                                         </Grid>
                                                         <FontIcon Grid.Column="1" Glyph="{x:Bind Glyph, Mode=OneWay}" FontSize="15" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                                        <TextBlock Grid.Column="2" Text="{x:Bind Name}" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{x:Bind Name}"/>
+                                                        <TextBlock Grid.Column="2" Text="{x:Bind Name, Mode=OneWay}" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{x:Bind Name, Mode=OneWay}"/>
                                                     </Grid>
-                                                    <TextBlock Grid.Column="1" Text="{x:Bind Pid}" Style="{StaticResource NumberCell}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                                    <TextBlock Grid.Column="1" Text="{x:Bind Pid, Mode=OneWay}" Style="{StaticResource NumberCell}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                                                     <Border Grid.Column="2" Width="{x:Bind CpuWidth, Mode=OneWay}" Height="21" HorizontalAlignment="Right" Margin="0,0,3,0" CornerRadius="3" Background="{ThemeResource AccentFillColorDefaultBrush}" Opacity="0.2"/>
                                                     <TextBlock Grid.Column="2" Text="{x:Bind Cpu, Mode=OneWay}" Style="{StaticResource NumberCell}"/>
                                                     <TextBlock Grid.Column="3" Text="{x:Bind Ram, Mode=OneWay}" Style="{StaticResource NumberCell}"/>

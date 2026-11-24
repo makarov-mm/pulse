@@ -1,42 +1,59 @@
 using Pulse.Localization;
 using Microsoft.UI.Xaml;
 using Pulse.Telemetry;
-using System.ComponentModel;
 
 namespace Pulse.Models;
 
-public sealed class ProcessRow : INotifyPropertyChanged
+public sealed class ProcessRow : ObservableRow
 {
+    private string _name = "", _pid = "", _threads = "", _cpu = "", _ram = "", _io = "", _glyph = "";
+    private string _arrow = "", _branchAction = "", _accessible = "";
+    private double _cpuWidth;
+    private Thickness _indent;
+    private Visibility _branchSpace, _arrowVisibility;
+    private bool _canExpand;
+
     internal TaskSample Sample { get; private set; }
     internal ProcessKey Key => Sample.Info.Key;
     internal ProcessRow(TaskSample sample) => Sample = sample;
-    public string Name => Sample.Info.Name;
-    public string Pid => Key.Pid.ToString();
-    public string Threads => Format.Number(Sample.Info.Threads);
-    public string Cpu => Format.Percent(Sample.Cpu);
-    public string Ram => Format.Bytes(Sample.Info.WorkingSet);
-    public string Io => Format.Bytes(Sample.Io, true);
-    public double CpuWidth => 58 * Math.Clamp(Sample.Cpu ?? 0, 0, 100) / 100;
-    public string Glyph => Sample.Info.Session == 0 ? "\uE713" : "\uECAA";
-    public Thickness Indent { get; private set; }
-    public Visibility BranchSpace { get; private set; }
-    public Visibility ArrowVisibility { get; private set; }
-    public string Arrow { get; private set; } = "";
-    public string BranchAction { get; private set; } = "";
-    public bool CanExpand { get; private set; }
-    public string Accessible => UiText.Format("RowDescription", Name, Pid, Cpu, Ram, Io);
-    public event PropertyChangedEventHandler? PropertyChanged;
+
+    public string Name => _name;
+    public string Pid => _pid;
+    public string Threads => _threads;
+    public string Cpu => _cpu;
+    public string Ram => _ram;
+    public string Io => _io;
+    public double CpuWidth => _cpuWidth;
+    public string Glyph => _glyph;
+    public Thickness Indent => _indent;
+    public Visibility BranchSpace => _branchSpace;
+    public Visibility ArrowVisibility => _arrowVisibility;
+    public string Arrow => _arrow;
+    public string BranchAction => _branchAction;
+    public bool CanExpand => _canExpand;
+    public string Accessible => _accessible;
 
     internal void Update(Branch branch, bool tree, bool collapsed, bool filtering)
     {
         Sample = branch.Task;
-        Indent = new(Math.Min(branch.Depth, 6) * 12, 0, 0, 0);
-        BranchSpace = tree ? Visibility.Visible : Visibility.Collapsed;
-        ArrowVisibility = branch.HasChildren ? Visibility.Visible : Visibility.Collapsed;
-        Arrow = collapsed && !filtering ? "\uE76C" : "\uE70D";
-        BranchAction = collapsed ? UiText.Get("ExpandBranch") : UiText.Get("CollapseBranch");
-        CanExpand = !filtering;
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty));
+        var info = Sample.Info;
+        // A collapsed branch shows the totals of the process and everything below it.
+        var total = branch.Total;
+        double? cpu = total is { } sum ? sum.Cpu : Sample.Cpu;
+        Set(ref _name, total is { } named ? $"{info.Name} ({named.Processes})" : info.Name, nameof(Name));
+        Set(ref _pid, info.Key.Pid.ToString(), nameof(Pid));
+        Set(ref _threads, Format.Number(total?.Threads ?? info.Threads), nameof(Threads));
+        Set(ref _cpu, Format.Percent(cpu), nameof(Cpu));
+        Set(ref _ram, Format.Bytes(total?.WorkingSet ?? info.WorkingSet), nameof(Ram));
+        Set(ref _io, Format.Bytes(total is { } summed ? summed.Io : Sample.Io, true), nameof(Io));
+        Set(ref _cpuWidth, 58 * Math.Clamp(cpu ?? 0, 0, 100) / 100, nameof(CpuWidth));
+        Set(ref _glyph, info.Session == 0 ? "" : "", nameof(Glyph));
+        Set(ref _indent, new Thickness(Math.Min(branch.Depth, 6) * 12, 0, 0, 0), nameof(Indent));
+        Set(ref _branchSpace, tree ? Visibility.Visible : Visibility.Collapsed, nameof(BranchSpace));
+        Set(ref _arrowVisibility, branch.HasChildren ? Visibility.Visible : Visibility.Collapsed, nameof(ArrowVisibility));
+        Set(ref _arrow, collapsed && !filtering ? "" : "", nameof(Arrow));
+        Set(ref _branchAction, collapsed ? UiText.Get("ExpandBranch") : UiText.Get("CollapseBranch"), nameof(BranchAction));
+        Set(ref _canExpand, !filtering, nameof(CanExpand));
+        Set(ref _accessible, UiText.Format("RowDescription", _name, _pid, _cpu, _ram, _io), nameof(Accessible));
     }
 }
-

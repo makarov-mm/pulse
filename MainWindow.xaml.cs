@@ -25,14 +25,13 @@ public sealed partial class MainWindow : Window
     private readonly UISettings _systemColors = new();
     private readonly DispatcherTimer _timer = new();
     private readonly ObservableCollection<ProcessRow> _visible = [];
-    private readonly Dictionary<ProcessKey, ProcessRow> _rows = [];
     private readonly HashSet<ProcessKey> _collapsed = [];
     private readonly Dictionary<string, TextBlock> _facts = [];
     private Dictionary<int, TaskSample> _byPid = [];
     private Frame? _frame;
     private ProcessKey? _selected;
     private SortField _sort = SortField.Cpu;
-    private bool _descending = true, _tree, _refreshing, _busy, _closed, _paused, _restart = true;
+    private bool _descending = true, _tree = true, _refreshing, _busy, _closed, _paused, _restart = true;
     private bool _loaded, _dialogOpen;
     private int _generation;
     private string _path = "";
@@ -123,7 +122,6 @@ public sealed partial class MainWindow : Window
             _frame = frame;
             _byPid = frame.Tasks.ToDictionary(t => t.Info.Key.Pid);
             var live = frame.Tasks.Select(t => t.Info.Key).ToHashSet();
-            foreach (var key in _rows.Keys.Where(k => !live.Contains(k)).ToArray()) _rows.Remove(key);
             _collapsed.RemoveWhere(k => !live.Contains(k));
             UpdateCards(frame);
             UpdateDevices(frame);
@@ -178,10 +176,12 @@ public sealed partial class MainWindow : Window
             foreach (var item in order)
             {
                 var key = item.Task.Info.Key;
-                if (!_rows.TryGetValue(key, out var row)) _rows[key] = row = new(item.Task);
+                // Rows stay in place and take on whichever process now holds their position.
+                // Replacing or moving list items would rebuild their containers and make the list flicker.
+                ProcessRow row;
+                if (i < _visible.Count) row = _visible[i];
+                else _visible.Add(row = new ProcessRow(item.Task));
                 row.Update(item, _tree, _collapsed.Contains(key), search.Length != 0);
-                if (i == _visible.Count) _visible.Add(row);
-                else if (_visible[i] != row) _visible[i] = row;
                 if (key == _selected) selected = row;
                 i++;
             }
@@ -265,7 +265,7 @@ public sealed partial class MainWindow : Window
     {
         if (_refreshing || TaskList.SelectedItem is not ProcessRow row) return;
         _selected = row.Key;
-        DetailName.Text = row.Name;
+        DetailName.Text = row.Sample.Info.Name;
         try { _path = ProcessActions.ImagePath(row.Key); }
         catch (Win32Exception ex) { _path = ex.NativeErrorCode == 5 ? UiText.Get("AccessDenied") : ex.Message; }
         catch (InvalidOperationException ex) { _path = ex.Message; }
