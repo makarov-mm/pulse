@@ -5,10 +5,10 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Media;
 using Pulse.Localization;
 using Pulse.Models;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.Foundation;
 
 namespace Pulse;
 
@@ -36,6 +36,7 @@ public sealed partial class MainWindow
         public Border? Shield;
         public List<UIElement> Frozen = [];
     }
+
     private readonly Dictionary<LowerTab, Table> _tables = [];
     private readonly ConditionalWeakTable<Grid, GridColumns> _gridColumns = new();
     private (Table Table, string Key)? _dragColumn;
@@ -57,9 +58,9 @@ public sealed partial class MainWindow
             FontWeight = button.FontWeight,
             FontSize = button.FontSize
         };
-        label.Measure(new(double.PositiveInfinity, double.PositiveInfinity));
-        return Math.Ceiling(label.DesiredSize.Width + button.Padding.Left + button.Padding.Right +
-            button.BorderThickness.Left + button.BorderThickness.Right);
+
+        label.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+        return Math.Ceiling(label.DesiredSize.Width + button.Padding.Left + button.Padding.Right + button.BorderThickness.Left + button.BorderThickness.Right);
     }
 
     private static void FitHeadings(Table table, Grid grid)
@@ -73,10 +74,27 @@ public sealed partial class MainWindow
 
     private void ConfigureColumns()
     {
+        foreach ((LowerTab tab, Grid header, Grid view) in new[] {
+            (LowerTab.Processes, ProcessHeaders, TableViewport),
+            (LowerTab.Details, DetailsHeaders, DetailsView),
+            (LowerTab.Users, UsersHeaders, UsersView),
+            (LowerTab.Connections, ConnectionsHeaders, ConnectionsView),
+            (LowerTab.Network, NetworkHeaders, NetworkView),
+            (LowerTab.Startup, StartupHeaders, StartupView),
+            (LowerTab.Services, ServicesHeaders, ServicesView),
+            (LowerTab.Space, SpaceHeaders, SpaceListPanel) })
+        {
+            var scroll = (ScrollViewer)view.Children[0];
+            Register(tab, header, scroll, (Grid)scroll.Content);
+        }
+
+        return;
+
         void Register(LowerTab tab, Grid header, ScrollViewer scroller, Grid body)
         {
-            var buttons = header.Children.OfType<Button>().OrderBy(Grid.GetColumn).ToArray();
+            Button[] buttons = [.. header.Children.OfType<Button>().OrderBy(Grid.GetColumn)];
             var t = new Table(tab, header, scroller, body, buttons);
+
             double identityMinimum = tab switch
             {
                 LowerTab.Details => 260,
@@ -85,17 +103,20 @@ public sealed partial class MainWindow
                 LowerTab.Connections or LowerTab.Startup or LowerTab.Services => 140,
                 _ => 0
             };
+
             t.HeadingMinimums[0] = Math.Max(t.HeadingMinimums[0], identityMinimum);
             _tables.Add(tab, t);
             FitHeadings(t, header);
-            var original = _gridColumns.GetValue(header, g => new(g));
-            foreach (var b in buttons)
+            GridColumns original = _gridColumns.GetValue(header, g => new GridColumns(g));
+
+            foreach (Button b in buttons)
             {
                 string key = (string)b.Tag;
                 b.ContextRequested += (_, e) => { ColumnMenu(t, b).ShowAt(b); e.Handled = true; };
                 b.CanDrag = true; b.AllowDrop = true;
                 b.DragStarting += (_, e) => { _dragColumn = (t, key); e.Data.RequestedOperation = DataPackageOperation.Move; e.Data.SetText(key); };
                 b.DragOver += (_, e) => { if (_dragColumn?.Table == t) { e.AcceptedOperation = DataPackageOperation.Move; e.Handled = true; } };
+                
                 b.Drop += (_, e) =>
                 {
                     if (_dragColumn is { } d && d.Table == t)
@@ -105,9 +126,10 @@ public sealed partial class MainWindow
                     }
                     _dragColumn = null;
                 };
+
                 b.DropCompleted += (_, _) => _dragColumn = null;
-                var grip = new Thumb { Width = 7, HorizontalAlignment = HorizontalAlignment.Right,
-                    IsTabStop = false, Template = (ControlTemplate)Application.Current.Resources["ColumnGripTemplate"] };
+
+                var grip = new Thumb { Width = 7, HorizontalAlignment = HorizontalAlignment.Right, IsTabStop = false, Template = (ControlTemplate)Application.Current.Resources["ColumnGripTemplate"] };
                 AutomationProperties.SetName(grip, (string)b.Content);
                 Grid.SetColumn(grip, Grid.GetColumn(b));
                 header.Children.Add(grip); original.Original.Add(grip, Grid.GetColumn(b));
@@ -116,95 +138,155 @@ public sealed partial class MainWindow
                 grip.DragDelta += (_, e) => { width = Math.Clamp(width + e.HorizontalChange, Minimum(t, key), 1800); Resize(t, key, width, false); };
                 grip.DragCompleted += (_, _) => Save(t);
             }
+
             scroller.SizeChanged += (_, _) => SizeTable(t);
-            scroller.ViewChanged += (_, _) => { if (t.Settings.Pin) { Translate(t, header); foreach (var row in t.Rows) Translate(t, row); } };
+
+            scroller.ViewChanged += (_, _) =>
+            {
+                if (t.Settings.Pin)
+                {
+                    Translate(t, header);
+
+                    foreach (Grid row in t.Rows)
+                    {
+                        Translate(t, row);
+                    }
+                }
+            };
+
             try
             {
                 var path = PreferencesPath(tab);
-                if (File.Exists(path) && new FileInfo(path).Length <= 65536 &&
-                    JsonSerializer.Deserialize<TablePreferences>(File.ReadAllText(path)) is { Columns: not null } saved)
+
+                if (File.Exists(path) && new FileInfo(path).Length <= 65536 && JsonSerializer.Deserialize<TablePreferences>(File.ReadAllText(path)) is { Columns: not null } saved)
                 {
-                    var valid = saved.Columns.Where(c => c != null && t.Keys.Contains(c.Key) && double.IsFinite(c.Width))
-                        .DistinctBy(c => c.Key).Select(c => c with { Width = Math.Clamp(c.Width, Minimum(t, c.Key), 1800) }).ToList();
+                    List<ColumnChoice> valid =
+                    [
+                        .. saved.Columns
+                            .Where(c => c != null && t.Keys.Contains(c.Key) && double.IsFinite(c.Width))
+                            .DistinctBy(c => c.Key)
+                            .Select(c => c with { Width = Math.Clamp(c.Width, Minimum(t, c.Key), 1800) })
+                    ];
+
                     if (valid.Count > 0)
                     {
                         foreach (string key in t.Keys.Except(valid.Select(c => c.Key))) valid.Add(new(key, 140, false));
                         if (valid.All(c => c.Hidden)) valid[0] = valid[0] with { Hidden = false };
                     }
-                    t.Settings = saved with { Columns = valid.ToArray(), Pin = saved.Pin && valid.Count != 0 };
+
+                    t.Settings = saved with
+                    {
+                        Columns = [.. valid], 
+                        Pin = saved.Pin && valid.Count != 0
+                    };
+
                     if (saved.Sort != null && t.Keys.Contains(saved.Sort))
                     {
-                        if (tab == LowerTab.Processes) { _sort = Enum.Parse<SortField>(saved.Sort); _descending = saved.Descending; }
-                        else _tabOrders[tab] = new(saved.Sort, saved.Descending);
+                        if (tab == LowerTab.Processes)
+                        {
+                            _sort = Enum.Parse<SortField>(saved.Sort);
+                            _descending = saved.Descending;
+                        }
+                        else
+                        {
+                            _tabOrders[tab] = new ColumnOrder(saved.Sort, saved.Descending);
+                        }
                     }
                 }
             }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException) { }
-            if (t.Settings.Columns.Length != 0) ApplyTable(t);
-        }
-        foreach (var (tab, header, view) in new[] { (LowerTab.Processes, ProcessHeaders, TableViewport), (LowerTab.Details, DetailsHeaders, DetailsView),
-            (LowerTab.Users, UsersHeaders, UsersView), (LowerTab.Connections, ConnectionsHeaders, ConnectionsView), (LowerTab.Network, NetworkHeaders, NetworkView),
-            (LowerTab.Startup, StartupHeaders, StartupView), (LowerTab.Services, ServicesHeaders, ServicesView), (LowerTab.Space, SpaceHeaders, SpaceListPanel) })
-        {
-            var scroll = (ScrollViewer)view.Children[0];
-            Register(tab, header, scroll, (Grid)scroll.Content);
+
+            if (t.Settings.Columns.Length != 0)
+            {
+                ApplyTable(t);
+            }
         }
     }
 
     private static double Minimum(Table t, string key) => t.Tab == LowerTab.Details && key == "Name" ? 260 : 48;
-    private static ColumnChoice[] Choices(Table t) => t.Settings.Columns.Length > 0 ? t.Settings.Columns :
-        t.Keys.Select((k, i) => new ColumnChoice(k, Math.Clamp(t.Header.ColumnDefinitions[i].ActualWidth, Minimum(t, k), 1800), false)).ToArray();
+
+    private static ColumnChoice[] Choices(Table t) => t.Settings.Columns.Length > 0 
+        ? t.Settings.Columns 
+        :
+        [
+            .. t.Keys.Select((k, i) => new ColumnChoice(k,
+                Math.Clamp(t.Header.ColumnDefinitions[i].ActualWidth, Minimum(t, k), 1800), false))
+        ];
+
     private static void Materialize(Table t) => t.Settings = t.Settings with { Columns = Choices(t) };
+
     private void Resize(Table t, string key, double width, bool persist)
     {
         Materialize(t);
-        t.Settings = t.Settings with { Columns = t.Settings.Columns.Select(c => c.Key == key
-            ? c with { Width = Math.Clamp(width, Minimum(t, key), 1800) } : c).ToArray() };
-        ApplyTable(t); if (persist) Save(t);
+
+        t.Settings = t.Settings with { Columns =
+            [
+                .. t.Settings.Columns.Select(c => c.Key == key
+                    ? c with { Width = Math.Clamp(width, Minimum(t, key), 1800) }
+                    : c)
+            
+            ]
+        };
+
+        ApplyTable(t); 
+        if (persist) Save(t);
     }
+
     private void Reorder(Table t, string from, string to)
     {
         if (from == to) return;
         Materialize(t);
         var list = t.Settings.Columns.ToList();
         int target = list.FindIndex(c => c.Key == to);
-        var item = list.Single(c => c.Key == from);
+        ColumnChoice item = list.Single(c => c.Key == from);
         list.Remove(item); list.Insert(target, item);
-        t.Settings = t.Settings with { Columns = list.ToArray() };
-        ApplyTable(t); Save(t);
+        t.Settings = t.Settings with { Columns = [.. list] };
+        ApplyTable(t);
+        Save(t);
     }
 
     private MenuFlyout ColumnMenu(Table t, Button anchor)
     {
         string key = (string)anchor.Tag;
-        var columns = Choices(t);
+        ColumnChoice[] columns = Choices(t);
         var menu = new MenuFlyout();
-        void Item(string label, Action action)
-        {
-            var item = new MenuFlyoutItem { Text = UiText.Get(label) };
-            item.Click += (_, _) => action();
-            menu.Items.Add(item);
-        }
+
         foreach (var c in columns)
         {
-            var b = t.Buttons[Array.IndexOf(t.Keys, c.Key)];
-            string label = _columnLabels.TryGetValue(b, out var h) ? h.Label : ((string)b.Content).TrimEnd(' ', '↓', '↑');
-            var item = new ToggleMenuFlyoutItem { Text = label, IsChecked = !c.Hidden,
-                IsEnabled = (c.Hidden || columns.Count(x => !x.Hidden) > 1) && !(t.Settings.Pin && c.Key == t.Keys[0]) };
+            Button b = t.Buttons[Array.IndexOf(t.Keys, c.Key)];
+            string label = _columnLabels.TryGetValue(b, out (LowerTab Tab, string Label) h) ? h.Label : ((string)b.Content).TrimEnd(' ', '↓', '↑');
+
+            var item = new ToggleMenuFlyoutItem
+            {
+                Text = label, 
+                IsChecked = !c.Hidden,
+                IsEnabled = (c.Hidden || columns.Count(x => !x.Hidden) > 1) && !(t.Settings.Pin && c.Key == t.Keys[0])
+            };
+
             item.Click += (_, _) =>
             {
-                t.Settings = t.Settings with { Columns = columns.Select(x => x.Key == c.Key ? x with { Hidden = !item.IsChecked } : x).ToArray() };
-                ApplyTable(t); Save(t);
+                t.Settings = t.Settings with { Columns = [.. columns.Select(x => x.Key == c.Key ? x with { Hidden = !item.IsChecked } : x)] };
+                ApplyTable(t); 
+                Save(t);
             };
+
             menu.Items.Add(item);
         }
+
         menu.Items.Add(new MenuFlyoutSeparator());
-        var pin = new ToggleMenuFlyoutItem { Text = UiText.Get("PinName"), IsChecked = t.Settings.Pin };
+
+        var pin = new ToggleMenuFlyoutItem
+        {
+            Text = UiText.Get("PinName"), 
+            IsChecked = t.Settings.Pin
+        };
+
         pin.Click += (_, _) =>
         {
             t.Settings = t.Settings with { Pin = pin.IsChecked, Columns = columns.Select(c => pin.IsChecked && c.Key == t.Keys[0] ? c with { Hidden = false } : c).ToArray() };
             ApplyTable(t); Save(t);
         };
+
         menu.Items.Add(pin);
         int index = Array.FindIndex(columns, c => c.Key == key);
         if (index > 0) Item("MoveLeft", () => Reorder(t, key, columns[index - 1].Key));
@@ -213,22 +295,48 @@ public sealed partial class MainWindow
         Item("Wider", () => Resize(t, key, columns[index].Width + 24, true));
         Item("RestoreLayout", () => { t.Settings = t.Settings with { Columns = [], Pin = false }; ApplyTable(t); Save(t); });
         return menu;
+
+        void Item(string label, Action action)
+        {
+            var item = new MenuFlyoutItem { Text = UiText.Get(label) };
+            item.Click += (_, _) => action();
+            menu.Items.Add(item);
+        }
     }
 
     private void Save(Table t)
     {
-        var sort = t.Tab == LowerTab.Processes ? new ColumnOrder(_sort.ToString(), _descending) :
-            _tabOrders.TryGetValue(t.Tab, out var s) ? s : new ColumnOrder("", false);
-        var data = t.Settings with { Sort = sort.Column, Descending = sort.Descending };
+        ColumnOrder sort = t.Tab == LowerTab.Processes 
+            ? new ColumnOrder(_sort.ToString(), _descending) 
+            : _tabOrders.TryGetValue(t.Tab, out var s) ? s : new ColumnOrder("", false);
+
+        TablePreferences data = t.Settings with
+        {
+            Sort = sort.Column, 
+            Descending = sort.Descending
+        };
+
         string path = PreferencesPath(t.Tab), temp = path + "." + Guid.NewGuid().ToString("N");
+
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);
             File.WriteAllText(temp, JsonSerializer.Serialize(data));
             File.Move(temp, path, true);
         }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { ShowError(UiText.Get("ActionError"), e.Message); }
-        finally { try { File.Delete(temp); } catch (IOException) { } catch (UnauthorizedAccessException) { } }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            ShowError(UiText.Get("ActionError"), e.Message);
+        }
+        finally
+        {
+            try
+            {
+                File.Delete(temp);
+            } 
+            catch (IOException) { } 
+            catch (UnauthorizedAccessException) { }
+        }
     }
 
     private void TableRowLoading(FrameworkElement sender, object args)
@@ -236,9 +344,17 @@ public sealed partial class MainWindow
         var row = (Grid)sender;
         if (!_tables.TryGetValue(Enum.Parse<LowerTab>((string)row.Tag), out var t)) return;
         t.Rows.Add(row);
-        if (t.Settings.Columns.Length != 0 || _gridColumns.TryGetValue(row, out _)) ApplyGrid(t, row);
-        else FitHeadings(t, row);
+
+        if (t.Settings.Columns.Length != 0 || _gridColumns.TryGetValue(row, out _))
+        {
+            ApplyGrid(t, row);
+        }
+        else
+        {
+            FitHeadings(t, row);
+        }
     }
+
     private void TableRowUnloaded(object sender, RoutedEventArgs e)
     {
         var row = (Grid)sender;
@@ -248,55 +364,100 @@ public sealed partial class MainWindow
     private void ApplyTable(Table t)
     {
         ApplyGrid(t, t.Header);
-        foreach (var row in t.Rows) ApplyGrid(t, row);
-        var columns = t.Settings.Columns;
-        double minimum = columns.Length == 0 ? t.OriginalMinimum :
-            columns.Where(c => !c.Hidden).Sum(c => c.Width) + t.Header.Padding.Left + t.Header.Padding.Right +
-            t.Header.ColumnSpacing * (t.Keys.Length - 1);
+
+        foreach (Grid row in t.Rows)
+        {
+            ApplyGrid(t, row);
+        }
+
+        ColumnChoice[] columns = t.Settings.Columns;
+
+        double minimum = columns.Length == 0 
+            ? t.OriginalMinimum 
+            : columns
+                .Where(c => !c.Hidden)
+                .Sum(c => c.Width) + t.Header.Padding.Left + t.Header.Padding.Right + t.Header.ColumnSpacing * (t.Keys.Length - 1);
+
         t.Body.MinWidth = minimum;
         SizeTable(t);
     }
 
     private static void SizeTable(Table t)
     {
-        double width = t.Header.ColumnDefinitions.Sum(c => Math.Max(c.MinWidth, c.Width.IsAbsolute ? c.Width.Value : 0))
-            + t.Header.Padding.Left + t.Header.Padding.Right + (t.Keys.Length - 1) * t.Header.ColumnSpacing;
+        double width = t.Header.ColumnDefinitions.Sum(c => Math.Max(c.MinWidth, c.Width.IsAbsolute ? c.Width.Value : 0)) + t.Header.Padding.Left + t.Header.Padding.Right + (t.Keys.Length - 1) * t.Header.ColumnSpacing;
         t.Body.Width = Math.Max(t.Scroll.ActualWidth, Math.Max(t.Body.MinWidth, width));
     }
 
     private void ApplyGrid(Table t, Grid g)
     {
-        var original = _gridColumns.GetValue(g, grid => new(grid));
-        var choices = t.Settings.Columns;
-        if (choices.Length != 0 && t.Settings.Pin) choices = choices.OrderByDescending(c => c.Key == t.Keys[0]).ToArray();
-        if (original.Shield != null) { g.Children.Remove(original.Shield); original.Shield = null; }
+        GridColumns original = _gridColumns.GetValue(g, grid => new(grid));
+        ColumnChoice[] choices = t.Settings.Columns;
+
+        if (choices.Length != 0 && t.Settings.Pin)
+        {
+            choices = [.. choices.OrderByDescending(c => c.Key == t.Keys[0])];
+        }
+
+        if (original.Shield != null)
+        {
+            g.Children.Remove(original.Shield); 
+            original.Shield = null;
+        }
+
         original.Frozen.Clear();
+
         for (int i = 0; i < t.Keys.Length; i++)
         {
-            var col = g.ColumnDefinitions[i];
-            col.MinWidth = choices.Length == 0 ? Math.Max(original.Defaults[i].Minimum, t.HeadingMinimums[i]) : 0;
-            col.Width = choices.Length == 0 ? original.Defaults[i].Width : new GridLength(choices[i].Hidden ? 0 : choices[i].Width);
+            ColumnDefinition col = g.ColumnDefinitions[i];
+
+            col.MinWidth = choices.Length == 0 
+                ? Math.Max(original.Defaults[i].Minimum, t.HeadingMinimums[i]) 
+                : 0;
+
+            col.Width = choices.Length == 0
+                ? original.Defaults[i].Width 
+                : new GridLength(choices[i].Hidden ? 0 : choices[i].Width);
         }
-        foreach (var (element, source) in original.Original)
+
+        foreach ((FrameworkElement element, int source) in original.Original)
         {
             int index = choices.Length == 0 ? source : Array.FindIndex(choices, c => c.Key == t.Keys[source]);
             Grid.SetColumn(element, index);
-            if (element is FrameworkElement visible && (choices.Length != 0 || element.Visibility == Visibility.Collapsed))
-                visible.Visibility = choices.Length != 0 && choices[index].Hidden ? Visibility.Collapsed : Visibility.Visible;
-            element.Translation = Vector3.Zero;
-            if (t.Settings.Pin && source == 0) original.Frozen.Add(element);
+
+            if (element != null && (choices.Length != 0 || element.Visibility == Visibility.Collapsed))
+            {
+                element.Visibility = choices.Length != 0 && choices[index].Hidden ? Visibility.Collapsed : Visibility.Visible;
+            }
+
+            element?.Translation = Vector3.Zero;
+
+            if (t.Settings.Pin && source == 0)
+                if (element != null)
+                    original.Frozen.Add(element);
         }
+
         if (original.Frozen.Count == 0) return;
         var shield = new Border { IsHitTestVisible = false, Style = (Style)Application.Current.Resources["FrozenColumnBackground"] };
         original.Shield = shield;
         g.Children.Add(shield);
-        foreach (var item in original.Frozen) { g.Children.Remove(item); g.Children.Add(item); }
+
+        foreach (UIElement item in original.Frozen)
+        {
+            g.Children.Remove(item);
+            g.Children.Add(item);
+        }
+
         original.Frozen.Insert(0, shield);
         Translate(t, g);
     }
     private void Translate(Table t, Grid grid)
     {
-        if (_gridColumns.TryGetValue(grid, out var original))
-            foreach (var element in original.Frozen) element.Translation = new((float)t.Scroll.HorizontalOffset, 0, 0);
+        if (_gridColumns.TryGetValue(grid, out GridColumns? original))
+        {
+            foreach (UIElement element in original.Frozen)
+            {
+                element.Translation = new Vector3((float)t.Scroll.HorizontalOffset, 0, 0);
+            }
+        }
     }
 }

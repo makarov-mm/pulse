@@ -10,7 +10,6 @@ using Windows.Foundation;
 
 namespace Pulse;
 
-// The Disk space tab: a background scan shown as a treemap and a list that drill down into folders.
 public sealed partial class MainWindow
 {
     private const int SpaceItemLimit = 60;
@@ -34,12 +33,22 @@ public sealed partial class MainWindow
             }
             catch (Exception error) when (error is IOException or UnauthorizedAccessException) { }
         }
-        if (_spaceTargets.Count > 0) SpaceDrives.SelectedIndex = 0;
+
+        if (_spaceTargets.Count > 0)
+        {
+            SpaceDrives.SelectedIndex = 0;
+        }
+
         SpaceScan.Content = UiText.Get("SpaceScan");
         SpaceScan.IsEnabled = _spaceTargets.Count > 0;
         SpacePath.Text = UiText.Get("SpacePrompt");
         _spaceTimer.Tick += (_, _) => DrawSpace();
-        Closed += (_, _) => { _spaceTimer.Stop(); _spaceCancel?.Cancel(); };
+
+        Closed += (_, _) =>
+        {
+            _spaceTimer.Stop();
+            _spaceCancel?.Cancel();
+        };
     }
 
     private async void SpaceBrowseClicked(object sender, RoutedEventArgs e)
@@ -54,7 +63,10 @@ public sealed partial class MainWindow
         }
         catch (Exception error) when (error is System.Runtime.InteropServices.COMException or UnauthorizedAccessException)
         {
-            if (!_closed) ShowError(UiText.Get("ActionError"), error.Message);
+            if (!_closed)
+            {
+                ShowError(UiText.Get("ActionError"), error.Message);
+            }
         }
     }
 
@@ -75,14 +87,25 @@ public sealed partial class MainWindow
 
     private async void SpaceScanClicked(object sender, RoutedEventArgs e)
     {
-        if (_spaceCancel is { } running)
+        try
         {
-            await running.CancelAsync();
-            return;
-        }
+            if (_spaceCancel is { } running)
+            {
+                await running.CancelAsync();
+                return;
+            }
 
-        if (SpaceDrives.SelectedIndex < 0 || SpaceDrives.SelectedIndex >= _spaceTargets.Count) return;
-        await ScanSpaceAsync(_spaceTargets[SpaceDrives.SelectedIndex]);
+            int index = SpaceDrives.SelectedIndex;
+            if (index < 0 || index >= _spaceTargets.Count) return;
+            await ScanSpaceAsync(_spaceTargets[index]);
+        }
+        catch (Exception error)
+        {
+            if (!_closed)
+            {
+                ShowError(UiText.Get("ActionError"), error.Message);
+            }
+        }
     }
 
     private async Task ScanSpaceAsync(string path)
@@ -93,20 +116,19 @@ public sealed partial class MainWindow
         _spaceRoot = _spaceCurrent = root;
         _spaceCancel = cancel;
         _spaceCancelled = false;
-        SpaceBrowse.IsEnabled = SpaceDrives.IsEnabled = false;
-        SpaceScan.Content = UiText.Get("Cancel");
-        _spaceTimer.Start();
-        DrawSpace();
 
         try
         {
+            SpaceBrowse.IsEnabled = SpaceDrives.IsEnabled = false;
+            SpaceScan.Content = UiText.Get("Cancel");
+            _spaceTimer.Start();
+            DrawSpace();
             await Task.Run(() => SpaceScanner.Scan(root, cancel.Token), cancel.Token);
         }
         catch (OperationCanceledException) when (cancel.IsCancellationRequested)
         {
             _spaceCancelled = true;
         }
-        // The scanner records read errors itself. A path it cannot form ends the scan and keeps what was found.
         catch (Exception error) when (error is ArgumentException or NotSupportedException)
         {
             _spaceCancelled = true;
@@ -187,7 +209,6 @@ public sealed partial class MainWindow
         if (args.ClickedItem is SpaceRow row) OpenSpaceFolder(row.Node);
     }
 
-    // Redraws the treemap and the list for the current folder. While a scan runs this is called every second.
     private void DrawSpace()
     {
         if (_tab != LowerTab.Space) return;
@@ -216,7 +237,7 @@ public sealed partial class MainWindow
         List<(SpaceNode Node, long Size)> items =
         [
             .. folder.Children
-                .Select(node => (Node: node, Size: node.Size))
+                .Select(node => (Node: node, node.Size))
                 .OrderByDescending(item => item.Size)
                 .ThenBy(item => item.Node.Name, StringComparer.CurrentCultureIgnoreCase)
         ];
@@ -256,7 +277,6 @@ public sealed partial class MainWindow
             string name = node is null ? UiText.Format("SpaceOther", positive.Count - SpaceItemLimit) : SpaceRow.Label(node);
             string label = $"{name}{Environment.NewLine}{Format.Bytes(node?.Size ?? rest)}";
 
-            // Folders take the disk colour and files the memory colour. Larger items are drawn stronger.
             var tile = new Border
             {
                 Width = box.Width - 2, Height = box.Height - 2, CornerRadius = new CornerRadius(3),
@@ -324,8 +344,6 @@ public sealed partial class MainWindow
         }
     }
 
-    // Squarified treemap layout: fills the area row by row, keeping each box as close to a square as it can.
-    // Items must be ordered from the largest weight to the smallest and have positive weights.
     private static List<(T Item, Rect Box)> Squarify<T>(IReadOnlyList<(T Item, double Weight)> items, Rect area)
     {
         List<(T Item, Rect Box)> boxes = [];
@@ -339,7 +357,6 @@ public sealed partial class MainWindow
         {
             double side = Math.Min(width, height);
             if (side <= 0) break;
-            // Extend the row while doing so improves its worst aspect ratio.
             int end = start;
             double sum = 0, smallest = double.MaxValue, largest = 0, worst = double.MaxValue;
 
@@ -356,7 +373,6 @@ public sealed partial class MainWindow
                 end++;
             }
 
-            // The row runs along the shorter side and takes a strip off the longer one.
             double thickness = sum / side, offset = 0;
 
             for (int i = start; i < end; i++)

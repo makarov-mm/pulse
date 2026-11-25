@@ -17,81 +17,105 @@ public sealed partial class MainWindow
 
     private void ConfigureTableHeaders()
     {
-        foreach (var (tab, grid) in new[] { (LowerTab.Details, DetailsHeaders), (LowerTab.Users, UsersHeaders),
-            (LowerTab.Connections, ConnectionsHeaders), (LowerTab.Network, NetworkHeaders), (LowerTab.Startup, StartupHeaders),
-            (LowerTab.Services, ServicesHeaders), (LowerTab.Space, SpaceHeaders) })
+        foreach (var (tab, grid) in new[] { 
+            (LowerTab.Details, DetailsHeaders),
+            (LowerTab.Users, UsersHeaders),
+            (LowerTab.Connections, ConnectionsHeaders),
+            (LowerTab.Network, NetworkHeaders),
+            (LowerTab.Startup, StartupHeaders),
+            (LowerTab.Services, ServicesHeaders),
+            (LowerTab.Space, SpaceHeaders) })
         {
             foreach (var button in grid.Children.OfType<Button>())
             {
                 string label = (string)button.Content;
                 _columnLabels.Add(button, (tab, label));
-                if (ToolTipService.GetToolTip(button) is null) ToolTipService.SetToolTip(button, label);
+
+                if (ToolTipService.GetToolTip(button) is null)
+                {
+                    ToolTipService.SetToolTip(button, label);
+                }
             }
         }
+
         UpdateHeaders();
     }
 
     private ColumnOrder CurrentOrder(LowerTab tab)
     {
-        if (_tabOrders.TryGetValue(tab, out var order)) return order;
+        if (_tabOrders.TryGetValue(tab, out ColumnOrder order)) return order;
+
         return tab switch
         {
-            LowerTab.Details => new(_sort switch
+            LowerTab.Details => new ColumnOrder(_sort switch
             {
                 SortField.Ram => "WorkingSet", SortField.Io or SortField.Gpu => "", _ => _sort.ToString()
             }, _descending),
-            LowerTab.Users => new("Session", false),
-            LowerTab.Connections => new("Host", false),
-            LowerTab.Startup or LowerTab.Services => new("Name", false),
-            LowerTab.Space => new("Size", true),
-            _ => new("", false)
+            LowerTab.Users => new ColumnOrder("Session", false),
+            LowerTab.Connections => new ColumnOrder("Host", false),
+            LowerTab.Startup or LowerTab.Services => new ColumnOrder("Name", false),
+            LowerTab.Space => new ColumnOrder("Size", true),
+            _ => new ColumnOrder(string.Empty, false)
         };
     }
 
     private void TabSortClicked(object sender, RoutedEventArgs args)
     {
-        var button = (Button)sender;
-        var (tab, _) = _columnLabels[button];
+        Button button = (Button)sender;
+        (LowerTab tab, _) = _columnLabels[button];
         string column = (string)button.Tag;
-        var previous = CurrentOrder(tab);
-        bool descending = previous.Column == column ? !previous.Descending :
-            column is "Cpu" or "WorkingSet" or "PrivateBytes" or "Read" or "Write" or "Threads" or
-                "Handles" or "Count" or "Memory" or "Io" or "Speed" or "Activity" or "Received" or "Sent" or "Size" or "Allocated" or "Share";
-        _tabOrders[tab] = new(column, descending);
+        ColumnOrder previous = CurrentOrder(tab);
+
+        bool descending = previous.Column == column 
+            ? !previous.Descending
+            : column is "Cpu" or "WorkingSet" or "PrivateBytes" or "Read" or "Write" or "Threads" or "Handles" or "Count" or "Memory" or "Io" or "Speed" or "Activity" or "Received" or "Sent" or "Size" or "Allocated" or "Share";
+
+        _tabOrders[tab] = new ColumnOrder(column, descending);
         Save(_tables[tab]);
         UpdateTabHeaders();
-        if (tab == LowerTab.Space) DrawSpace();
-        else UpdateTabRows();
+
+        if (tab == LowerTab.Space)
+        {
+            DrawSpace();
+        }
+        else
+        {
+            UpdateTabRows();
+        }
     }
 
     private void UpdateTabHeaders()
     {
-        foreach (var (button, heading) in _columnLabels)
+        foreach ((Button button, (LowerTab Tab, string Label) heading) in _columnLabels)
         {
-            var order = CurrentOrder(heading.Tab);
+            ColumnOrder order = CurrentOrder(heading.Tab);
             bool active = order.Column == (string)button.Tag;
             button.Content = active ? heading.Label + (order.Descending ? " ↓" : " ↑") : heading.Label;
-            AutomationProperties.SetName(button, active
-                ? UiText.Format(order.Descending ? "SortDescending" : "SortAscending", heading.Label) : heading.Label);
+            AutomationProperties.SetName(button, active ? UiText.Format(order.Descending ? "SortDescending" : "SortAscending", heading.Label) : heading.Label);
         }
     }
 
-    // The source supplies deterministic tie order. Unknown readings stay last in either direction.
     private IEnumerable<T> SortItems<T>(LowerTab tab, IEnumerable<T> source, Func<T, string, IComparable?> key)
     {
         if (!_tabOrders.TryGetValue(tab, out var order)) return source;
-        var comparer = Comparer<IComparable?>.Create((left, right) =>
+
+        Comparer<IComparable?> comparer = Comparer<IComparable?>.Create((left, right) =>
         {
             if (left is null or "" || right is null or "")
+            {
                 return (left is null or "").CompareTo(right is null or "");
+            }
+
             if (order.Descending) (left, right) = (right, left);
+
             return left is string a && right is string b
-                ? StringComparer.CurrentCultureIgnoreCase.Compare(a, b) : left.CompareTo(right);
+                ? StringComparer.CurrentCultureIgnoreCase.Compare(a, b)
+                : left.CompareTo(right);
         });
+
         return source.OrderBy(item => key(item, order.Column), comparer);
     }
 
-    // Socket addresses sort by family, numeric address, scope and numeric port.
     private sealed class AddressOrder(IPAddress address, int port = 0) : IComparable
     {
         private readonly byte[] _bytes = address.GetAddressBytes();
@@ -110,16 +134,26 @@ public sealed partial class MainWindow
 
     private IComparable? DetailSortValue(TaskSample task, string column)
     {
-        var info = task.Info;
-        var identity = _identities.GetValueOrDefault(info.Key).Identity;
+        ProcessCounters info = task.Info;
+        ProcessIdentity? identity = _identities.GetValueOrDefault(info.Key).Identity;
+
         return column switch
         {
-            "Name" => info.Name, "Pid" => info.Key.Pid, "Parent" => info.ParentId == 0 ? null : info.ParentId,
-            "Session" => info.Session, "Cpu" => task.Cpu, "WorkingSet" => info.WorkingSet, "PrivateBytes" => info.PrivateBytes,
-            "Read" => task.Read, "Write" => task.Write, "Threads" => info.Threads, "Handles" => info.Handles,
+            "Name" => info.Name,
+            "Pid" => info.Key.Pid,
+            "Parent" => info.ParentId == 0 ? null : info.ParentId,
+            "Session" => info.Session, 
+            "Cpu" => task.Cpu, 
+            "WorkingSet" => info.WorkingSet, 
+            "PrivateBytes" => info.PrivateBytes,
+            "Read" => task.Read, 
+            "Write" => task.Write, 
+            "Threads" => info.Threads, 
+            "Handles" => info.Handles,
             "Started" => info.Key.Created > 0 ? info.Key.Created : null,
             "Priority" => identity?.PriorityClass is null ? null : info.BasePriority,
-            "User" => identity?.User, "CommandLine" => identity?.CommandLine,
+            "User" => identity?.User, 
+            "CommandLine" => identity?.CommandLine,
             _ => throw new ArgumentOutOfRangeException(nameof(column))
         };
     }
@@ -127,6 +161,7 @@ public sealed partial class MainWindow
     private void TableViewportChanged(object sender, SizeChangedEventArgs e)
     {
         var viewport = (Grid)sender;
+
         if (viewport.Children.FirstOrDefault() is ScrollViewer { Content: Grid body })
         {
             var header = (Grid)((Border)body.Children[0]).Child;

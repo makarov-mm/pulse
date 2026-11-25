@@ -9,13 +9,9 @@ using Pulse.Telemetry;
 
 namespace Pulse;
 
-// The tabs of the lower pane: Processes, Details, Users, Connections, Network, Startup apps, Services and Disk space.
 public sealed partial class MainWindow
 {
-    // In the order of the tab bar.
     private enum LowerTab { Processes, Details, Users, Connections, Network, Startup, Services, Space }
-
-    // A row of the Network tab: an adapter, or one of the devices on its network.
     private readonly record struct NetworkEntry(NetworkAdapter Adapter, NetworkNeighbor? Device);
     private readonly ObservableCollection<DetailRow> _detailRows = [];
     private readonly ObservableCollection<UserRow> _userRows = [];
@@ -55,7 +51,6 @@ public sealed partial class MainWindow
 
     private void TabChanged(SelectorBar sender, SelectorBarSelectionChangedEventArgs args)
     {
-        // A selection can be raised while the window is still being built.
         if (ServicesView is null || DetailsView is null || UsersView is null || ConnectionsView is null || NetworkView is null || StartupView is null || SpaceView is null || Inspector is null || TreeButton is null) return;
         int index = sender.SelectedItem is { } selected ? sender.Items.IndexOf(selected) : 0;
         _tab = index is >= 0 and <= (int)LowerTab.Space ? (LowerTab)index : LowerTab.Processes;
@@ -67,9 +62,9 @@ public sealed partial class MainWindow
         StartupView.Visibility = Shown(LowerTab.Startup);
         ServicesView.Visibility = Shown(LowerTab.Services);
         SpaceView.Visibility = Shown(LowerTab.Space);
-        // The disk space tab has nothing to search.
         SearchBox.Visibility = _tab == LowerTab.Space ? Visibility.Collapsed : Visibility.Visible;
         TreeButton.Visibility = Shown(LowerTab.Processes);
+
         SearchBox.PlaceholderText = UiText.Get(_tab switch
         {
             LowerTab.Users => "SearchUsers",
@@ -79,6 +74,7 @@ public sealed partial class MainWindow
             LowerTab.Services => "SearchServices",
             _ => "Search"
         });
+
         RefreshInspectorSources();
         UpdateRows();
         UpdateTabRows();
@@ -87,7 +83,6 @@ public sealed partial class MainWindow
 
     private Visibility Shown(LowerTab tab) => _tab == tab ? Visibility.Visible : Visibility.Collapsed;
 
-    // Fills the list of the tab on screen. The Processes tab is filled by UpdateRows.
     private void UpdateTabRows()
     {
         if (_frame is null) return;
@@ -104,7 +99,6 @@ public sealed partial class MainWindow
         }
     }
 
-    // Rows keep their position and take on the item that now holds it, which avoids rebuilding list containers.
     private static void Fill<TRow, TItem, TKey>(ListView view, ObservableCollection<TRow> rows, IReadOnlyList<TItem> items, Func<TRow, TKey> key, Func<TRow> create, Action<TRow, TItem> update) where TRow : class
     {
         var selected = view.SelectedItem as TRow;
@@ -120,7 +114,11 @@ public sealed partial class MainWindow
             update(rows[i], items[i]);
         }
 
-        while (rows.Count > items.Count) rows.RemoveAt(rows.Count - 1);
+        while (rows.Count > items.Count)
+        {
+            rows.RemoveAt(rows.Count - 1);
+        }
+
         TRow? Find(TKey? wanted) => rows.FirstOrDefault(row => EqualityComparer<TKey>.Default.Equals(key(row), wanted));
         if (selected is not null && (!ReferenceEquals(view.SelectedItem, selected) || !EqualityComparer<TKey>.Default.Equals(key(selected), selectedKey))) view.SelectedItem = Find(selectedKey);
 
@@ -134,7 +132,6 @@ public sealed partial class MainWindow
 
     private void UpdateDetailRows(IReadOnlyList<TaskSample> tasks)
     {
-        // Follow Processes until Details gets its own order. PID then breaks ties between equal values.
         bool independent = _tabOrders.ContainsKey(LowerTab.Details);
 
         List<TaskSample> matches =
@@ -150,8 +147,6 @@ public sealed partial class MainWindow
         _ = LoadIdentitiesAsync(tasks);
     }
 
-    // Describes the processes the Details tab has not seen yet. Opening every process takes too long for the UI thread.
-    // A change to the sampled base priority invalidates the cached Windows priority class.
     private async Task LoadIdentitiesAsync(IReadOnlyList<TaskSample> tasks)
     {
         if (_identitiesLoading) return;
@@ -185,20 +180,30 @@ public sealed partial class MainWindow
             })
             .Where(s => search.Length == 0 || s.User.Contains(search, StringComparison.CurrentCultureIgnoreCase))
             .OrderBy(s => s.Session);
+
         var sorted = SortItems(LowerTab.Users, sessions, (s, column) => column switch
         {
-            "User" => s.User, "Session" => s.Session, "Count" => s.Count, "Cpu" => s.Cpu, "Memory" => s.Memory,
-            "Io" => s.Io, "Threads" => s.Threads, _ => throw new ArgumentOutOfRangeException(nameof(column))
+            "User" => s.User, 
+            "Session" => s.Session, 
+            "Count" => s.Count, 
+            "Cpu" => s.Cpu, 
+            "Memory" => s.Memory,
+            "Io" => s.Io, 
+            "Threads" => s.Threads,
+            _ => throw new ArgumentOutOfRangeException(nameof(column))
         }).ToList();
-        Fill(UserList, _userRows, sorted, row => row.Session, () => new UserRow(), (row, s) => row.Update(s.User, s.Session, s.Count,
-            s.Cpu, s.Memory, s.Io, s.Threads));
+
+        Fill(UserList, _userRows, sorted, row => row.Session, () => new UserRow(), (row, s) => row.Update(s.User, s.Session, s.Count, s.Cpu, s.Memory, s.Io, s.Threads));
         CountText.Text = $"{sorted.Count}";
     }
 
     private static string SessionLabel(uint session)
     {
         string user = Sessions.User(session);
-        return user.Length != 0 ? user : session == 0 ? UiText.Get("Services") : UiText.Format("SessionName", session);
+
+        return user.Length != 0 ? user : session == 0 
+            ? UiText.Get("Services") 
+            : UiText.Format("SessionName", session);
     }
 
     private void UpdateStartupRows(IReadOnlyList<TaskSample> tasks, IReadOnlyList<StartupItem> items)
@@ -232,7 +237,6 @@ public sealed partial class MainWindow
         if (TappedRow<StartupRow>(e) is { Item: { } item }) _ = EditStartupAsync(item);
     }
 
-    // Services and connections are only queried while their tab or the process inspector displays them.
     private void RefreshInspectorSources()
     {
         if (_tab == LowerTab.Startup) _startupItems = StartupItems.Read();
@@ -256,7 +260,6 @@ public sealed partial class MainWindow
         if (_tab == LowerTab.Network) _ = LoadNetworkAsync();
     }
 
-    // Adapter configuration is slower to read than the other lists, so it is collected off the UI thread.
     private async Task LoadNetworkAsync()
     {
         if (_networkLoading) return;
@@ -299,7 +302,6 @@ public sealed partial class MainWindow
 
         foreach (var adapter in SortItems(LowerTab.Network, _adapters, AdapterKey))
         {
-            // An adapter that matches keeps all its devices. Otherwise it is listed for the devices that match.
             bool all = search.Length == 0 || Found(adapter.Name) || Found(adapter.Description) || Found(adapter.Mac) || FoundAny(adapter.Addresses);
 
             IReadOnlyList<NetworkNeighbor> devices = all 
@@ -384,7 +386,7 @@ public sealed partial class MainWindow
         SocketTables missing = requested & ~_availableTables;
         if (missing == SocketTables.None) return text;
         if (missing == requested) return UiText.Get("ConnectionsUnavailable");
-        var names = new List<string>(4);
+        List<string> names = [with(4)];
         if (missing.HasFlag(SocketTables.Tcp4)) names.Add("TCP/IPv4");
         if (missing.HasFlag(SocketTables.Tcp6)) names.Add("TCP/IPv6");
         if (missing.HasFlag(SocketTables.Udp4)) names.Add("UDP/IPv4");
@@ -396,22 +398,6 @@ public sealed partial class MainWindow
     private void ConnectionDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
     {
         if (TappedRow<ConnectionRow>(e) is { ProcessId: not 0 } row) ShowProcess(row.ProcessId);
-    }
-
-    // Separate established conversations from local sockets that can receive traffic.
-    private string ProcessEndpoints(int pid, bool bound)
-    {
-        const int shown = 6;
-        var endpoints = _connections.Where(c => c.Pid == pid &&
-                (bound ? c.Udp || c.State == TcpState.Listening : !c.Udp && c.State == TcpState.Established))
-            .OrderBy(c => c.Udp).ThenBy(c => c.IPv6).ThenBy(c => c.LocalPort)
-            .ThenBy(c => c.Local, StringComparer.Ordinal).ThenBy(c => c.Remote, StringComparer.Ordinal)
-            .Select(c => bound ? $"{c.Protocol} {c.Local}" : $"{c.Local} → {c.Remote}")
-            .Distinct().ToList();
-        string text = string.Join(Environment.NewLine, endpoints.Take(shown));
-        if (endpoints.Count > shown) text += $"{Environment.NewLine}+{endpoints.Count - shown}";
-        text = WithConnectionStatus(text, bound ? SocketTables.All : SocketTables.Tcp, Environment.NewLine);
-        return text.Length == 0 ? "—" : text;
     }
 
     private void UpdateServiceRows()
@@ -450,10 +436,8 @@ public sealed partial class MainWindow
         if (TappedRow<DetailRow>(e) is { } row) ShowProcess(row.ProcessId);
     }
 
-    // The row under a double-click. A click below the last row is not on any row and must not act on the selected one.
     private static TRow? TappedRow<TRow>(DoubleTappedRoutedEventArgs e) where TRow : class => (e.OriginalSource as FrameworkElement)?.DataContext as TRow;
 
-    // Shows a process with its parents on the Processes tab.
     private void ShowProcess(int pid)
     {
         SearchBox.Text = TaskOrder.PidPrefix + pid;
