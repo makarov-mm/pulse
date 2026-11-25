@@ -12,7 +12,6 @@ namespace Pulse;
 public sealed partial class MainWindow
 {
     private readonly record struct ColumnOrder(string Column, bool Descending);
-
     private readonly Dictionary<LowerTab, ColumnOrder> _tabOrders = [];
     private readonly Dictionary<Button, (LowerTab Tab, string Label)> _columnLabels = [];
 

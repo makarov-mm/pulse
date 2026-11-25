@@ -17,7 +17,6 @@ public sealed partial class MainWindow
 
     // A row of the Network tab: an adapter, or one of the devices on its network.
     private readonly record struct NetworkEntry(NetworkAdapter Adapter, NetworkNeighbor? Device);
-
     private readonly ObservableCollection<DetailRow> _detailRows = [];
     private readonly ObservableCollection<UserRow> _userRows = [];
     private readonly ObservableCollection<ConnectionRow> _connectionRows = [];
@@ -92,6 +91,7 @@ public sealed partial class MainWindow
     private void UpdateTabRows()
     {
         if (_frame is null) return;
+
         switch (_tab)
         {
             case LowerTab.Details: UpdateDetailRows(_frame.Tasks); break;
@@ -105,8 +105,7 @@ public sealed partial class MainWindow
     }
 
     // Rows keep their position and take on the item that now holds it, which avoids rebuilding list containers.
-    private static void Fill<TRow, TItem, TKey>(ListView view, ObservableCollection<TRow> rows, IReadOnlyList<TItem> items,
-        Func<TRow, TKey> key, Func<TRow> create, Action<TRow, TItem> update) where TRow : class
+    private static void Fill<TRow, TItem, TKey>(ListView view, ObservableCollection<TRow> rows, IReadOnlyList<TItem> items, Func<TRow, TKey> key, Func<TRow> create, Action<TRow, TItem> update) where TRow : class
     {
         var selected = view.SelectedItem as TRow;
         var selectedKey = selected is null ? default : key(selected);
@@ -114,25 +113,22 @@ public sealed partial class MainWindow
         var focused = container is not null && view.IndexFromContainer(container) >= 0 ? container.Content as TRow : null;
         var focusedKey = focused is null ? default : key(focused);
         var focusState = container?.FocusState ?? FocusState.Unfocused;
+
         for (int i = 0; i < items.Count; i++)
         {
             if (i == rows.Count) rows.Add(create());
             update(rows[i], items[i]);
         }
+
         while (rows.Count > items.Count) rows.RemoveAt(rows.Count - 1);
         TRow? Find(TKey? wanted) => rows.FirstOrDefault(row => EqualityComparer<TKey>.Default.Equals(key(row), wanted));
-        if (selected is not null && (!ReferenceEquals(view.SelectedItem, selected) ||
-            !EqualityComparer<TKey>.Default.Equals(key(selected), selectedKey)))
-            view.SelectedItem = Find(selectedKey);
-        if (focused is not null && focusState == FocusState.Keyboard &&
-            (!EqualityComparer<TKey>.Default.Equals(key(focused), focusedKey) || !rows.Contains(focused)))
+        if (selected is not null && (!ReferenceEquals(view.SelectedItem, selected) || !EqualityComparer<TKey>.Default.Equals(key(selected), selectedKey))) view.SelectedItem = Find(selectedKey);
+
+        if (focused is not null && focusState == FocusState.Keyboard && (!EqualityComparer<TKey>.Default.Equals(key(focused), focusedKey) || !rows.Contains(focused)) && Find(focusedKey) is { } target)
         {
-            if (Find(focusedKey) is { } target)
-            {
-                view.ScrollIntoView(target);
-                view.UpdateLayout();
-                (view.ContainerFromItem(target) as ListViewItem)?.Focus(FocusState.Keyboard);
-            }
+            view.ScrollIntoView(target);
+            view.UpdateLayout();
+            (view.ContainerFromItem(target) as ListViewItem)?.Focus(FocusState.Keyboard);
         }
     }
 
@@ -140,12 +136,16 @@ public sealed partial class MainWindow
     {
         // Follow Processes until Details gets its own order. PID then breaks ties between equal values.
         bool independent = _tabOrders.ContainsKey(LowerTab.Details);
-        var matches = TaskOrder.Build(tasks, SearchBox.Text, independent ? SortField.Pid : _sort,
-                !independent && _descending, false, _collapsed)
-            .Select(branch => branch.Task).ToList();
-        matches = SortItems(LowerTab.Details, matches, DetailSortValue).ToList();
-        Fill(DetailList, _detailRows, matches, row => row.Key, () => new DetailRow(),
-            (row, task) => row.Update(task, _identities.GetValueOrDefault(task.Info.Key).Identity));
+
+        List<TaskSample> matches =
+        [
+            .. TaskOrder
+                .Build(tasks, SearchBox.Text, independent ? SortField.Pid : _sort, !independent && _descending, false, _collapsed)
+                .Select(branch => branch.Task)
+        ];
+
+        matches = [.. SortItems(LowerTab.Details, matches, DetailSortValue)];
+        Fill(DetailList, _detailRows, matches, row => row.Key, () => new DetailRow(), (row, task) => row.Update(task, _identities.GetValueOrDefault(task.Info.Key).Identity));
         CountText.Text = matches.Count == tasks.Count ? $"{matches.Count}" : $"{matches.Count} / {tasks.Count}";
         _ = LoadIdentitiesAsync(tasks);
     }
@@ -204,22 +204,26 @@ public sealed partial class MainWindow
     private void UpdateStartupRows(IReadOnlyList<TaskSample> tasks, IReadOnlyList<StartupItem> items)
     {
         string search = SearchBox.Text.Trim();
-        var running = tasks.Select(t => t.Info.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var matches = items
-            .Where(i => search.Length == 0 ||
-                i.Name.Contains(search, StringComparison.CurrentCultureIgnoreCase) ||
-                i.Command.Contains(search, StringComparison.OrdinalIgnoreCase))
+        HashSet<string> running = tasks.Select(t => t.Info.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        IEnumerable<(StartupItem Item, string Host)> matches = items
+            .Where(i => search.Length == 0 || i.Name.Contains(search, StringComparison.CurrentCultureIgnoreCase) || i.Command.Contains(search, StringComparison.OrdinalIgnoreCase))
             .OrderBy(i => i.Name, StringComparer.CurrentCultureIgnoreCase)
             .Select(item => (Item: item, Program: StartupItems.Executable(item.Command)))
-            .Select(entry => (entry.Item, Host: running.Contains(entry.Program) ? entry.Program : ""));
-        var sorted = SortItems(LowerTab.Startup, matches, (entry, column) => column switch
-        {
-            "Name" => entry.Item.Name, "Command" => entry.Item.Command, "Source" => StartupRow.SourceLabel(entry.Item),
-            "State" => UiText.Get(entry.Item.Enabled ? "StartupEnabled" : "StartupDisabled"), "Host" => entry.Host,
-            _ => throw new ArgumentOutOfRangeException(nameof(column))
-        }).ToList();
-        Fill(StartupList, _startupRows, sorted, row => (row.Item!.Source, row.Item.Location, row.Item.Entry),
-            () => new StartupRow(), (row, entry) => row.Update(entry.Item, entry.Host));
+            .Select(entry => (entry.Item, Host: running.Contains(entry.Program) ? entry.Program : string.Empty));
+
+        List<(StartupItem Item, string Host)> sorted =
+        [
+            .. SortItems(LowerTab.Startup, matches, (entry, column) => column switch
+            {
+                "Name" => entry.Item.Name, "Command" => entry.Item.Command,
+                "Source" => StartupRow.SourceLabel(entry.Item),
+                "State" => UiText.Get(entry.Item.Enabled ? "StartupEnabled" : "StartupDisabled"), "Host" => entry.Host,
+                _ => throw new ArgumentOutOfRangeException(nameof(column))
+            })
+        ];
+
+        Fill(StartupList, _startupRows, sorted, row => (row.Item!.Source, row.Item.Location, row.Item.Entry), () => new StartupRow(), (row, entry) => row.Update(entry.Item, entry.Host));
         CountText.Text = UiText.Format("StartupCount", items.Count(i => i.Enabled), items.Count);
     }
 
@@ -233,6 +237,7 @@ public sealed partial class MainWindow
     {
         if (_tab == LowerTab.Startup) _startupItems = StartupItems.Read();
         bool inspecting = _tab == LowerTab.Processes && Inspector.IsPaneOpen;
+
         if (_tab == LowerTab.Services || (inspecting && InspectorSection == 2))
         {
             try
@@ -246,6 +251,7 @@ public sealed partial class MainWindow
                 _serviceReadError = UiText.Format("ServicesUnavailable", error.Message);
             }
         }
+
         if (_tab == LowerTab.Connections || (inspecting && InspectorSection == 3)) _connections = TcpConnections.Read(out _availableTables);
         if (_tab == LowerTab.Network) _ = LoadNetworkAsync();
     }
@@ -255,14 +261,18 @@ public sealed partial class MainWindow
     {
         if (_networkLoading) return;
         _networkLoading = true;
+
         try
         {
-            var adapters = await Task.Run(NetworkDevices.Read);
+            List<NetworkAdapter> adapters = await Task.Run(NetworkDevices.Read);
             if (_closed) return;
             _adapters = adapters;
             if (_tab == LowerTab.Network) UpdateNetworkRows();
         }
-        finally { _networkLoading = false; }
+        finally
+        {
+            _networkLoading = false;
+        }
     }
 
     private void UpdateNetworkRows()
@@ -270,11 +280,13 @@ public sealed partial class MainWindow
         string search = SearchBox.Text.Trim();
         bool Found(string text) => text.Contains(search, StringComparison.CurrentCultureIgnoreCase);
         bool FoundAny(IEnumerable<System.Net.IPAddress> addresses) => addresses.Any(a => Found(a.ToString()));
-        var rates = _frame?.Adapters?.ToDictionary(a => a.Id);
-        var entries = new List<NetworkEntry>();
+        Dictionary<string, AdapterSample>? rates = _frame?.Adapters?.ToDictionary(a => a.Id);
+        List<NetworkEntry> entries = [];
+
         IComparable? AdapterKey(NetworkAdapter adapter, string column)
         {
             var sample = rates?.GetValueOrDefault(adapter.Id);
+
             return column switch
             {
                 "Name" => adapter.Name, "Type" => NetworkRow.TypeName(adapter.Type), "Mac" => adapter.Mac,
@@ -284,16 +296,23 @@ public sealed partial class MainWindow
                 _ => throw new ArgumentOutOfRangeException(nameof(column))
             };
         }
+
         foreach (var adapter in SortItems(LowerTab.Network, _adapters, AdapterKey))
         {
             // An adapter that matches keeps all its devices. Otherwise it is listed for the devices that match.
-            bool all = search.Length == 0 || Found(adapter.Name) || Found(adapter.Description) || Found(adapter.Mac) ||
-                FoundAny(adapter.Addresses);
-            var devices = all ? adapter.Neighbors : adapter.Neighbors
-                .Where(d => Found(d.Mac) || FoundAny(d.Addresses) || Found(HostNames.Find(d.Addresses[0]))).ToList();
+            bool all = search.Length == 0 || Found(adapter.Name) || Found(adapter.Description) || Found(adapter.Mac) || FoundAny(adapter.Addresses);
+
+            IReadOnlyList<NetworkNeighbor> devices = all 
+                ? adapter.Neighbors 
+                :
+            [
+                .. adapter.Neighbors.Where(d => Found(d.Mac) || FoundAny(d.Addresses) || Found(HostNames.Find(d.Addresses[0])))
+            ];
+
             if (!all && devices.Count == 0) continue;
-            entries.Add(new(adapter, null));
-            var sorted = SortItems(LowerTab.Network, devices, (device, column) => column switch
+            entries.Add(new NetworkEntry(adapter, null));
+
+            IEnumerable<NetworkNeighbor> sorted = SortItems(LowerTab.Network, devices, (device, column) => column switch
             {
                 "Name" => NetworkRow.DeviceName(device, HostNames.Find(device.Addresses[0])),
                 "Type" => UiText.Get(device.Gateway ? "NetworkGateway" : "NetworkDevice"),
@@ -301,13 +320,22 @@ public sealed partial class MainWindow
                 "State" => NetworkRow.StateLabel(device.State), "Speed" or "Activity" => null,
                 _ => throw new ArgumentOutOfRangeException(nameof(column))
             });
+
             entries.AddRange(sorted.Select(device => new NetworkEntry(adapter, device)));
         }
+
         Fill(NetworkList, _networkRows, entries, row => row.Key, () => new NetworkRow(), (row, entry) =>
         {
-            if (entry.Device is { } device) row.Update(entry.Adapter.Id, device, HostNames.Find(device.Addresses[0]));
-            else row.Update(entry.Adapter, rates?.GetValueOrDefault(entry.Adapter.Id));
+            if (entry.Device is { } device)
+            {
+                row.Update(entry.Adapter.Id, device, HostNames.Find(device.Addresses[0]));
+            }
+            else
+            {
+                row.Update(entry.Adapter, rates?.GetValueOrDefault(entry.Adapter.Id));
+            }
         });
+
         CountText.Text = UiText.Format("NetworkCount", _adapters.Count(a => a.Connected), _adapters.Count);
     }
 
@@ -316,37 +344,44 @@ public sealed partial class MainWindow
     private void UpdateConnectionRows()
     {
         string search = SearchBox.Text.Trim();
-        var matches = _connections
-            .Select(c => (Connection: c, Process: ProcessName(c.Pid), Rate: SocketRates(c)))
-            .Where(m => search.Length == 0 ||
-                m.Process.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                m.Connection.Pid.ToString().Contains(search, StringComparison.Ordinal) ||
-                m.Connection.Protocol.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                (!m.Connection.Udp && ConnectionRow.StateName(m.Connection.State).Contains(search, StringComparison.OrdinalIgnoreCase)) ||
-                m.Connection.Local.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                m.Connection.Remote.Contains(search, StringComparison.OrdinalIgnoreCase))
-            .OrderBy(m => m.Process, StringComparer.OrdinalIgnoreCase)
-            .ThenBy(m => m.Connection.Pid)
-            .ThenBy(m => m.Connection.LocalPort)
-            .ToList();
-        matches = SortItems(LowerTab.Connections, matches, (entry, column) => column switch
-        {
-            "Received" => entry.Rate.Received, "Sent" => entry.Rate.Sent,
-            "Host" => entry.Process, "Pid" => entry.Connection.Pid, "Protocol" => entry.Connection.Protocol,
-            "Local" => new AddressOrder(entry.Connection.LocalAddress, entry.Connection.LocalPort),
-            "Remote" => entry.Connection.Remote.Length == 0 ? null : new AddressOrder(entry.Connection.RemoteAddress, entry.Connection.RemotePort),
-            "State" => entry.Connection.Udp ? null : ConnectionRow.StateName(entry.Connection.State),
-            _ => throw new ArgumentOutOfRangeException(nameof(column))
-        }).ToList();
-        Fill(ConnectionList, _connectionRows, matches, row => (row.ProcessId, row.Protocol, row.Local, row.Remote),
-            () => new ConnectionRow(), (row, m) => row.Update(m.Connection, m.Process, m.Rate));
+
+        List<(TcpConnection Connection, string Process, (double? Received, double? Sent) Rate)> matches =
+        [
+            .. _connections
+                .Select(c => (Connection: c, Process: ProcessName(c.Pid), Rate: SocketRates(c)))
+                .Where(m => search.Length == 0 ||
+                    m.Process.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                    m.Connection.Pid.ToString().Contains(search, StringComparison.Ordinal) ||
+                    m.Connection.Protocol.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                    (!m.Connection.Udp && ConnectionRow.StateName(m.Connection.State).Contains(search, StringComparison.OrdinalIgnoreCase)) || m.Connection.Local.Contains(search, StringComparison.OrdinalIgnoreCase) || m.Connection.Remote.Contains(search, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(m => m.Process, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(m => m.Connection.Pid)
+                .ThenBy(m => m.Connection.LocalPort)
+        ];
+
+        matches =
+        [
+            .. SortItems(LowerTab.Connections, matches, (entry, column) => column switch
+            {
+                "Received" => entry.Rate.Received, "Sent" => entry.Rate.Sent,
+                "Host" => entry.Process, "Pid" => entry.Connection.Pid, "Protocol" => entry.Connection.Protocol,
+                "Local" => new AddressOrder(entry.Connection.LocalAddress, entry.Connection.LocalPort),
+                "Remote" => entry.Connection.Remote.Length == 0
+                    ? null
+                    : new AddressOrder(entry.Connection.RemoteAddress, entry.Connection.RemotePort),
+                "State" => entry.Connection.Udp ? null : ConnectionRow.StateName(entry.Connection.State),
+                _ => throw new ArgumentOutOfRangeException(nameof(column))
+            })
+        ];
+
+        Fill(ConnectionList, _connectionRows, matches, row => (row.ProcessId, row.Protocol, row.Local, row.Remote), () => new ConnectionRow(), (row, m) => row.Update(m.Connection, m.Process, m.Rate));
         string count = matches.Count == _connections.Count ? $"{matches.Count}" : $"{matches.Count} / {_connections.Count}";
         CountText.Text = WithConnectionStatus(count, SocketTables.All, " · ");
     }
 
     private string WithConnectionStatus(string text, SocketTables requested, string separator)
     {
-        var missing = requested & ~_availableTables;
+        SocketTables missing = requested & ~_availableTables;
         if (missing == SocketTables.None) return text;
         if (missing == requested) return UiText.Get("ConnectionsUnavailable");
         var names = new List<string>(4);
@@ -382,21 +417,25 @@ public sealed partial class MainWindow
     private void UpdateServiceRows()
     {
         string search = SearchBox.Text.Trim();
-        var matches = _services
-            .Where(s => search.Length == 0 ||
-                s.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                s.DisplayName.Contains(search, StringComparison.CurrentCultureIgnoreCase) ||
-                (s.Pid != 0 && s.Pid.ToString().Contains(search, StringComparison.Ordinal)))
-            .OrderBy(s => s.Name, StringComparer.OrdinalIgnoreCase)
-            .ToList();
-        matches = SortItems(LowerTab.Services, matches, (service, column) => column switch
-        {
-            "Name" => service.Name, "Title" => service.DisplayName, "State" => ServiceRow.StateLabel(service.State),
-            "Pid" => service.Pid == 0 ? null : service.Pid, "Host" => ProcessName(service.Pid),
-            _ => throw new ArgumentOutOfRangeException(nameof(column))
-        }).ToList();
-        Fill(ServiceList, _serviceRows, matches, row => row.Name, () => new ServiceRow(),
-            (row, service) => row.Update(service, ProcessName(service.Pid)));
+
+        List<ServiceInfo> matches =
+        [
+            .. _services
+                .Where(s => search.Length == 0 || s.Name.Contains(search, StringComparison.OrdinalIgnoreCase) || s.DisplayName.Contains(search, StringComparison.CurrentCultureIgnoreCase) || (s.Pid != 0 && s.Pid.ToString().Contains(search, StringComparison.Ordinal)))
+                .OrderBy(s => s.Name, StringComparer.OrdinalIgnoreCase)
+        ];
+
+        matches =
+        [
+            .. SortItems(LowerTab.Services, matches, (service, column) => column switch
+            {
+                "Name" => service.Name, "Title" => service.DisplayName, "State" => ServiceRow.StateLabel(service.State),
+                "Pid" => service.Pid == 0 ? null : service.Pid, "Host" => ProcessName(service.Pid),
+                _ => throw new ArgumentOutOfRangeException(nameof(column))
+            })
+        ];
+
+        Fill(ServiceList, _serviceRows, matches, row => row.Name, () => new ServiceRow(), (row, service) => row.Update(service, ProcessName(service.Pid)));
         CountText.Text = _serviceReadError is null ? UiText.Format("ServiceCount", _services.Count(s => s.State == ServiceState.Running), _services.Count) : UiText.Get("ServicesUnavailableShort");
         ToolTipService.SetToolTip(ServiceList, _serviceReadError);
     }
@@ -412,8 +451,7 @@ public sealed partial class MainWindow
     }
 
     // The row under a double-click. A click below the last row is not on any row and must not act on the selected one.
-    private static TRow? TappedRow<TRow>(DoubleTappedRoutedEventArgs e) where TRow : class =>
-        (e.OriginalSource as FrameworkElement)?.DataContext as TRow;
+    private static TRow? TappedRow<TRow>(DoubleTappedRoutedEventArgs e) where TRow : class => (e.OriginalSource as FrameworkElement)?.DataContext as TRow;
 
     // Shows a process with its parents on the Processes tab.
     private void ShowProcess(int pid)
