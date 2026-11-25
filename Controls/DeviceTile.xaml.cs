@@ -38,7 +38,7 @@ public sealed partial class DeviceTile : UserControl
         UpdateAxis();
     }
 
-    internal void Update(double time, DateTime clock, DeviceReading reading)
+    internal void Update(double time, DeviceReading reading)
     {
         if (Heading.Text != reading.Name)
         {
@@ -52,13 +52,13 @@ public sealed partial class DeviceTile : UserControl
             ToolTipService.SetToolTip(Caption, reading.Caption.Length == 0 ? null : reading.Caption);
         }
         Caption.Visibility = reading.Caption.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
-        Graph.Add(time, clock, reading.Value);
+        Graph.Add(time, reading.Value);
         UpdateAxis();
         AutomationProperties.SetName(this, $"{reading.Name}, {reading.Text}");
     }
 
     // A compact percentage graph always ends at 100 %, so its axis stays unlabelled.
-    // Other axes show their current maximum, and an expanded tile also shows its time axis.
+    // Throughput graphs show the current maximum.
     private void UpdateAxis()
     {
         bool labelled = _expanded || !_percent;
@@ -71,28 +71,18 @@ public sealed partial class DeviceTile : UserControl
         if (_expanded == expanded) return;
         _expanded = expanded;
         GraphRow.Height = new GridLength(expanded ? 96 : 30);
-        TimeAxis.Visibility = expanded ? Visibility.Visible : Visibility.Collapsed;
         UpdateAxis();
     }
 
     // Records a sample without a value so the graph shows a break.
-    internal void MarkGap(double time, DateTime clock)
+    internal void MarkGap(double time)
     {
         Reading.Text = "—";
         Caption.Text = "";
         Caption.Visibility = Visibility.Collapsed;
         ToolTipService.SetToolTip(Caption, null);
         AutomationProperties.SetName(this, $"{Heading.Text}, {Reading.Text}");
-        Graph.Add(time, clock, null);
-        UpdateAxis();
-    }
-
-    internal void ClearHistory() => Graph.Clear();
-
-    internal void SetSpan(double seconds, string label)
-    {
-        Graph.SetSpan(seconds);
-        SpanStart.Text = "−" + label;
+        Graph.Add(time, null);
         UpdateAxis();
     }
 }

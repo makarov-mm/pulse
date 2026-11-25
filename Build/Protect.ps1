@@ -9,7 +9,7 @@ $manifest = Join-Path $PSScriptRoot '../.config/dotnet-tools.json'
 dotnet tool restore --tool-manifest $manifest
 if ($LASTEXITCODE) { throw 'Could not restore the pinned obfuscator.' }
 
-# Only types explicitly annotated in source are eligible. XAML, interop and recording contracts keep their names.
+# Only types explicitly annotated in source are eligible. XAML and interop contracts keep their names.
 $config = [xml]'<Obfuscator><Var name="MarkedOnly" value="true"/><Var name="HideStrings" value="false"/><Var name="RenameProperties" value="false"/><Var name="RenameEvents" value="false"/></Obfuscator>'
 function Add-Element([string]$name, [hashtable]$attributes) {
     $node = $config.CreateElement($name)

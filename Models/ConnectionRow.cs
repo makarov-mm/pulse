@@ -5,18 +5,14 @@ namespace Pulse.Models;
 public sealed class ConnectionRow : ObservableRow
 {
     private string _host = "", _pid = "", _protocol = "", _local = "", _remote = "", _state = "";
-
     internal ConnectionRow() { }
     internal int ProcessId { get; private set; }
-
-    // The process that owns the socket.
     public string Host => _host;
     public string Pid => _pid;
     public string Protocol => _protocol;
     public string Local => _local;
     public string Remote => _remote;
     public string State => _state;
-
     private string _received = "", _sent = "";
     public string Received => _received;
     public string Sent => _sent;
@@ -34,7 +30,6 @@ public sealed class ConnectionRow : ObservableRow
         Set(ref _state, connection.Udp ? "" : StateName(connection.State), nameof(State));
     }
 
-    // Protocol state names are identifiers and stay untranslated, as in netstat.
     internal static string StateName(TcpState state) => state switch
     {
         TcpState.Closed => "CLOSED",

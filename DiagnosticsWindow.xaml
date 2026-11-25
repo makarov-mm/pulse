@@ -4,62 +4,15 @@
     <Grid x:Name="Surface" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Padding="16" RowSpacing="10">
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition/></Grid.RowDefinitions>
         <SelectorBar x:Name="Pages" SelectionChanged="PageChanged">
-            <SelectorBarItem x:Name="RangesPage" Text="{loc:Localize Key=Intervals}"/>
             <SelectorBarItem x:Name="WatchPage" Text="{loc:Localize Key=Pinned}"/>
             <SelectorBarItem x:Name="GpuPage" Text="GPU"/>
             <SelectorBarItem x:Name="ActivityPage" Text="{loc:Localize Key=ActivityTrace}"/>
         </SelectorBar>
         <InfoBar x:Name="Problem" Grid.Row="1" Severity="Warning" IsOpen="False"/>
-        <Grid x:Name="Ranges" Grid.Row="2" RowSpacing="8">
-            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition/></Grid.RowDefinitions>
-            <ScrollViewer HorizontalScrollMode="Enabled" HorizontalScrollBarVisibility="Auto" VerticalScrollMode="Disabled" VerticalScrollBarVisibility="Disabled">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                    <Button Content="{loc:Localize Key=LiveHistory}" Click="LiveClicked"/>
-                    <Button Content="{loc:Localize Key=OpenCapture}" Click="OpenClicked"/>
-                    <Button Content="{loc:Localize Key=SaveCapture}" Click="SaveClicked" x:Name="SaveRange"/>
-                    <Button Content="{loc:Localize Key=CompareCapture}" Click="CompareClicked"/>
-                </StackPanel>
-            </ScrollViewer>
-            <Grid Grid.Row="1" ColumnSpacing="12">
-                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
-                <ComboBox x:Name="Slot" VerticalAlignment="Center" SelectedIndex="0" SelectionChanged="SlotChanged" AutomationProperties.Name="{loc:Localize Key=Intervals}">
-                    <ComboBoxItem Content="{loc:Localize Key=MeasuredRange}"/><ComboBoxItem x:Name="ReferenceOption" Content="{loc:Localize Key=BaseRange}" IsEnabled="False"/>
-                </ComboBox>
-                <Slider x:Name="From" Grid.Column="1" Header="{loc:Localize Key=RangeStart}" StepFrequency="1" ValueChanged="RangeChanged"/>
-                <Slider x:Name="Until" Grid.Column="2" Header="{loc:Localize Key=RangeEnd}" StepFrequency="1" ValueChanged="RangeChanged"/>
-            </Grid>
-            <TextBlock x:Name="Summary" Grid.Row="2" TextWrapping="Wrap" IsTextSelectionEnabled="True"/>
-            <TextBlock x:Name="Comparison" Grid.Row="3" TextWrapping="Wrap" IsTextSelectionEnabled="True"/>
-            <ScrollViewer Grid.Row="4" SizeChanged="RankViewportChanged" HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Enabled" VerticalScrollMode="Disabled" VerticalScrollBarVisibility="Disabled">
-                <Grid x:Name="RankBody" MinWidth="1000" HorizontalAlignment="Left"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition/></Grid.RowDefinitions>
-                    <Grid x:Name="RankHeaders" ColumnSpacing="8" Padding="12,0"><Grid.ColumnDefinitions><ColumnDefinition Width="240"/><ColumnDefinition Width="110"/><ColumnDefinition Width="145"/><ColumnDefinition Width="105"/><ColumnDefinition Width="105"/><ColumnDefinition/></Grid.ColumnDefinitions>
-                        <Button HorizontalContentAlignment="Left" Style="{StaticResource TableHeader}" Tag="Name" Content="{loc:Localize Key=Name}" Click="RankClicked"/>
-                        <Button Grid.Column="1" Style="{StaticResource TableHeader}" Tag="CPU" Content="{loc:Localize Key=CpuTime}" Click="RankClicked"/>
-                        <Button Grid.Column="2" Style="{StaticResource TableHeader}" Tag="Private" Content="{loc:Localize Key=PrivateChange}" Click="RankClicked"/>
-                        <Button Grid.Column="3" Style="{StaticResource TableHeader}" Tag="Read" Content="{loc:Localize Key=ReadBytes}" Click="RankClicked"/>
-                        <Button Grid.Column="4" Style="{StaticResource TableHeader}" Tag="Write" Content="{loc:Localize Key=WrittenBytes}" Click="RankClicked"/>
-                        <Button Grid.Column="5" Style="{StaticResource TableHeader}" Tag="Time" Content="{loc:Localize Key=Observed}" Click="RankClicked"/>
-                    </Grid>
-                    <ListView x:Name="Ranks" Grid.Row="1" SelectionMode="Single" Padding="0">
-                        <ListView.ItemContainerStyle><Style TargetType="ListViewItem"><Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="Padding" Value="0"/><Setter Property="Margin" Value="0"/></Style></ListView.ItemContainerStyle>
-                        <ListView.ItemTemplate><DataTemplate x:DataType="m:IntervalDisplay"><Grid ColumnSpacing="8" Padding="12,0">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="240"/><ColumnDefinition Width="110"/><ColumnDefinition Width="145"/><ColumnDefinition Width="105"/><ColumnDefinition Width="105"/><ColumnDefinition/></Grid.ColumnDefinitions>
-                            <TextBlock Text="{x:Bind Name}" Style="{StaticResource TextCell}" ToolTipService.ToolTip="{x:Bind Name}"/>
-                            <TextBlock Grid.Column="1" Text="{x:Bind Cpu}" Style="{StaticResource NumberCell}"/>
-                            <TextBlock Grid.Column="2" Text="{x:Bind Private}" Style="{StaticResource NumberCell}"/>
-                            <TextBlock Grid.Column="3" Text="{x:Bind Read}" Style="{StaticResource NumberCell}"/>
-                            <TextBlock Grid.Column="4" Text="{x:Bind Write}" Style="{StaticResource NumberCell}"/>
-                            <TextBlock Grid.Column="5" Text="{x:Bind Observed}" Style="{StaticResource NumberCell}"/>
-                        </Grid></DataTemplate></ListView.ItemTemplate>
-                    </ListView>
-                </Grid>
-            </ScrollViewer>
-        </Grid>
         <ScrollViewer Grid.Row="2" x:Name="Charts" Visibility="Collapsed"><StackPanel x:Name="ChartsPanel" Spacing="12"/></ScrollViewer>
         <Grid Grid.Row="2" x:Name="Activity" Visibility="Collapsed" RowSpacing="8">
             <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition/></Grid.RowDefinitions>
-            <TextBlock Text="{loc:Localize Key=TraceHelp}" TextWrapping="Wrap"/>
-            <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8"><Button x:Name="TraceButton" Click="TraceClicked" Content="{loc:Localize Key=StartTrace}"/><Button x:Name="Elevate" Content="{loc:Localize Key=ElevateButton}" Click="ElevateClicked"/></StackPanel>
+            <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8"><Button x:Name="Elevate" Content="{loc:Localize Key=ElevateButton}" Click="ElevateClicked"/></StackPanel>
             <TextBlock x:Name="TraceStatus" Grid.Row="2"/>
             <ListView x:Name="Transfers" Grid.Row="3"><ListView.ItemTemplate><DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" IsTextSelectionEnabled="True"/></DataTemplate></ListView.ItemTemplate></ListView>
         </Grid>

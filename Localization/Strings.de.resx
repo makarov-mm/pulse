@@ -7,14 +7,6 @@
   <data name="WindowTitle" xml:space="preserve"><value>Makarov Pulse — Task-Manager</value></data>
   <data name="AppSubtitle" xml:space="preserve"><value>Task-Manager</value></data>
   <data name="Overview" xml:space="preserve"><value>Systemübersicht</value></data>
-  <data name="Interval" xml:space="preserve"><value>Aktualisierungsintervall</value></data>
-  <data name="IntervalOne" xml:space="preserve"><value>1 s</value></data>
-  <data name="IntervalTwo" xml:space="preserve"><value>2 s</value></data>
-  <data name="IntervalFive" xml:space="preserve"><value>5 s</value></data>
-  <data name="Pause" xml:space="preserve"><value>Pause</value></data>
-  <data name="Resume" xml:space="preserve"><value>Fortsetzen</value></data>
-  <data name="PauseUpdates" xml:space="preserve"><value>Aktualisierung anhalten</value></data>
-  <data name="ResumeUpdates" xml:space="preserve"><value>Aktualisierung fortsetzen</value></data>
   <data name="Processes" xml:space="preserve"><value>Prozesse</value></data>
   <data name="Search" xml:space="preserve"><value>Nach Name oder PID suchen</value></data>
   <data name="Tree" xml:space="preserve"><value>Baum</value></data>
@@ -32,9 +24,8 @@
   <data name="Memory" xml:space="preserve"><value>Speicher</value></data>
   <data name="Disk" xml:space="preserve"><value>Datenträger</value></data>
   <data name="Network" xml:space="preserve"><value>Netzwerk</value></data>
-  <data name="HostHistory" xml:space="preserve"><value>{0}   ·   Verlauf: {1}</value></data>
   <data name="Uptime" xml:space="preserve"><value>Betriebszeit   {0} T {1:00} Std. {2:00} Min.</value></data>
-  <data name="LastUpdate" xml:space="preserve"><value>Aktualisiert um {0:T}   ·   {1:N0} Threads</value></data>
+  <data name="LiveThreads" xml:space="preserve"><value>Live · {0:N0} Threads</value></data>
   <data name="SampleError" xml:space="preserve"><value>Messung fehlgeschlagen</value></data>
   <data name="RetryStatus" xml:space="preserve"><value>Nächste Messung wird abgewartet</value></data>
   <data name="CpuCount" xml:space="preserve"><value>Logische Prozessoren   {0}</value></data>
@@ -44,8 +35,6 @@
   <data name="DiskRates" xml:space="preserve"><value>Lesen {0}   ·   Schreiben {1}</value></data>
   <data name="NoMatches" xml:space="preserve"><value>Keine passenden Prozesse</value></data>
   <data name="NoProcesses" xml:space="preserve"><value>Keine Prozesse</value></data>
-  <data name="PausedAt" xml:space="preserve"><value>Angehalten   ·   Zuletzt aktualisiert um {0:T}</value></data>
-  <data name="Paused" xml:space="preserve"><value>Aktualisierung angehalten</value></data>
   <data name="Name" xml:space="preserve"><value>Name</value></data>
   <data name="InputOutput" xml:space="preserve"><value>E/A</value></data>
   <data name="Threads" xml:space="preserve"><value>Threads</value></data>
@@ -75,7 +64,6 @@
   <data name="RowDescription" xml:space="preserve"><value>{0}, PID {1}, CPU {2}, Speicher {3}, E/A {4}</value></data>
   <data name="ExpandBranch" xml:space="preserve"><value>Zweig aufklappen</value></data>
   <data name="CollapseBranch" xml:space="preserve"><value>Zweig zuklappen</value></data>
-  <data name="NoSample" xml:space="preserve"><value>Kein Messpunkt</value></data>
   <data name="NoData" xml:space="preserve"><value>Keine Daten</value></data>
   <data name="Bytes" xml:space="preserve"><value>B</value></data>
   <data name="Kibibytes" xml:space="preserve"><value>KiB</value></data>
@@ -92,12 +80,10 @@
   <data name="PhysicalDisks" xml:space="preserve"><value>Physische Datenträger</value></data>
   <data name="NetworkAdapters" xml:space="preserve"><value>Netzwerkadapter</value></data>
   <data name="ShowProcessors" xml:space="preserve"><value>Logische Prozessoren anzeigen</value></data>
-  <data name="ShowDisks" xml:space="preserve"><value>Physische Datenträger anzeigen</value></data>
+  <data name="ShowDisks" xml:space="preserve"><value>Datenträgeraktivität anzeigen</value></data>
   <data name="ShowAdapters" xml:space="preserve"><value>Netzwerkadapter anzeigen</value></data>
   <data name="HideDevices" xml:space="preserve"><value>Geräteansicht ausblenden</value></data>
   <data name="CloseDevices" xml:space="preserve"><value>Geräteansicht schließen</value></data>
-  <data name="DeviceSpanPercent" xml:space="preserve"><value>Verlauf: {0}   ·   0–100 %</value></data>
-  <data name="DeviceSpanPeak" xml:space="preserve"><value>Verlauf: {0}   ·   jedes Diagramm ist auf seinen eigenen Spitzenwert skaliert</value></data>
   <data name="CoreName" xml:space="preserve"><value>CPU {0}</value></data>
   <data name="CoreGroupName" xml:space="preserve"><value>Gruppe {0} · CPU {1}</value></data>
   <data name="DiskName" xml:space="preserve"><value>Datenträger {0}</value></data>
@@ -110,15 +96,7 @@
   <data name="MegabitsPerSecond" xml:space="preserve"><value>MBit/s</value></data>
   <data name="GigabitsPerSecond" xml:space="preserve"><value>GBit/s</value></data>
   <data name="NoDevices" xml:space="preserve"><value>Noch keine Gerätemesswerte</value></data>
-  <data name="SpanLabel" xml:space="preserve"><value>Verlaufsfenster</value></data>
-  <data name="SpanOne" xml:space="preserve"><value>1 min</value></data>
-  <data name="SpanFifteen" xml:space="preserve"><value>15 min</value></data>
-  <data name="MomentHint" xml:space="preserve"><value>Klicken, um die führenden Prozesse zu diesem Zeitpunkt anzuzeigen</value></data>
-  <data name="MomentTitle" xml:space="preserve"><value>Prozesse um {0:T}</value></data>
-  <data name="MomentCpu" xml:space="preserve"><value>Höchste CPU-Last</value></data>
-  <data name="MomentMemory" xml:space="preserve"><value>Größte Arbeitssätze</value></data>
   <data name="MomentExited" xml:space="preserve"><value>{0} · beendet</value></data>
-  <data name="AxisNow" xml:space="preserve"><value>jetzt</value></data>
   <data name="Services" xml:space="preserve"><value>Dienste</value></data>
   <data name="ServiceDescription" xml:space="preserve"><value>Beschreibung</value></data>
   <data name="ServiceStatus" xml:space="preserve"><value>Status</value></data>
@@ -152,7 +130,6 @@
   <data name="LocalEndpoint" xml:space="preserve"><value>Lokale Adresse</value></data>
   <data name="RemoteEndpoint" xml:space="preserve"><value>Remoteadresse</value></data>
   <data name="SearchConnections" xml:space="preserve"><value>Nach Prozess, PID, Adresse, Port, Protokoll oder Status suchen</value></data>
-  <data name="BoundPorts" xml:space="preserve"><value>Lokale Ports</value></data>
   <data name="MenuEnable" xml:space="preserve"><value>Aktivieren</value></data>
   <data name="MenuDisable" xml:space="preserve"><value>Deaktivieren</value></data>
   <data name="MenuDelete" xml:space="preserve"><value>Löschen…</value></data>
@@ -170,7 +147,6 @@
   <data name="DeleteButton" xml:space="preserve"><value>Löschen</value></data>
   <data name="ActionError" xml:space="preserve"><value>Die Aktion konnte nicht abgeschlossen werden</value></data>
   <data name="ActionTimeout" xml:space="preserve"><value>Der Dienst wurde nicht rechtzeitig beendet.</value></data>
-  <data name="BusyThreads" xml:space="preserve"><value>Aktivste Threads</value></data>
   <data name="Priority" xml:space="preserve"><value>Priorität</value></data>
   <data name="CommandLine" xml:space="preserve"><value>Befehlszeile</value></data>
   <data name="PriorityLow" xml:space="preserve"><value>Niedrig</value></data>
@@ -189,7 +165,7 @@
   <data name="SpaceOther" xml:space="preserve"><value>{0} kleinere Elemente</value></data>
   <data name="SpaceUnread" xml:space="preserve"><value>nicht lesbar</value></data>
   <data name="SpaceScanning" xml:space="preserve"><value>wird gescannt…</value></data>
-  <data name="SpacePrompt" xml:space="preserve"><value>Ein Laufwerk scannen oder einen Ordner auswählen</value></data>
+  <data name="SpacePrompt" xml:space="preserve"><value>Laufwerk oder Ordner auswählen</value></data>
   <data name="SpaceBrowseLabel" xml:space="preserve"><value>Ordner zum Scannen auswählen</value></data>
   <data name="SpaceItemsLabel" xml:space="preserve"><value>Ordnerinhalt</value></data>
   <data name="SpaceCancelled" xml:space="preserve"><value>Scan abgebrochen · Teilergebnis</value></data>
@@ -225,47 +201,28 @@
   <data name="SpaceShare" xml:space="preserve"><value>Anteil</value></data>
   <data name="Allocated" xml:space="preserve"><value>Auf Disk</value></data>
   <data name="Diagnostics" xml:space="preserve"><value>Diagnose</value></data>
-  <data name="Intervals" xml:space="preserve"><value>Intervalle</value></data>
   <data name="WatchProcess" xml:space="preserve"><value>Prozess beobachten</value></data>
   <data name="Pinned" xml:space="preserve"><value>Fixierter Prozess</value></data>
   <data name="ActivityTrace" xml:space="preserve"><value>Datei- und Socketaktivität</value></data>
-  <data name="OpenCapture" xml:space="preserve"><value>Aufzeichnung öffnen</value></data>
-  <data name="SaveCapture" xml:space="preserve"><value>Intervall speichern</value></data>
-  <data name="CompareCapture" xml:space="preserve"><value>Aufzeichnung vergleichen</value></data>
-  <data name="LiveHistory" xml:space="preserve"><value>Aktuellen Verlauf laden</value></data>
-  <data name="RangeStart" xml:space="preserve"><value>Beginn</value></data>
-  <data name="RangeEnd" xml:space="preserve"><value>Ende</value></data>
-  <data name="BaseRange" xml:space="preserve"><value>Referenz</value></data>
-  <data name="MeasuredRange" xml:space="preserve"><value>Gewähltes Intervall</value></data>
-  <data name="CaptureFile" xml:space="preserve"><value>Makarov Pulse-Aufzeichnung</value></data>
-  <data name="RangeSummary" xml:space="preserve"><value>{0:T} – {1:T} · {2} Messungen · {3} Lücken · CPU-Spitze {4} · Speicherspitze {5}</value></data>
-  <data name="DifferentCapture" xml:space="preserve"><value>Hardware oder Abtastintervalle unterscheiden sich.</value></data>
-  <data name="CpuTime" xml:space="preserve"><value>CPU-Zeit</value></data>
-  <data name="PrivateChange" xml:space="preserve"><value>Private Bytes Δ</value></data>
-  <data name="ReadBytes" xml:space="preserve"><value>Gelesen</value></data>
-  <data name="WrittenBytes" xml:space="preserve"><value>Geschrieben</value></data>
-  <data name="Observed" xml:space="preserve"><value>Beobachtet</value></data>
   <data name="NoPinned" xml:space="preserve"><value>Prozess in der Prozessliste wählen und auf „Prozess beobachten“ klicken.</value></data>
   <data name="GpuEngine" xml:space="preserve"><value>GPU-Engine</value></data>
   <data name="DedicatedGpu" xml:space="preserve"><value>Dedizierter Speicher</value></data>
   <data name="SharedGpu" xml:space="preserve"><value>Gemeinsamer Speicher</value></data>
-  <data name="StartTrace" xml:space="preserve"><value>Aktivität aufzeichnen</value></data>
-  <data name="StopTrace" xml:space="preserve"><value>Aufzeichnung beenden</value></data>
-  <data name="TraceHelp" xml:space="preserve"><value>Eine Kernelaufzeichnung erfasst Datenträgerzugriffe je Datei und Netzwerkverkehr je Endpunkt. Windows kann Administratorrechte verlangen.</value></data>
   <data name="TraceLost" xml:space="preserve"><value>Verlorene Ereignisse: {0}</value></data>
   <data name="OverviewFacts" xml:space="preserve"><value>Übersicht</value></data>
-  <data name="FromTo" xml:space="preserve"><value>{0:T} – {1:T}</value></data>
   <data name="PinName" xml:space="preserve"><value>Erste Spalte fixieren</value></data>
   <data name="RestoreLayout" xml:space="preserve"><value>Layout zurücksetzen</value></data>
-  <data name="Columns" xml:space="preserve"><value>Spalten</value></data>
   <data name="MoveLeft" xml:space="preserve"><value>Nach links</value></data>
   <data name="MoveRight" xml:space="preserve"><value>Nach rechts</value></data>
   <data name="Narrower" xml:space="preserve"><value>Schmaler</value></data>
   <data name="Wider" xml:space="preserve"><value>Breiter</value></data>
-  <data name="RangeGesture" xml:space="preserve"><value>Ziehen, um ein Intervall auszuwählen. Pfeiltasten wählen eine Messung, Umschalt erweitert die Auswahl, Eingabe öffnet sie.</value></data>
-  <data name="RecordingTooLarge" xml:space="preserve"><value>Die Aufzeichnung überschreitet 256 MiB. Bitte ein kürzeres Intervall auswählen.</value></data>
   <data name="ReceiveRate" xml:space="preserve"><value>Empfangsrate</value></data>
   <data name="SendRate" xml:space="preserve"><value>Senderate</value></data>
   <data name="OpenFileLocation" xml:space="preserve"><value>Dateispeicherort öffnen</value></data>
   <data name="StorageCleanup" xml:space="preserve"><value>Windows-Bereinigungsempfehlungen</value></data>
+  <data name="ConfirmDependents" xml:space="preserve"><value>Abhängige Dienste beenden?</value></data>
+  <data name="ConfirmDependentsBody" xml:space="preserve"><value>Diese ausgeführten Dienste hängen von {0} ab und werden ebenfalls beendet: {1}</value></data>
+  <data name="StartAutomaticDelayed" xml:space="preserve"><value>Automatisch (verzögerter Start)</value></data>
+  <data name="TraceInUse" xml:space="preserve"><value>Eine andere Instanz von Makarov Pulse zeichnet bereits Aktivitäten auf.</value></data>
+  <data name="MountedVolumes" xml:space="preserve"><value>Eingebundene Volumes</value></data>
 </root>

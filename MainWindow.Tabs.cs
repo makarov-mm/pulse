@@ -28,6 +28,9 @@ public sealed partial class MainWindow
     private readonly Dictionary<ProcessKey, (int BasePriority, ProcessIdentity Identity)> _identities = [];
     private bool _identitiesLoading;
     private bool _networkLoading;
+    private int _sourceVersion;
+    private SourceNeeds _requestedSources;
+    private Task _sourceRefresh = Task.CompletedTask;
     private LowerTab _tab;
 
     private void CreateTabs()
@@ -79,6 +82,7 @@ public sealed partial class MainWindow
         UpdateRows();
         UpdateTabRows();
         DrawSpace();
+        if (_tab == LowerTab.Space) _ = ScanSelectedSpaceAsync();
     }
 
     private Visibility Shown(LowerTab tab) => _tab == tab ? Visibility.Visible : Visibility.Collapsed;
@@ -162,6 +166,11 @@ public sealed partial class MainWindow
             if (_closed) return;
             foreach (var (key, priority, identity) in found) _identities[key] = (priority, identity);
         }
+        catch (Exception error)
+        {
+            if (!_closed && _tab == LowerTab.Details) ShowError(UiText.Get("SampleError"), error.Message);
+            return;
+        }
         finally { _identitiesLoading = false; }
         if (_tab == LowerTab.Details && _frame is { } frame) UpdateDetailRows(frame.Tasks);
     }
@@ -237,27 +246,87 @@ public sealed partial class MainWindow
         if (TappedRow<StartupRow>(e) is { Item: { } item }) _ = EditStartupAsync(item);
     }
 
-    private void RefreshInspectorSources()
+    // What the visible tab or inspector page shows besides the process sample. A part that is not needed is null.
+    private readonly record struct SourceNeeds(bool Startup, bool Services, bool Connections);
+    private sealed record SourceData(List<StartupItem>? Startup, List<ServiceInfo>? Services, string? ServiceError,
+        List<TcpConnection>? Connections, SocketTables Tables);
+
+    private SourceNeeds NeededSources()
     {
-        if (_tab == LowerTab.Startup) _startupItems = StartupItems.Read();
         bool inspecting = _tab == LowerTab.Processes && Inspector.IsPaneOpen;
 
-        if (_tab == LowerTab.Services || (inspecting && InspectorSection == 2))
+        return new SourceNeeds(_tab == LowerTab.Startup,
+            _tab == LowerTab.Services || (inspecting && InspectorSection == 2),
+            _tab == LowerTab.Connections || (inspecting && InspectorSection == 3));
+    }
+
+    // Read only the sources needed for the visible tab or inspector section.
+    private static SourceData ReadSources(SourceNeeds needs)
+    {
+        List<StartupItem>? startup = needs.Startup ? StartupItems.Read() : null;
+        List<ServiceInfo>? services = null;
+        string? serviceError = null;
+
+        if (needs.Services)
         {
             try
             {
-                _services = ServiceSnapshot.Read();
-                _serviceReadError = null;
+                services = ServiceSnapshot.Read();
             }
             catch (Win32Exception error)
             {
-                _services = [];
-                _serviceReadError = UiText.Format("ServicesUnavailable", error.Message);
+                services = [];
+                serviceError = UiText.Format("ServicesUnavailable", error.Message);
             }
         }
 
-        if (_tab == LowerTab.Connections || (inspecting && InspectorSection == 3)) _connections = TcpConnections.Read(out _availableTables);
+        SocketTables tables = SocketTables.None;
+        List<TcpConnection>? connections = needs.Connections ? TcpConnections.Read(out tables) : null;
+        return new SourceData(startup, services, serviceError, connections, tables);
+    }
+
+    private void ApplySources(SourceData data)
+    {
+        if (data.Startup is not null) _startupItems = data.Startup;
+
+        if (data.Services is not null)
+        {
+            _services = data.Services;
+            _serviceReadError = data.ServiceError;
+        }
+
+        if (data.Connections is not null)
+        {
+            _connections = data.Connections;
+            _availableTables = data.Tables;
+        }
+    }
+
+    private void RefreshInspectorSources(bool force = false)
+    {
+        if (_closed) return;
         if (_tab == LowerTab.Network) _ = LoadNetworkAsync();
+        var needs = NeededSources();
+        if (!force && needs == _requestedSources && !_sourceRefresh.IsCompleted) return;
+        _requestedSources = needs;
+        int version = ++_sourceVersion;
+        _sourceRefresh = needs == default ? Task.CompletedTask : ReadVisibleSourcesAsync(needs, version);
+    }
+
+    private async Task ReadVisibleSourcesAsync(SourceNeeds needs, int version)
+    {
+        try
+        {
+            var data = await Task.Run(() => ReadSources(needs));
+            if (_closed || version != _sourceVersion || needs != NeededSources()) return;
+            ApplySources(data);
+            UpdateTabRows();
+            UpdateDetails();
+        }
+        catch (Exception error)
+        {
+            if (!_closed && version == _sourceVersion) ShowError(UiText.Get("SampleError"), error.Message);
+        }
     }
 
     private async Task LoadNetworkAsync()
@@ -271,6 +340,10 @@ public sealed partial class MainWindow
             if (_closed) return;
             _adapters = adapters;
             if (_tab == LowerTab.Network) UpdateNetworkRows();
+        }
+        catch (Exception error)
+        {
+            if (!_closed && _tab == LowerTab.Network) ShowError(UiText.Get("SampleError"), error.Message);
         }
         finally
         {
@@ -304,12 +377,8 @@ public sealed partial class MainWindow
         {
             bool all = search.Length == 0 || Found(adapter.Name) || Found(adapter.Description) || Found(adapter.Mac) || FoundAny(adapter.Addresses);
 
-            IReadOnlyList<NetworkNeighbor> devices = all 
-                ? adapter.Neighbors 
-                :
-            [
-                .. adapter.Neighbors.Where(d => Found(d.Mac) || FoundAny(d.Addresses) || Found(HostNames.Find(d.Addresses[0])))
-            ];
+            IReadOnlyList<NetworkNeighbor> devices = all ? adapter.Neighbors :
+                adapter.Neighbors.Where(d => Found(d.Mac) || FoundAny(d.Addresses) || Found(HostNames.Find(d.Addresses[0]))).ToArray();
 
             if (!all && devices.Count == 0) continue;
             entries.Add(new NetworkEntry(adapter, null));

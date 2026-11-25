@@ -424,16 +424,13 @@ public sealed partial class MainWindow
             int index = choices.Length == 0 ? source : Array.FindIndex(choices, c => c.Key == t.Keys[source]);
             Grid.SetColumn(element, index);
 
-            if (element != null && (choices.Length != 0 || element.Visibility == Visibility.Collapsed))
+            if (choices.Length != 0 || element.Visibility == Visibility.Collapsed)
             {
                 element.Visibility = choices.Length != 0 && choices[index].Hidden ? Visibility.Collapsed : Visibility.Visible;
             }
 
-            element?.Translation = Vector3.Zero;
-
-            if (t.Settings.Pin && source == 0)
-                if (element != null)
-                    original.Frozen.Add(element);
+            element.Translation = Vector3.Zero;
+            if (t.Settings.Pin && source == 0) original.Frozen.Add(element);
         }
 
         if (original.Frozen.Count == 0) return;

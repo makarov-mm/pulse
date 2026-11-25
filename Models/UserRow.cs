@@ -1,12 +1,9 @@
 namespace Pulse.Models;
 
-// The combined counters of every process in one session.
 public sealed class UserRow : ObservableRow
 {
     private string _user = "", _session = "", _count = "", _cpu = "", _memory = "", _io = "", _threads = "";
-
     internal UserRow() { }
-
     public string User => _user;
     public string Session => _session;
     public string Count => _count;

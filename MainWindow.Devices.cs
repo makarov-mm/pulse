@@ -54,8 +54,8 @@ public sealed partial class MainWindow
         }
 
         DeviceGroup current = _devices[_deviceView];
-        DeviceTitle.Text = current.Title;
-        UpdateSpanText();
+        DeviceTitle.Text = view == DeviceView.Disk && _frame?.Disks?.Any(d => d.IsVolume) == true
+            ? UiText.Get("MountedVolumes") : current.Title;
         LayoutDevices();
         DevicePanel.StartBringIntoView();
     }
@@ -70,6 +70,8 @@ public sealed partial class MainWindow
 
     private void UpdateDevices(Frame f)
     {
+        if (_deviceView == DeviceView.Disk && f.Disks is { } disks)
+            DeviceTitle.Text = disks.Any(d => d.IsVolume) ? UiText.Get("MountedVolumes") : _devices[DeviceView.Disk].Title;
         bool groups = f.Cores?.Any(c => c.Group != 0) == true;
         Sync(DeviceView.Processor, f, f.Cores?.Select(c => new DeviceReading($"{c.Group},{c.Number}",
             groups ? UiText.Format("CoreGroupName", c.Group, c.Number) : UiText.Format("CoreName", c.Number),
@@ -85,7 +87,7 @@ public sealed partial class MainWindow
     }
 
     private static string DiskName(DiskSample disk) =>
-        disk.Index is not { } index ? disk.Instance :
+        disk.IsVolume ? disk.Volumes : disk.Index is not { } index ? disk.Instance :
         disk.Volumes.Length == 0 ? UiText.Format("DiskName", index) : UiText.Format("DiskVolumes", index, disk.Volumes);
 
     private void Sync(DeviceView view, Frame f, IEnumerable<DeviceReading>? source)
@@ -96,7 +98,7 @@ public sealed partial class MainWindow
         {
             foreach ((_, DeviceTile tile) in group.Tiles)
             {
-                tile.MarkGap(f.Time, f.Clock);
+                tile.MarkGap(f.Time);
             }
 
             return;
@@ -116,12 +118,11 @@ public sealed partial class MainWindow
                 tile.SetBinding(Control.ForegroundProperty, new Binding { Source = group.Card, Path = new PropertyPath("Foreground") });
                 if (group.Percent) tile.Configure(true, v => Format.Percent(v));
                 else tile.Configure(false, v => Format.Bytes(v, true));
-                tile.SetSpan(_span, SpanLabel);
                 string key = reading.Key;
                 tile.Selected += (_, _) => ExpandDevice(view, key);
             }
 
-            tile.Update(f.Time, f.Clock, reading);
+            tile.Update(f.Time, reading);
             next.Add((reading.Key, tile));
         }
 
@@ -145,17 +146,6 @@ public sealed partial class MainWindow
             if (tileKey == key)
             {
                 tile.Focus(FocusState.Programmatic);
-            }
-        }
-    }
-
-    private void ClearDeviceHistory()
-    {
-        foreach (DeviceGroup group in _devices.Values)
-        {
-            foreach ((_, DeviceTile tile) in group.Tiles)
-            {
-                tile.ClearHistory();
             }
         }
     }

@@ -7,14 +7,6 @@
   <data name="WindowTitle" xml:space="preserve"><value>Makarov Pulse — Диспетчер завдань</value></data>
   <data name="AppSubtitle" xml:space="preserve"><value>Диспетчер завдань</value></data>
   <data name="Overview" xml:space="preserve"><value>Огляд системи</value></data>
-  <data name="Interval" xml:space="preserve"><value>Інтервал оновлення</value></data>
-  <data name="IntervalOne" xml:space="preserve"><value>1 с</value></data>
-  <data name="IntervalTwo" xml:space="preserve"><value>2 с</value></data>
-  <data name="IntervalFive" xml:space="preserve"><value>5 с</value></data>
-  <data name="Pause" xml:space="preserve"><value>Призупинити</value></data>
-  <data name="Resume" xml:space="preserve"><value>Продовжити</value></data>
-  <data name="PauseUpdates" xml:space="preserve"><value>Призупинити оновлення</value></data>
-  <data name="ResumeUpdates" xml:space="preserve"><value>Продовжити оновлення</value></data>
   <data name="Processes" xml:space="preserve"><value>Процеси</value></data>
   <data name="Search" xml:space="preserve"><value>Пошук за назвою або PID</value></data>
   <data name="Tree" xml:space="preserve"><value>Дерево</value></data>
@@ -32,9 +24,8 @@
   <data name="Memory" xml:space="preserve"><value>Пам’ять</value></data>
   <data name="Disk" xml:space="preserve"><value>Диск</value></data>
   <data name="Network" xml:space="preserve"><value>Мережа</value></data>
-  <data name="HostHistory" xml:space="preserve"><value>{0}   ·   історія: {1}</value></data>
   <data name="Uptime" xml:space="preserve"><value>Час роботи   {0} д {1:00} год {2:00} хв</value></data>
-  <data name="LastUpdate" xml:space="preserve"><value>Оновлено о {0:T}   ·   потоків: {1:N0}</value></data>
+  <data name="LiveThreads" xml:space="preserve"><value>Наживо · потоків: {0:N0}</value></data>
   <data name="SampleError" xml:space="preserve"><value>Не вдалося отримати показники</value></data>
   <data name="RetryStatus" xml:space="preserve"><value>Очікування наступного вимірювання</value></data>
   <data name="CpuCount" xml:space="preserve"><value>Логічні процесори   {0}</value></data>
@@ -44,8 +35,6 @@
   <data name="DiskRates" xml:space="preserve"><value>Читання {0}   ·   Запис {1}</value></data>
   <data name="NoMatches" xml:space="preserve"><value>Відповідних процесів немає</value></data>
   <data name="NoProcesses" xml:space="preserve"><value>Процесів немає</value></data>
-  <data name="PausedAt" xml:space="preserve"><value>Призупинено   ·   Останнє оновлення о {0:T}</value></data>
-  <data name="Paused" xml:space="preserve"><value>Оновлення призупинено</value></data>
   <data name="Name" xml:space="preserve"><value>Назва</value></data>
   <data name="InputOutput" xml:space="preserve"><value>Ввід/вивід</value></data>
   <data name="Threads" xml:space="preserve"><value>Потоки</value></data>
@@ -75,7 +64,6 @@
   <data name="RowDescription" xml:space="preserve"><value>{0}, PID {1}, ЦП {2}, пам’ять {3}, ввід/вивід {4}</value></data>
   <data name="ExpandBranch" xml:space="preserve"><value>Розгорнути гілку</value></data>
   <data name="CollapseBranch" xml:space="preserve"><value>Згорнути гілку</value></data>
-  <data name="NoSample" xml:space="preserve"><value>Немає вимірювання</value></data>
   <data name="NoData" xml:space="preserve"><value>Немає даних</value></data>
   <data name="Bytes" xml:space="preserve"><value>Б</value></data>
   <data name="Kibibytes" xml:space="preserve"><value>КіБ</value></data>
@@ -92,12 +80,10 @@
   <data name="PhysicalDisks" xml:space="preserve"><value>Фізичні диски</value></data>
   <data name="NetworkAdapters" xml:space="preserve"><value>Мережеві адаптери</value></data>
   <data name="ShowProcessors" xml:space="preserve"><value>Показати логічні процесори</value></data>
-  <data name="ShowDisks" xml:space="preserve"><value>Показати фізичні диски</value></data>
+  <data name="ShowDisks" xml:space="preserve"><value>Показати активність дисків</value></data>
   <data name="ShowAdapters" xml:space="preserve"><value>Показати мережеві адаптери</value></data>
   <data name="HideDevices" xml:space="preserve"><value>Приховати подання пристроїв</value></data>
   <data name="CloseDevices" xml:space="preserve"><value>Закрити подання пристроїв</value></data>
-  <data name="DeviceSpanPercent" xml:space="preserve"><value>Історія: {0}   ·   0–100 %</value></data>
-  <data name="DeviceSpanPeak" xml:space="preserve"><value>Історія: {0}   ·   шкала кожного графіка відповідає його максимуму</value></data>
   <data name="CoreName" xml:space="preserve"><value>ЦП {0}</value></data>
   <data name="CoreGroupName" xml:space="preserve"><value>Група {0} · ЦП {1}</value></data>
   <data name="DiskName" xml:space="preserve"><value>Диск {0}</value></data>
@@ -110,15 +96,7 @@
   <data name="MegabitsPerSecond" xml:space="preserve"><value>Мбіт/с</value></data>
   <data name="GigabitsPerSecond" xml:space="preserve"><value>Гбіт/с</value></data>
   <data name="NoDevices" xml:space="preserve"><value>Показників пристроїв ще немає</value></data>
-  <data name="SpanLabel" xml:space="preserve"><value>Період історії</value></data>
-  <data name="SpanOne" xml:space="preserve"><value>1 хв</value></data>
-  <data name="SpanFifteen" xml:space="preserve"><value>15 хв</value></data>
-  <data name="MomentHint" xml:space="preserve"><value>Клацніть, щоб побачити провідні процеси на цей момент</value></data>
-  <data name="MomentTitle" xml:space="preserve"><value>Процеси о {0:T}</value></data>
-  <data name="MomentCpu" xml:space="preserve"><value>Найбільше навантаження на ЦП</value></data>
-  <data name="MomentMemory" xml:space="preserve"><value>Найбільші робочі набори</value></data>
   <data name="MomentExited" xml:space="preserve"><value>{0} · завершено</value></data>
-  <data name="AxisNow" xml:space="preserve"><value>зараз</value></data>
   <data name="Services" xml:space="preserve"><value>Служби</value></data>
   <data name="ServiceDescription" xml:space="preserve"><value>Опис</value></data>
   <data name="ServiceStatus" xml:space="preserve"><value>Стан</value></data>
@@ -152,7 +130,6 @@
   <data name="LocalEndpoint" xml:space="preserve"><value>Локальна адреса</value></data>
   <data name="RemoteEndpoint" xml:space="preserve"><value>Віддалена адреса</value></data>
   <data name="SearchConnections" xml:space="preserve"><value>Шукайте сокети за процесом, PID, адресою, портом, протоколом або станом</value></data>
-  <data name="BoundPorts" xml:space="preserve"><value>Локальні порти</value></data>
   <data name="MenuEnable" xml:space="preserve"><value>Увімкнути</value></data>
   <data name="MenuDisable" xml:space="preserve"><value>Вимкнути</value></data>
   <data name="MenuDelete" xml:space="preserve"><value>Видалити…</value></data>
@@ -170,7 +147,6 @@
   <data name="DeleteButton" xml:space="preserve"><value>Видалити</value></data>
   <data name="ActionError" xml:space="preserve"><value>Не вдалося виконати дію</value></data>
   <data name="ActionTimeout" xml:space="preserve"><value>Служба не зупинилася за відведений час.</value></data>
-  <data name="BusyThreads" xml:space="preserve"><value>Найактивніші потоки</value></data>
   <data name="Priority" xml:space="preserve"><value>Пріоритет</value></data>
   <data name="CommandLine" xml:space="preserve"><value>Командний рядок</value></data>
   <data name="PriorityLow" xml:space="preserve"><value>Низький</value></data>
@@ -189,7 +165,7 @@
   <data name="SpaceOther" xml:space="preserve"><value>Менші елементи: {0}</value></data>
   <data name="SpaceUnread" xml:space="preserve"><value>немає доступу для читання</value></data>
   <data name="SpaceScanning" xml:space="preserve"><value>сканування…</value></data>
-  <data name="SpacePrompt" xml:space="preserve"><value>Виберіть диск і запустіть сканування або виберіть папку</value></data>
+  <data name="SpacePrompt" xml:space="preserve"><value>Виберіть диск або папку</value></data>
   <data name="SpaceBrowseLabel" xml:space="preserve"><value>Вибрати папку для сканування</value></data>
   <data name="SpaceItemsLabel" xml:space="preserve"><value>Вміст папки</value></data>
   <data name="SpaceCancelled" xml:space="preserve"><value>Сканування скасовано · неповні результати</value></data>
@@ -225,47 +201,28 @@
   <data name="SpaceShare" xml:space="preserve"><value>Частка</value></data>
   <data name="Allocated" xml:space="preserve"><value>На диску</value></data>
   <data name="Diagnostics" xml:space="preserve"><value>Діагностика</value></data>
-  <data name="Intervals" xml:space="preserve"><value>Інтервали</value></data>
   <data name="WatchProcess" xml:space="preserve"><value>Спостерігати за процесом</value></data>
   <data name="Pinned" xml:space="preserve"><value>Закріплений процес</value></data>
   <data name="ActivityTrace" xml:space="preserve"><value>Активність файлів і сокетів</value></data>
-  <data name="OpenCapture" xml:space="preserve"><value>Відкрити запис</value></data>
-  <data name="SaveCapture" xml:space="preserve"><value>Зберегти інтервал</value></data>
-  <data name="CompareCapture" xml:space="preserve"><value>Порівняти записи</value></data>
-  <data name="LiveHistory" xml:space="preserve"><value>Завантажити поточну історію</value></data>
-  <data name="RangeStart" xml:space="preserve"><value>Початок</value></data>
-  <data name="RangeEnd" xml:space="preserve"><value>Кінець</value></data>
-  <data name="BaseRange" xml:space="preserve"><value>Еталон</value></data>
-  <data name="MeasuredRange" xml:space="preserve"><value>Вибраний інтервал</value></data>
-  <data name="CaptureFile" xml:space="preserve"><value>Запис Makarov Pulse</value></data>
-  <data name="RangeSummary" xml:space="preserve"><value>{0:T} – {1:T} · вимірювань: {2} · пропусків: {3} · пік ЦП {4} · пік пам’яті {5}</value></data>
-  <data name="DifferentCapture" xml:space="preserve"><value>Обладнання або інтервали вимірювання різняться.</value></data>
-  <data name="CpuTime" xml:space="preserve"><value>Час ЦП</value></data>
-  <data name="PrivateChange" xml:space="preserve"><value>Зміна приватної пам’яті</value></data>
-  <data name="ReadBytes" xml:space="preserve"><value>Прочитано байтів</value></data>
-  <data name="WrittenBytes" xml:space="preserve"><value>Записано байтів</value></data>
-  <data name="Observed" xml:space="preserve"><value>Період спостереження</value></data>
   <data name="NoPinned" xml:space="preserve"><value>Виберіть процес на вкладці «Процеси» й натисніть «Спостерігати за процесом».</value></data>
   <data name="GpuEngine" xml:space="preserve"><value>Рушій GPU</value></data>
   <data name="DedicatedGpu" xml:space="preserve"><value>Виділена пам’ять</value></data>
   <data name="SharedGpu" xml:space="preserve"><value>Спільна пам’ять</value></data>
-  <data name="StartTrace" xml:space="preserve"><value>Записувати активність</value></data>
-  <data name="StopTrace" xml:space="preserve"><value>Зупинити запис активності</value></data>
-  <data name="TraceHelp" xml:space="preserve"><value>Запустіть трасування ядра Windows, щоб побачити дискові операції за файлами та мережеві швидкості за кінцевими точками. Можуть знадобитися права адміністратора.</value></data>
   <data name="TraceLost" xml:space="preserve"><value>Втрачено подій: {0}</value></data>
   <data name="OverviewFacts" xml:space="preserve"><value>Огляд</value></data>
-  <data name="FromTo" xml:space="preserve"><value>{0:T} – {1:T}</value></data>
   <data name="PinName" xml:space="preserve"><value>Закріпити перший стовпець</value></data>
   <data name="RestoreLayout" xml:space="preserve"><value>Скинути макет</value></data>
-  <data name="Columns" xml:space="preserve"><value>Стовпці</value></data>
   <data name="MoveLeft" xml:space="preserve"><value>Перемістити ліворуч</value></data>
   <data name="MoveRight" xml:space="preserve"><value>Перемістити праворуч</value></data>
   <data name="Narrower" xml:space="preserve"><value>Звузити</value></data>
   <data name="Wider" xml:space="preserve"><value>Розширити</value></data>
-  <data name="RangeGesture" xml:space="preserve"><value>Протягніть вказівник, щоб дослідити інтервал. Стрілками виберіть вимірювання, утримуйте Shift, щоб розширити вибір, і натисніть Enter, щоб відкрити його.</value></data>
-  <data name="RecordingTooLarge" xml:space="preserve"><value>Розмір запису перевищує 256 МіБ. Виберіть коротший інтервал.</value></data>
   <data name="ReceiveRate" xml:space="preserve"><value>Швидкість отримання</value></data>
   <data name="SendRate" xml:space="preserve"><value>Швидкість надсилання</value></data>
   <data name="OpenFileLocation" xml:space="preserve"><value>Відкрити розташування файлу</value></data>
   <data name="StorageCleanup" xml:space="preserve"><value>Рекомендації Windows з очищення</value></data>
+  <data name="ConfirmDependents" xml:space="preserve"><value>Зупинити залежні служби?</value></data>
+  <data name="ConfirmDependentsBody" xml:space="preserve"><value>Від служби {0} залежать запущені служби, їх також буде зупинено: {1}</value></data>
+  <data name="StartAutomaticDelayed" xml:space="preserve"><value>Автоматично (відкладений запуск)</value></data>
+  <data name="TraceInUse" xml:space="preserve"><value>Інший екземпляр Makarov Pulse вже записує активність.</value></data>
+  <data name="MountedVolumes" xml:space="preserve"><value>Змонтовані томи</value></data>
 </root>

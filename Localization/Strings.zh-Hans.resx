@@ -7,14 +7,6 @@
   <data name="WindowTitle" xml:space="preserve"><value>Makarov Pulse — 任务管理器</value></data>
   <data name="AppSubtitle" xml:space="preserve"><value>任务管理器</value></data>
   <data name="Overview" xml:space="preserve"><value>系统概览</value></data>
-  <data name="Interval" xml:space="preserve"><value>刷新间隔</value></data>
-  <data name="IntervalOne" xml:space="preserve"><value>1 秒</value></data>
-  <data name="IntervalTwo" xml:space="preserve"><value>2 秒</value></data>
-  <data name="IntervalFive" xml:space="preserve"><value>5 秒</value></data>
-  <data name="Pause" xml:space="preserve"><value>暂停</value></data>
-  <data name="Resume" xml:space="preserve"><value>继续</value></data>
-  <data name="PauseUpdates" xml:space="preserve"><value>暂停刷新</value></data>
-  <data name="ResumeUpdates" xml:space="preserve"><value>继续刷新</value></data>
   <data name="Processes" xml:space="preserve"><value>进程</value></data>
   <data name="Search" xml:space="preserve"><value>按名称或 PID 搜索</value></data>
   <data name="Tree" xml:space="preserve"><value>树状视图</value></data>
@@ -32,9 +24,8 @@
   <data name="Memory" xml:space="preserve"><value>内存</value></data>
   <data name="Disk" xml:space="preserve"><value>磁盘</value></data>
   <data name="Network" xml:space="preserve"><value>网络</value></data>
-  <data name="HostHistory" xml:space="preserve"><value>{0}   ·   历史记录：{1}</value></data>
   <data name="Uptime" xml:space="preserve"><value>运行时间   {0} 天 {1:00} 小时 {2:00} 分钟</value></data>
-  <data name="LastUpdate" xml:space="preserve"><value>更新于 {0:T}   ·   {1:N0} 个线程</value></data>
+  <data name="LiveThreads" xml:space="preserve"><value>实时 · {0:N0} 个线程</value></data>
   <data name="SampleError" xml:space="preserve"><value>无法采集样本</value></data>
   <data name="RetryStatus" xml:space="preserve"><value>正在等待下一个样本</value></data>
   <data name="CpuCount" xml:space="preserve"><value>逻辑处理器   {0}</value></data>
@@ -44,8 +35,6 @@
   <data name="DiskRates" xml:space="preserve"><value>读取 {0}   ·   写入 {1}</value></data>
   <data name="NoMatches" xml:space="preserve"><value>无匹配进程</value></data>
   <data name="NoProcesses" xml:space="preserve"><value>没有进程</value></data>
-  <data name="PausedAt" xml:space="preserve"><value>已暂停   ·   上次更新于 {0:T}</value></data>
-  <data name="Paused" xml:space="preserve"><value>已暂停刷新</value></data>
   <data name="Name" xml:space="preserve"><value>名称</value></data>
   <data name="InputOutput" xml:space="preserve"><value>I/O</value></data>
   <data name="Threads" xml:space="preserve"><value>线程</value></data>
@@ -75,7 +64,6 @@
   <data name="RowDescription" xml:space="preserve"><value>{0}，PID {1}，CPU {2}，内存 {3}，I/O {4}</value></data>
   <data name="ExpandBranch" xml:space="preserve"><value>展开分支</value></data>
   <data name="CollapseBranch" xml:space="preserve"><value>折叠分支</value></data>
-  <data name="NoSample" xml:space="preserve"><value>无样本</value></data>
   <data name="NoData" xml:space="preserve"><value>无数据</value></data>
   <data name="Bytes" xml:space="preserve"><value>B</value></data>
   <data name="Kibibytes" xml:space="preserve"><value>KiB</value></data>
@@ -92,12 +80,10 @@
   <data name="PhysicalDisks" xml:space="preserve"><value>物理磁盘</value></data>
   <data name="NetworkAdapters" xml:space="preserve"><value>网络适配器</value></data>
   <data name="ShowProcessors" xml:space="preserve"><value>显示逻辑处理器</value></data>
-  <data name="ShowDisks" xml:space="preserve"><value>显示物理磁盘</value></data>
+  <data name="ShowDisks" xml:space="preserve"><value>显示磁盘活动</value></data>
   <data name="ShowAdapters" xml:space="preserve"><value>显示网络适配器</value></data>
   <data name="HideDevices" xml:space="preserve"><value>隐藏设备视图</value></data>
   <data name="CloseDevices" xml:space="preserve"><value>关闭设备视图</value></data>
-  <data name="DeviceSpanPercent" xml:space="preserve"><value>历史记录：{0}   ·   0–100%</value></data>
-  <data name="DeviceSpanPeak" xml:space="preserve"><value>历史记录：{0}   ·   各图表按自身峰值缩放</value></data>
   <data name="CoreName" xml:space="preserve"><value>CPU {0}</value></data>
   <data name="CoreGroupName" xml:space="preserve"><value>组 {0} · CPU {1}</value></data>
   <data name="DiskName" xml:space="preserve"><value>磁盘 {0}</value></data>
@@ -110,15 +96,7 @@
   <data name="MegabitsPerSecond" xml:space="preserve"><value>Mbit/s</value></data>
   <data name="GigabitsPerSecond" xml:space="preserve"><value>Gbit/s</value></data>
   <data name="NoDevices" xml:space="preserve"><value>暂无设备读数</value></data>
-  <data name="SpanLabel" xml:space="preserve"><value>历史时长</value></data>
-  <data name="SpanOne" xml:space="preserve"><value>1 分钟</value></data>
-  <data name="SpanFifteen" xml:space="preserve"><value>15 分钟</value></data>
-  <data name="MomentHint" xml:space="preserve"><value>单击查看此时占用资源最多的进程</value></data>
-  <data name="MomentTitle" xml:space="preserve"><value>{0:T} 时的进程</value></data>
-  <data name="MomentCpu" xml:space="preserve"><value>CPU 占用最高</value></data>
-  <data name="MomentMemory" xml:space="preserve"><value>最大的工作集</value></data>
   <data name="MomentExited" xml:space="preserve"><value>{0} · 已退出</value></data>
-  <data name="AxisNow" xml:space="preserve"><value>现在</value></data>
   <data name="Services" xml:space="preserve"><value>服务</value></data>
   <data name="ServiceDescription" xml:space="preserve"><value>描述</value></data>
   <data name="ServiceStatus" xml:space="preserve"><value>状态</value></data>
@@ -152,7 +130,6 @@
   <data name="LocalEndpoint" xml:space="preserve"><value>本地地址</value></data>
   <data name="RemoteEndpoint" xml:space="preserve"><value>远程地址</value></data>
   <data name="SearchConnections" xml:space="preserve"><value>按进程、PID、地址、端口、协议或状态搜索套接字</value></data>
-  <data name="BoundPorts" xml:space="preserve"><value>本地端口</value></data>
   <data name="MenuEnable" xml:space="preserve"><value>启用</value></data>
   <data name="MenuDisable" xml:space="preserve"><value>禁用</value></data>
   <data name="MenuDelete" xml:space="preserve"><value>删除…</value></data>
@@ -170,7 +147,6 @@
   <data name="DeleteButton" xml:space="preserve"><value>删除</value></data>
   <data name="ActionError" xml:space="preserve"><value>无法完成操作</value></data>
   <data name="ActionTimeout" xml:space="preserve"><value>服务未能在规定时间内停止。</value></data>
-  <data name="BusyThreads" xml:space="preserve"><value>最繁忙的线程</value></data>
   <data name="Priority" xml:space="preserve"><value>优先级</value></data>
   <data name="CommandLine" xml:space="preserve"><value>命令行</value></data>
   <data name="PriorityLow" xml:space="preserve"><value>低</value></data>
@@ -189,7 +165,7 @@
   <data name="SpaceOther" xml:space="preserve"><value>{0} 个较小项目</value></data>
   <data name="SpaceUnread" xml:space="preserve"><value>无法读取</value></data>
   <data name="SpaceScanning" xml:space="preserve"><value>正在扫描…</value></data>
-  <data name="SpacePrompt" xml:space="preserve"><value>选择驱动器并扫描，或选择一个文件夹</value></data>
+  <data name="SpacePrompt" xml:space="preserve"><value>选择驱动器或文件夹</value></data>
   <data name="SpaceBrowseLabel" xml:space="preserve"><value>选择要扫描的文件夹</value></data>
   <data name="SpaceItemsLabel" xml:space="preserve"><value>文件夹内容</value></data>
   <data name="SpaceCancelled" xml:space="preserve"><value>扫描已取消 · 结果不完整</value></data>
@@ -225,47 +201,28 @@
   <data name="SpaceShare" xml:space="preserve"><value>占比</value></data>
   <data name="Allocated" xml:space="preserve"><value>占用空间</value></data>
   <data name="Diagnostics" xml:space="preserve"><value>诊断</value></data>
-  <data name="Intervals" xml:space="preserve"><value>时间区间</value></data>
   <data name="WatchProcess" xml:space="preserve"><value>监视进程</value></data>
   <data name="Pinned" xml:space="preserve"><value>已固定的进程</value></data>
   <data name="ActivityTrace" xml:space="preserve"><value>文件和套接字活动</value></data>
-  <data name="OpenCapture" xml:space="preserve"><value>打开记录</value></data>
-  <data name="SaveCapture" xml:space="preserve"><value>保存区间</value></data>
-  <data name="CompareCapture" xml:space="preserve"><value>比较记录</value></data>
-  <data name="LiveHistory" xml:space="preserve"><value>加载当前历史记录</value></data>
-  <data name="RangeStart" xml:space="preserve"><value>开始</value></data>
-  <data name="RangeEnd" xml:space="preserve"><value>结束</value></data>
-  <data name="BaseRange" xml:space="preserve"><value>参考区间</value></data>
-  <data name="MeasuredRange" xml:space="preserve"><value>所选区间</value></data>
-  <data name="CaptureFile" xml:space="preserve"><value>Makarov Pulse 记录</value></data>
-  <data name="RangeSummary" xml:space="preserve"><value>{0:T} – {1:T} · {2} 个样本 · {3} 处缺口 · CPU 峰值 {4} · 内存峰值 {5}</value></data>
-  <data name="DifferentCapture" xml:space="preserve"><value>硬件或采样间隔不同。</value></data>
-  <data name="CpuTime" xml:space="preserve"><value>CPU 时间</value></data>
-  <data name="PrivateChange" xml:space="preserve"><value>专用内存变化</value></data>
-  <data name="ReadBytes" xml:space="preserve"><value>读取字节数</value></data>
-  <data name="WrittenBytes" xml:space="preserve"><value>写入字节数</value></data>
-  <data name="Observed" xml:space="preserve"><value>观测时段</value></data>
   <data name="NoPinned" xml:space="preserve"><value>请在“进程”中选择一个进程，然后选择“监视进程”。</value></data>
   <data name="GpuEngine" xml:space="preserve"><value>GPU 引擎</value></data>
   <data name="DedicatedGpu" xml:space="preserve"><value>专用显存</value></data>
   <data name="SharedGpu" xml:space="preserve"><value>共享内存</value></data>
-  <data name="StartTrace" xml:space="preserve"><value>开始记录活动</value></data>
-  <data name="StopTrace" xml:space="preserve"><value>停止记录活动</value></data>
-  <data name="TraceHelp" xml:space="preserve"><value>启动 Windows 内核跟踪，按文件查看磁盘传输，按端点查看网络速率。Windows 可能需要管理员权限。</value></data>
   <data name="TraceLost" xml:space="preserve"><value>丢失事件数：{0}</value></data>
   <data name="OverviewFacts" xml:space="preserve"><value>概览</value></data>
-  <data name="FromTo" xml:space="preserve"><value>{0:T} – {1:T}</value></data>
   <data name="PinName" xml:space="preserve"><value>固定第一列</value></data>
   <data name="RestoreLayout" xml:space="preserve"><value>重置布局</value></data>
-  <data name="Columns" xml:space="preserve"><value>列</value></data>
   <data name="MoveLeft" xml:space="preserve"><value>左移</value></data>
   <data name="MoveRight" xml:space="preserve"><value>右移</value></data>
   <data name="Narrower" xml:space="preserve"><value>缩窄</value></data>
   <data name="Wider" xml:space="preserve"><value>加宽</value></data>
-  <data name="RangeGesture" xml:space="preserve"><value>拖动以查看时间区间。用方向键选择样本，按住 Shift 扩展选区，按 Enter 打开。</value></data>
-  <data name="RecordingTooLarge" xml:space="preserve"><value>记录超过 256 MiB。请选择较短的时间区间。</value></data>
   <data name="ReceiveRate" xml:space="preserve"><value>接收速率</value></data>
   <data name="SendRate" xml:space="preserve"><value>发送速率</value></data>
   <data name="OpenFileLocation" xml:space="preserve"><value>打开文件所在的位置</value></data>
   <data name="StorageCleanup" xml:space="preserve"><value>Windows 清理建议</value></data>
+  <data name="ConfirmDependents" xml:space="preserve"><value>停止依赖的服务？</value></data>
+  <data name="ConfirmDependentsBody" xml:space="preserve"><value>以下正在运行的服务依赖于 {0}，也将被停止：{1}</value></data>
+  <data name="StartAutomaticDelayed" xml:space="preserve"><value>自动（延迟启动）</value></data>
+  <data name="TraceInUse" xml:space="preserve"><value>另一个 Makarov Pulse 实例正在跟踪活动。</value></data>
+  <data name="MountedVolumes" xml:space="preserve"><value>已装载卷</value></data>
 </root>

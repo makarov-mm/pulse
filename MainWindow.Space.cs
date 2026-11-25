@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -12,36 +13,24 @@ namespace Pulse;
 
 public sealed partial class MainWindow
 {
-    private const int SpaceItemLimit = 60;
+    private const int SpaceItemLimit = 60, SpaceMoveLimit = 64;
     private readonly DispatcherTimer _spaceTimer = new() { Interval = TimeSpan.FromSeconds(1) };
     private readonly List<string> _spaceTargets = [];
     private SpaceNode? _spaceRoot, _spaceCurrent;
     private CancellationTokenSource? _spaceCancel;
+    private readonly SemaphoreSlim _spaceScanSlot = new(1, 1);
     private bool _spaceCancelled;
     private SpaceNode? _listedFolder;
     private readonly Dictionary<SpaceNode, SpaceRow> _spaceRows = [];
+    private ObservableCollection<SpaceRow> _spaceList = [];
 
     private void CreateSpace()
     {
-        foreach (var drive in DriveInfo.GetDrives())
-        {
-            try
-            {
-                if (!drive.IsReady || drive.DriveType is not (DriveType.Fixed or DriveType.Removable)) continue;
-                SpaceDrives.Items.Add(UiText.Format("SpaceDrive", drive.Name, Format.Bytes(drive.AvailableFreeSpace), Format.Bytes(drive.TotalSize)));
-                _spaceTargets.Add(drive.RootDirectory.FullName);
-            }
-            catch (Exception error) when (error is IOException or UnauthorizedAccessException) { }
-        }
-
-        if (_spaceTargets.Count > 0)
-        {
-            SpaceDrives.SelectedIndex = 0;
-        }
-
         SpaceScan.Content = UiText.Get("SpaceScan");
-        SpaceScan.IsEnabled = _spaceTargets.Count > 0;
+        SpaceScan.IsEnabled = false;
         SpacePath.Text = UiText.Get("SpacePrompt");
+        SpaceDrives.SelectionChanged += (_, _) => _ = ScanSelectedSpaceAsync();
+        _ = LoadSpaceDrivesAsync();
         _spaceTimer.Tick += (_, _) => DrawSpace();
 
         Closed += (_, _) =>
@@ -51,6 +40,41 @@ public sealed partial class MainWindow
         };
     }
 
+    private async Task LoadSpaceDrivesAsync()
+    {
+        try
+        {
+            var drives = await Task.Run(() =>
+            {
+                var available = new List<(string Path, string Label)>();
+                foreach (var drive in DriveInfo.GetDrives())
+                {
+                    try
+                    {
+                        if (drive.DriveType is not (DriveType.Fixed or DriveType.Removable) || !drive.IsReady) continue;
+                        available.Add((drive.RootDirectory.FullName,
+                            UiText.Format("SpaceDrive", drive.Name, Format.Bytes(drive.AvailableFreeSpace), Format.Bytes(drive.TotalSize))));
+                    }
+                    catch (Exception error) when (error is IOException or UnauthorizedAccessException) { }
+                }
+                return available;
+            });
+            if (_closed) return;
+            foreach (var drive in drives)
+            {
+                if (_spaceTargets.Contains(drive.Path, StringComparer.OrdinalIgnoreCase)) continue;
+                _spaceTargets.Add(drive.Path);
+                SpaceDrives.Items.Add(drive.Label);
+            }
+            if (SpaceDrives.SelectedIndex < 0 && _spaceTargets.Count > 0) SpaceDrives.SelectedIndex = 0;
+            SpaceScan.IsEnabled = _spaceTargets.Count > 0;
+        }
+        catch (Exception error)
+        {
+            if (!_closed) ShowError(UiText.Get("ActionError"), error.Message);
+        }
+    }
+
     private async void SpaceBrowseClicked(object sender, RoutedEventArgs e)
     {
         try
@@ -58,10 +82,9 @@ public sealed partial class MainWindow
             var picker = new FolderPicker(AppWindow.Id);
             var result = await picker.PickSingleFolderAsync();
             if (result is null || _closed) return;
-            SelectSpaceTarget(result.Path);
-            await ScanSpaceAsync(result.Path);
+            if (!SelectSpaceTarget(result.Path)) await ScanSelectedSpaceAsync(rescan: true);
         }
-        catch (Exception error) when (error is System.Runtime.InteropServices.COMException or UnauthorizedAccessException)
+        catch (Exception error)
         {
             if (!_closed)
             {
@@ -70,7 +93,7 @@ public sealed partial class MainWindow
         }
     }
 
-    private void SelectSpaceTarget(string path)
+    private bool SelectSpaceTarget(string path)
     {
         int index = _spaceTargets.FindIndex(target => string.Equals(path, target, StringComparison.OrdinalIgnoreCase));
 
@@ -81,8 +104,22 @@ public sealed partial class MainWindow
             SpaceDrives.Items.Add(path);
         }
 
+        if (SpaceDrives.SelectedIndex == index) return false;
         SpaceDrives.SelectedIndex = index;
-        SpaceScan.IsEnabled = true;
+        return true;
+    }
+
+    private Task ScanSelectedSpaceAsync(bool rescan = false)
+    {
+        int index = SpaceDrives.SelectedIndex;
+        if (_closed || _tab != LowerTab.Space || index < 0 || index >= _spaceTargets.Count)
+            return Task.CompletedTask;
+
+        string path = _spaceTargets[index];
+        if (!rescan && string.Equals(path, _spaceRoot?.Name, StringComparison.OrdinalIgnoreCase))
+            return Task.CompletedTask;
+
+        return ScanSpaceAsync(path);
     }
 
     private async void SpaceScanClicked(object sender, RoutedEventArgs e)
@@ -95,9 +132,7 @@ public sealed partial class MainWindow
                 return;
             }
 
-            int index = SpaceDrives.SelectedIndex;
-            if (index < 0 || index >= _spaceTargets.Count) return;
-            await ScanSpaceAsync(_spaceTargets[index]);
+            await ScanSelectedSpaceAsync(rescan: true);
         }
         catch (Exception error)
         {
@@ -110,45 +145,47 @@ public sealed partial class MainWindow
 
     private async Task ScanSpaceAsync(string path)
     {
-        if (_spaceCancel is not null || _closed) return;
+        if (_closed) return;
+        _spaceCancel?.Cancel();
         var root = new SpaceNode(path, null, false);
-        var cancel = new CancellationTokenSource();
+        using var cancel = new CancellationTokenSource();
         _spaceRoot = _spaceCurrent = root;
         _spaceCancel = cancel;
         _spaceCancelled = false;
+        bool failed = false;
 
         try
         {
-            SpaceBrowse.IsEnabled = SpaceDrives.IsEnabled = false;
+            SpaceScan.IsEnabled = true;
             SpaceScan.Content = UiText.Get("Cancel");
             _spaceTimer.Start();
             DrawSpace();
-            await Task.Run(() => SpaceScanner.Scan(root, cancel.Token), cancel.Token);
+            await _spaceScanSlot.WaitAsync(cancel.Token);
+            try { await Task.Run(() => SpaceScanner.Scan(root, cancel.Token), cancel.Token); }
+            finally { _spaceScanSlot.Release(); }
         }
         catch (OperationCanceledException) when (cancel.IsCancellationRequested)
         {
-            _spaceCancelled = true;
+            // Keep the results accumulated before cancellation.
         }
-        catch (Exception error) when (error is ArgumentException or NotSupportedException)
+        catch (Exception error)
         {
-            _spaceCancelled = true;
-
-            if (!_closed)
-            {
-                ShowError(UiText.Get("ActionError"), error.Message);
-            }
+            failed = true;
+            if (!_closed && _spaceCancel == cancel) ShowError(UiText.Get("ActionError"), error.Message);
         }
         finally
         {
-            cancel.Dispose();
-            _spaceCancel = null;
-
-            if (!_closed)
+            // A replacement scan owns the visible tree, status and timer as soon as the target changes.
+            if (_spaceCancel == cancel)
             {
-                _spaceTimer.Stop();
-                SpaceBrowse.IsEnabled = SpaceDrives.IsEnabled = true;
-                SpaceScan.Content = UiText.Get("SpaceScan");
-                DrawSpace();
+                _spaceCancel = null;
+                _spaceCancelled = cancel.IsCancellationRequested || failed;
+                if (!_closed)
+                {
+                    _spaceTimer.Stop();
+                    SpaceScan.Content = UiText.Get("SpaceScan");
+                    DrawSpace();
+                }
             }
         }
     }
@@ -320,16 +357,33 @@ public sealed partial class MainWindow
             rows.Add(row);
         }
 
-        if (SpaceItems.ItemsSource is List<SpaceRow> current && current.SequenceEqual(rows))
-        {
-            return;
-        }
+        bool listed = ReferenceEquals(SpaceItems.ItemsSource, _spaceList);
+        if (listed && _spaceList.SequenceEqual(rows)) return;
 
         var selected = SpaceItems.SelectedItem as SpaceRow;
         var container = FocusManager.GetFocusedElement(Root.XamlRoot) as ListViewItem;
         var focusedRow = container?.Content as SpaceRow;
         var state = container?.FocusState ?? FocusState.Unfocused;
-        SpaceItems.ItemsSource = rows;
+        int shared = Math.Min(rows.Count, _spaceList.Count), displaced = Math.Abs(rows.Count - _spaceList.Count);
+        for (int i = 0; i < shared; i++) if (!ReferenceEquals(_spaceList[i], rows[i])) displaced++;
+
+        if (!listed || displaced > SpaceMoveLimit)
+        {
+            SpaceItems.ItemsSource = _spaceList = new ObservableCollection<SpaceRow>(rows);
+        }
+        else
+        {
+            // A few rows changing place during a scan move within the list, which keeps its scroll position.
+            for (int i = 0; i < rows.Count; i++)
+            {
+                if (i < _spaceList.Count && ReferenceEquals(_spaceList[i], rows[i])) continue;
+                int at = _spaceList.IndexOf(rows[i]);
+                if (at < 0) _spaceList.Insert(i, rows[i]);
+                else _spaceList.Move(at, i);
+            }
+
+            while (_spaceList.Count > rows.Count) _spaceList.RemoveAt(_spaceList.Count - 1);
+        }
 
         if (selected is not null && _spaceRows.ContainsKey(selected.Node))
         {

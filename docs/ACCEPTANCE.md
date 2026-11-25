@@ -2,11 +2,9 @@
 
 ## Repeatable checks
 
-Run `tests/Run.ps1` for the English, Russian and German WinUI checks. Add `-Extended` for a live 15-minute history, two 20-second CPU workloads, a five-minute delayed report, saved recordings and cancellation during a system-volume scan. Each extended run writes its own metrics, two recordings and an acceptance result in the test artifacts directory.
+Run `tests/Run.ps1` for WinUI checks in all seven supported languages. The tests wait for real CPU samples and verify that the logical processor panel renders a percentage for every active logical processor. They also exercise device updates, the process inspector, GPU readings, socket matching, table settings, and disk scanning. Add `-Extended` to check cancellation during a system-volume scan.
 
-The window checks exercise resizing, column order, visibility, frozen names, sorting, independent tab preferences and reopening a window from disk-backed settings. Diagnostics checks cover offline comparison, missing samples, exited and reused PIDs, bounded history with 400 processes, pinned charts, GPU memory and engine attribution. Connection checks match rates by address family, local and remote endpoints, protocol and PID. The disk fixture checks logical and allocated bytes.
-
-## Measurements on November 24–25, 2026
+## Historical measurements on November 24–25, 2026
 
 The baseline was built from commit `600731e`. The release candidate included the tables, GPU sampling, process history and diagnostics window. Both builds used the same profiling loop. Both isolated test sessions could see three processes. A background-priority metadata scan overlapped part of the candidate run. CPU is per-process CPU time. Each interval had a six-second warm-up. Measurements for the 2- and 5-second settings lasted 30 seconds each. The 1-second setting ran for 911 seconds on the baseline and 912 seconds on the release candidate.
 

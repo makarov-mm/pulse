@@ -5,7 +5,7 @@ using Pulse.Localization;
 
 namespace Pulse.Telemetry;
 
-internal enum StartupSource { UserRun, MachineRun, MachineRun32, UserRunOnce, MachineRunOnce, UserFolder, CommonFolder }
+internal enum StartupSource { UserRun, MachineRun, MachineRun32, UserRunOnce, MachineRunOnce, UserFolder, CommonFolder, MachineRunOnce32 }
 
 // Location is the registry key that holds the entry, or the path of the file in a Startup folder.
 // Entry is the registry value name or the file name, which also identifies the entry under StartupApproved.
@@ -14,9 +14,9 @@ internal sealed record StartupItem(string Name, string Command, StartupSource So
     public bool InRegistry => Source is not (StartupSource.UserFolder or StartupSource.CommonFolder);
     // Machine-wide entries can only be changed by an administrator.
     public bool MachineWide => Source is StartupSource.MachineRun or StartupSource.MachineRun32 or
-        StartupSource.MachineRunOnce or StartupSource.CommonFolder;
+        StartupSource.MachineRunOnce or StartupSource.MachineRunOnce32 or StartupSource.CommonFolder;
     // Windows keeps no enabled state for RunOnce entries.
-    public bool CanToggle => Source is not (StartupSource.UserRunOnce or StartupSource.MachineRunOnce);
+    public bool CanToggle => Source is not (StartupSource.UserRunOnce or StartupSource.MachineRunOnce or StartupSource.MachineRunOnce32);
 }
 
 internal static class StartupItems
@@ -32,6 +32,7 @@ internal static class StartupItems
         AddValues(items, StartupSource.MachineRun32, RegistryHive.LocalMachine, RegistryView.Registry32, "Run", "Run32");
         AddValues(items, StartupSource.UserRunOnce, RegistryHive.CurrentUser, RegistryView.Default, "RunOnce", null);
         AddValues(items, StartupSource.MachineRunOnce, RegistryHive.LocalMachine, RegistryView.Registry64, "RunOnce", null);
+        AddValues(items, StartupSource.MachineRunOnce32, RegistryHive.LocalMachine, RegistryView.Registry32, "RunOnce", null);
         AddFiles(items, StartupSource.UserFolder, RegistryHive.CurrentUser, Environment.SpecialFolder.Startup);
         AddFiles(items, StartupSource.CommonFolder, RegistryHive.LocalMachine, Environment.SpecialFolder.CommonStartup);
         return items;
@@ -91,11 +92,11 @@ internal static class StartupItems
 
     private static RegistryKey Root(StartupItem item) => item.MachineWide
         ? RegistryKey.OpenBaseKey(RegistryHive.LocalMachine,
-            item.Source == StartupSource.MachineRun32 ? RegistryView.Registry32 : RegistryView.Registry64)
+            item.Source is StartupSource.MachineRun32 or StartupSource.MachineRunOnce32 ? RegistryView.Registry32 : RegistryView.Registry64)
         : RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default);
 
     private static string RunKey(StartupItem item) =>
-        Windows + (item.Source is StartupSource.UserRunOnce or StartupSource.MachineRunOnce ? "RunOnce" : "Run");
+        Windows + (item.CanToggle ? "Run" : "RunOnce");
 
     private static string ApprovalKey(StartupItem item) => Approved + item.Source switch
     {

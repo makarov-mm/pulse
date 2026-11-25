@@ -18,11 +18,11 @@ if ($LASTEXITCODE -ne 0) { throw 'The test build failed.' }
 $runs = @('en-US', 'ru-RU', 'de-CH', 'uk-UA', 'es-MX', 'fr-CA', 'zh-CN')
 if ($Extended) {
     $extendedDirectory = Join-Path $artifacts ("extended-" + [guid]::NewGuid())
-    $runs += 'profile', 'recordings', 'volume'
+    $runs += 'volume'
 }
 $failures = @()
 foreach ($run in $runs) {
-    $extendedPhase = $run -in 'profile', 'recordings', 'volume'
+    $extendedPhase = $run -eq 'volume'
     $language = if ($extendedPhase) { 'en-US' } else { $run }
     $report = Join-Path $artifacts ("check-{0}-{1}.txt" -f $language, [guid]::NewGuid())
     $start = [Diagnostics.ProcessStartInfo]::new($exe)
@@ -33,7 +33,6 @@ foreach ($run in $runs) {
     $timeout = 120000
     if ($extendedPhase) {
         $start.EnvironmentVariables['PULSE_EXTENDED_CHECKS'] = $extendedDirectory
-        $start.EnvironmentVariables['PULSE_EXTENDED_PHASE'] = $run
         $timeout = 20 * 60 * 1000
     }
     $process = [Diagnostics.Process]::Start($start)

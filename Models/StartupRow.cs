@@ -6,15 +6,12 @@ namespace Pulse.Models;
 public sealed class StartupRow : ObservableRow
 {
     private string _name = "", _command = "", _source = "", _state = "", _host = "";
-
     internal StartupRow() { }
     internal StartupItem? Item { get; private set; }
-
     public string Name => _name;
     public string Command => _command;
     public string Source => _source;
     public string State => _state;
-    // The running process started from this entry, if any.
     public string Host => _host;
 
     internal void Update(StartupItem item, string process)
@@ -34,6 +31,7 @@ public sealed class StartupRow : ObservableRow
         StartupSource.MachineRun32 => @"HKLM\…\WOW6432Node\…\Run",
         StartupSource.UserRunOnce => @"HKCU\…\RunOnce",
         StartupSource.MachineRunOnce => @"HKLM\…\RunOnce",
+        StartupSource.MachineRunOnce32 => @"HKLM\…\WOW6432Node\…\RunOnce",
         StartupSource.UserFolder => UiText.Get("StartupUserFolder"),
         _ => UiText.Get("StartupCommonFolder")
     };

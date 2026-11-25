@@ -3,8 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace Pulse.Telemetry;
 
-internal sealed record CounterSample(double? Cpu, double? Read, double? Write,
-    IReadOnlyList<CoreSample>? Cores, IReadOnlyList<DiskSample>? Disks)
+internal sealed record CounterSample(double? Cpu, double? Read, double? Write, IReadOnlyList<CoreSample>? Cores, IReadOnlyList<DiskSample>? Disks)
 {
     public GpuSnapshot? Gpu { get; init; }
     public static readonly CounterSample Empty = new(null, null, null, null, null);
@@ -33,7 +32,6 @@ internal sealed class PerformanceCounters : IDisposable
     private static extern uint PdhGetFormattedCounterArrayW(nint counter, uint format, ref uint bytes, out uint count, nint items);
     [DllImport("pdh.dll")]
     private static extern uint PdhCloseQuery(nint query);
-
     private nint _query, _cpu, _read, _write, _cores, _diskRead, _diskWrite, _diskIdle, _diskResponse;
     private readonly Dictionary<ulong, string> _gpuNames = GpuCounters.AdapterNames();
     private nint _gpuEngine, _gpuDedicated, _gpuShared;
@@ -57,36 +55,38 @@ internal sealed class PerformanceCounters : IDisposable
             _diskIdle = Add(@"\PhysicalDisk(*)\% Idle Time");
             _diskResponse = Add(@"\PhysicalDisk(*)\Avg. Disk sec/Transfer");
         }
+
         if (PdhCollectQueryData(_query) != 0) return CounterSample.Empty;
-        return new(GetValue(_cpu), GetValue(_read), GetValue(_write), Cores(), Disks())
-        { Gpu = GpuCounters.Read(GetValues(_gpuEngine), GetValues(_gpuDedicated), GetValues(_gpuShared), _gpuNames) };
+
+        return new CounterSample(GetValue(_cpu), GetValue(_read), GetValue(_write), Cores(), Disks())
+        {
+            Gpu = GpuCounters.Read(GetValues(_gpuEngine), GetValues(_gpuDedicated), GetValues(_gpuShared), _gpuNames)
+        };
     }
 
     private nint Add(string path) => PdhAddEnglishCounterW(_query, path, 0, out nint counter) == 0 ? counter : 0;
-
     private static bool Valid(Value value) => value.Status <= 1 && double.IsFinite(value.Number) && value.Number >= 0;
+    private static double? GetValue(nint counter) => counter != 0 && PdhGetFormattedCounterValue(counter, FormatDouble, 0, out var value) == 0 && Valid(value) ? value.Number : null;
 
-    private static double? GetValue(nint counter) =>
-        counter != 0 && PdhGetFormattedCounterValue(counter, FormatDouble, 0, out var value) == 0 && Valid(value)
-            ? value.Number : null;
-
-    // A null inventory means the query failed. A named instance may still be warming up.
     private Dictionary<string, double?>? GetValues(nint counter)
     {
         if (counter == 0) return null;
+
         for (int attempt = 0; attempt < 3; attempt++)
         {
             uint bytes = _capacity;
             uint status = PdhGetFormattedCounterArrayW(counter, FormatDouble, ref bytes, out uint count, _items);
+
             if (status == MoreData)
             {
-                // PDH only guarantees the required byte count on a zero-length sizing call.
                 if (_capacity != 0)
                 {
                     bytes = 0;
+
                     if (PdhGetFormattedCounterArrayW(counter, FormatDouble, ref bytes, out _, 0) != MoreData)
                         continue;
                 }
+
                 uint capacity = checked(bytes + 4096);
                 nint buffer = Marshal.AllocHGlobal((nint)capacity);
                 Marshal.FreeHGlobal(_items);
@@ -94,34 +94,43 @@ internal sealed class PerformanceCounters : IDisposable
                 _capacity = capacity;
                 continue;
             }
+
             if (status != 0) return null;
             var result = new Dictionary<string, double?>(StringComparer.OrdinalIgnoreCase);
             int size = Marshal.SizeOf<Item>();
+
             for (int i = 0; i < count; i++)
             {
                 var item = Marshal.PtrToStructure<Item>(_items + i * size);
+
                 if (Marshal.PtrToStringUni(item.Name) is { Length: > 0 } name)
                     result[name] = Valid(item.Value) ? item.Value.Number : null;
             }
+
             return result;
         }
+
         return null;
     }
 
     private List<CoreSample>? Cores()
     {
-        var values = GetValues(_cores);
+        Dictionary<string, double?>? values = GetValues(_cores);
         if (values is null) return null;
         var cores = new List<CoreSample>();
+
         foreach (var (name, usage) in values)
         {
-            // Instances are "group,number". "_Total" and "group,_Total" are aggregates.
-            var parts = name.Split(',');
+            string[] parts = name.Split(',');
+
             if (parts.Length == 2 &&
                 int.TryParse(parts[0], NumberStyles.None, CultureInfo.InvariantCulture, out int group) &&
                 int.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out int number))
-                cores.Add(new(group, number, usage is { } n ? Math.Clamp(n, 0, 100) : null));
+            {
+                cores.Add(new CoreSample(group, number, usage is { } n ? Math.Clamp(n, 0, 100) : null));
+            }
         }
+
         cores.Sort((a, b) => a.Group != b.Group ? a.Group.CompareTo(b.Group) : a.Number.CompareTo(b.Number));
         return cores;
     }
@@ -135,10 +144,10 @@ internal sealed class PerformanceCounters : IDisposable
         var available = new[] { read, write, idle, response }.OfType<Dictionary<string, double?>>().ToArray();
         if (available.Length == 0) return null;
         var disks = new List<DiskSample>();
-        foreach (var name in available.SelectMany(counter => counter.Keys).Distinct(StringComparer.OrdinalIgnoreCase))
+
+        foreach (string name in available.SelectMany(counter => counter.Keys).Distinct(StringComparer.OrdinalIgnoreCase))
         {
             if (name.Equals(Total, StringComparison.OrdinalIgnoreCase)) continue;
-            // Instances are the disk number followed by its volumes, such as "0 C: D:".
             int space = name.IndexOf(' ');
             string head = space < 0 ? name : name[..space];
             int? index = int.TryParse(head, NumberStyles.None, CultureInfo.InvariantCulture, out int n) ? n : null;

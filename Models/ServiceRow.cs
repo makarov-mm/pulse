@@ -6,11 +6,9 @@ namespace Pulse.Models;
 public sealed class ServiceRow : ObservableRow
 {
     private string _name = "", _title = "", _state = "", _pid = "", _host = "";
-
     internal ServiceRow() { }
     internal int ProcessId { get; private set; }
     internal ServiceInfo? Info { get; private set; }
-
     public string Name => _name;
     public string Title => _title;
     public string State => _state;

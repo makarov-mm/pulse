@@ -1,3 +1,4 @@
+using System.Net;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Pulse.Controls;
@@ -9,60 +10,74 @@ namespace Pulse;
 
 public sealed partial class MainWindow
 {
-    private readonly ProcessHistory _history = new();
-    private readonly List<(double Time, DateTime Clock, IReadOnlyList<GpuDevice>? Devices)> _graphics = [];
     private DiagnosticsWindow? _diagnostics;
-    private ILookup<(int Pid, int Port), ActivityRate>? _flowRates;
+    private IReadOnlyList<ActivityRate>? _flowRates;
+    private List<TcpConnection>? _indexedConnections;
+    private readonly Dictionary<TcpConnection, (double Received, double Sent)> _socketRates = [];
 
     internal void UpdateFlows(IEnumerable<ActivityRate>? values)
     {
-        if (_closed || (_paused && values != null)) return;
-        _flowRates = values?.Where(r => r.Socket != null).ToLookup(r => (r.Pid, r.Socket!.Local.Port));
-        if (_paused) return;
+        if (_closed) return;
+        _flowRates = values?.Where(r => r.Socket != null).ToArray();
+        _indexedConnections = null;
         if (_tab == LowerTab.Connections) UpdateConnectionRows();
         if (Inspector.IsPaneOpen && InspectorSection == 3) UpdateDetails();
     }
 
     private (double? Received, double? Sent) SocketRates(TcpConnection socket)
     {
-        if (_flowRates == null || socket is { Udp: false, State: TcpState.Listening })
+        if (_flowRates is null) return (null, null);
+        if (!ReferenceEquals(_indexedConnections, _connections))
         {
-            return (null, null);
+            _socketRates.Clear();
+            var bindings = _connections.Where(c => c.Udp || c.State != TcpState.Listening)
+                .ToLookup(c => (c.Pid, c.Udp, c.LocalPort));
+
+            foreach (var rate in _flowRates)
+            {
+                if (rate.Socket is not { } flow) continue;
+                TcpConnection? match = null;
+                foreach (var candidate in bindings[(rate.Pid, flow.Protocol == "UDP", flow.Local.Port)])
+                {
+                    if (!MatchesFlow(candidate, flow)) continue;
+                    // ETW omits interface scopes. Shared or indistinguishable bindings cannot own a rate uniquely.
+                    if (match != null) { match = null; break; }
+                    match = candidate;
+                }
+
+                if (match is null) continue;
+                var prior = _socketRates.GetValueOrDefault(match);
+                _socketRates[match] = (prior.Received + rate.Incoming, prior.Sent + rate.Outgoing);
+            }
+
+            _indexedConnections = _connections;
         }
 
-        double received = 0, sent = 0;
-        bool any = false;
-
-        foreach (var value in _flowRates[(socket.Pid, socket.LocalPort)])
-        {
-            var flow = value.Socket!;
-            bool wildcard = socket.Udp && (socket.LocalAddress.Equals(System.Net.IPAddress.Any) || socket.LocalAddress.Equals(System.Net.IPAddress.IPv6Any));
-
-            if (flow.Protocol != (socket.Udp ? "UDP" : "TCP") ||
-                flow.Local.AddressFamily != socket.LocalAddress.AddressFamily ||
-                (!wildcard && !flow.Local.Address.Equals(socket.LocalAddress)) ||
-                (!socket.Udp && (!flow.Remote.Address.Equals(socket.RemoteAddress) || flow.Remote.Port != socket.RemotePort))) continue;
-
-            received += value.Incoming; sent += value.Outgoing; any = true;
-        }
-
-        return any ? (received, sent) : (null, null);
+        return _socketRates.TryGetValue(socket, out var value) ? value : (null, null);
     }
 
-    internal IReadOnlyList<HistorySample> Observations => _history.Samples;
-    internal IReadOnlyList<(double Time, DateTime Clock, IReadOnlyList<GpuDevice>? Devices)> GraphicsHistory => _graphics;
-    internal HistoryCapture Capture() => HistoryCapture.Create(_frame, _history.Samples);
+    private static bool MatchesFlow(TcpConnection socket, SocketFlow flow)
+    {
+        if (flow.Local.AddressFamily != socket.LocalAddress.AddressFamily) return false;
+        bool wildcard = socket.Udp && (socket.LocalAddress.Equals(IPAddress.Any) || socket.LocalAddress.Equals(IPAddress.IPv6Any));
+        return (wildcard || MatchesAddress(flow.Local.Address, socket.LocalAddress)) &&
+            (socket.Udp || (flow.Remote.Port == socket.RemotePort && MatchesAddress(flow.Remote.Address, socket.RemoteAddress)));
+    }
+
+    private static bool MatchesAddress(IPAddress traced, IPAddress bound)
+    {
+        if (traced.Equals(bound)) return true;
+        if (traced.AddressFamily != System.Net.Sockets.AddressFamily.InterNetworkV6 ||
+            bound.AddressFamily != traced.AddressFamily || traced.ScopeId != 0) return false;
+        return traced.GetAddressBytes().AsSpan().SequenceEqual(bound.GetAddressBytes());
+    }
+
+    internal Frame? CurrentFrame => _frame;
     internal static string GpuText(GpuLoad? gpu) => gpu is null ? "—" : $"{Format.Percent(gpu.Percent)} · {gpu.Adapter} · {gpu.Engine}";
 
     private void ConfigureDiagnostics()
     {
         InspectorPage.SelectedItem = InspectorPage.Items[0];
-
-        foreach (var card in new[] { CpuCard, MemoryCard, DiskCard, NetworkCard })
-        {
-            var graph = (Sparkline)card.FindName("Plot");
-            graph.EnableRange((a, b) => Diagnostics().UseLive(a, b), t => ShowMoment(card, t));
-        }
 
         Root.RegisterPropertyChangedCallback(FrameworkElement.RequestedThemeProperty, (_, _) => _diagnostics?.ApplyTheme(Root.RequestedTheme));
     }
@@ -78,14 +93,6 @@ public sealed partial class MainWindow
 
         _diagnostics.Activate();
         return _diagnostics;
-    }
-
-    private void RecordDiagnostics(Frame f)
-    {
-        _history.Add(f, (int)Math.Max(1, _timer.Interval.TotalSeconds));
-        _graphics.RemoveAll(g => f.Time - g.Time > 900);
-        _graphics.Add((f.Time, f.Clock, f.Gpu?.Devices));
-        _diagnostics?.UpdateLive();
     }
 
     private void DiagnosticsClicked(object sender, RoutedEventArgs args) => Diagnostics();
@@ -107,6 +114,18 @@ public sealed partial class MainWindow
         UpdateDetails();
     }
 
+    private string ProcessEndpoints(int pid)
+    {
+        var lines = _connections.Where(c => c.Pid == pid).Select(c =>
+        {
+            string ends = c.Remote.Length == 0 ? c.Local : $"{c.Local} → {c.Remote}";
+            var rate = SocketRates(c);
+            string traffic = rate.Received.HasValue ? $"  ↓ {Format.Bytes(rate.Received, true)}  ↑ {Format.Bytes(rate.Sent, true)}" : "";
+            return $"{c.Protocol} {ends}{traffic}";
+        });
+        return WithConnectionStatus(string.Join(Environment.NewLine, lines), SocketTables.All, Environment.NewLine);
+    }
+
     private void UpdateInspectorPage(ProcessKey key)
     {
         int page = InspectorSection;
@@ -118,7 +137,7 @@ public sealed partial class MainWindow
             1 when _frame?.ThreadOwner == key => string.Join(Environment.NewLine,
                 _frame.Threads.OrderByDescending(t => t.Cpu).Select(t => $"TID {t.Id}     {Format.Percent(t.Cpu)}")),
             2 => HostedServices(key.Pid),
-            3 => WithConnectionStatus(string.Join(Environment.NewLine, _connections.Where(c => c.Pid == key.Pid).Select(c => { var rate = SocketRates(c); return $"{c.Protocol}  {c.Local}  {c.Remote}" + (rate.Received.HasValue ? $"  ↓ {Format.Bytes(rate.Received, true)}  ↑ {Format.Bytes(rate.Sent, true)}" : ""); })), SocketTables.All, Environment.NewLine),
+            3 => ProcessEndpoints(key.Pid),
             _ => string.Empty
         };
 

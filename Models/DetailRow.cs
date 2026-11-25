@@ -2,18 +2,15 @@ using Pulse.Telemetry;
 
 namespace Pulse.Models;
 
-// One process on the Details tab, with every counter in its own column.
 public sealed class DetailRow : ObservableRow
 {
     private string _name = "", _pid = "", _parent = "", _session = "", _cpu = "", _workingSet = "", _privateBytes = "";
     private string _read = "", _write = "", _threads = "", _handles = "", _started = "";
     private string _priority = "", _user = "", _commandLine = "";
     private string? _commandTip;
-
     internal DetailRow() { }
     internal ProcessKey Key { get; private set; }
     internal int ProcessId => Key.Pid;
-
     public string Name => _name;
     public string Pid => _pid;
     public string Parent => _parent;
@@ -29,13 +26,11 @@ public sealed class DetailRow : ObservableRow
     public string Priority => _priority;
     public string User => _user;
     public string CommandLine => _commandLine;
-    // Null without a command line, so that no empty tooltip opens.
     public string? CommandTip => _commandTip;
 
-    // identity is null until the process has been described in the background.
     internal void Update(TaskSample task, ProcessIdentity? identity)
     {
-        var info = task.Info;
+        ProcessCounters info = task.Info;
         Key = info.Key;
         Set(ref _name, info.Name, nameof(Name));
         Set(ref _pid, info.Key.Pid.ToString(), nameof(Pid));

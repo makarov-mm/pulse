@@ -28,15 +28,6 @@
                             ToolTipService.ToolTip="{loc:Localize Key=About}" Padding="10,6">
                         <FontIcon Glyph="&#xE946;" FontSize="16"/>
                     </Button>
-                    <ComboBox x:Name="SpanBox" SelectedIndex="0" SelectionChanged="SpanChanged" AutomationProperties.Name="{loc:Localize Key=SpanLabel}" ToolTipService.ToolTip="{loc:Localize Key=SpanLabel}">
-                        <ComboBoxItem Content="{loc:Localize Key=SpanOne}"/><ComboBoxItem Content="{loc:Localize Key=SpanFifteen}"/>
-                    </ComboBox>
-                    <ComboBox x:Name="IntervalBox" SelectedIndex="1" SelectionChanged="IntervalChanged" AutomationProperties.Name="{loc:Localize Key=Interval}" ToolTipService.ToolTip="{loc:Localize Key=Interval}">
-                        <ComboBoxItem Content="{loc:Localize Key=IntervalOne}"/><ComboBoxItem Content="{loc:Localize Key=IntervalTwo}"/><ComboBoxItem Content="{loc:Localize Key=IntervalFive}"/>
-                    </ComboBox>
-                    <ToggleButton x:Name="PauseButton" Click="PauseClicked" AutomationProperties.Name="{loc:Localize Key=PauseUpdates}">
-                        <StackPanel Orientation="Horizontal" Spacing="7"><FontIcon x:Name="PauseIcon" Glyph="&#xE769;" FontSize="13"/><TextBlock x:Name="PauseLabel" Text="{loc:Localize Key=Pause}"/></StackPanel>
-                    </ToggleButton>
                 </StackPanel>
             </Grid>
             <ScrollViewer Grid.Row="1" x:Name="OverviewScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
@@ -56,7 +47,6 @@
                             <Grid ColumnSpacing="10">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                 <TextBlock x:Name="DeviceTitle" VerticalAlignment="Center" Style="{StaticResource BodyStrongTextBlockStyle}"/>
-                                <TextBlock Grid.Column="1" x:Name="DeviceSpan" VerticalAlignment="Center" FontSize="12" TextTrimming="CharacterEllipsis" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                                 <Button Grid.Column="2" Margin="0,-4,-6,-4" Style="{StaticResource SubtleButtonStyle}" Click="CloseDevices" AutomationProperties.Name="{loc:Localize Key=CloseDevices}" ToolTipService.ToolTip="{loc:Localize Key=CloseDevices}"><FontIcon Glyph="&#xE711;" FontSize="12"/></Button>
                             </Grid>
                             <ScrollViewer Grid.Row="1" x:Name="DeviceScroll" MaxHeight="190" VerticalScrollBarVisibility="Auto">

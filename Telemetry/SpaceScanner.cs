@@ -47,7 +47,7 @@ internal static class SpaceScanner
 
     public static void Scan(SpaceNode root, CancellationToken cancel)
     {
-        var options = new EnumerationOptions { AttributesToSkip = Skip, IgnoreInaccessible = false };
+        var buffer = new byte[FileAllocation.DirectoryBufferSize];
         var pending = new Stack<SpaceNode>();
         pending.Push(root);
         while (pending.TryPop(out var folder))
@@ -63,26 +63,22 @@ internal static class SpaceScanner
                 var directory = new DirectoryInfo(folder.Path);
                 // A chosen root can itself be a link. A child can also disappear or become a link after discovery.
                 if ((directory.Attributes & Skip) != 0) { folder.Unread = true; folder.Add(0, 0, true); continue; }
-                foreach (var entry in directory.EnumerateFileSystemInfos("*", options))
+                foreach (var entry in FileAllocation.Enumerate(directory, buffer))
                 {
                     if (cancel.IsCancellationRequested) break;
-                    if (entry is not FileInfo file)
+                    if ((entry.Attributes & FileAttributes.Directory) != 0)
                     {
                         directories.Add(new SpaceNode(entry.Name, folder, false));
                         continue;
                     }
-                    try
-                    {
-                        long length = file.Length;
-                        total += length;
-                        count++;
-                        long? allocation = FileAllocation.Read(file.FullName, file.Attributes);
-                        allocatedTotal += allocation ?? 0;
-                        if (allocation is null) unknown++;
-                        if (largest.Count < LargestFiles) largest.Enqueue((file.Name, allocation), length);
-                        else largest.EnqueueDequeue((file.Name, allocation), length);
-                    }
-                    catch (Exception error) when (IsReadError(error)) { folder.Unread = true; }
+                    long length = entry.Length;
+                    if (length < 0) { folder.Unread = true; continue; }
+                    total += length;
+                    count++;
+                    allocatedTotal += entry.Allocation ?? 0;
+                    if (entry.Allocation is null) unknown++;
+                    if (largest.Count < LargestFiles) largest.Enqueue((entry.Name, entry.Allocation), length);
+                    else largest.EnqueueDequeue((entry.Name, entry.Allocation), length);
                 }
             }
             catch (Exception error) when (IsReadError(error)) { folder.Unread = true; }
@@ -106,5 +102,5 @@ internal static class SpaceScanner
         }
     }
 
-    private static bool IsReadError(Exception error) => error is UnauthorizedAccessException or IOException or SecurityException;
+    private static bool IsReadError(Exception error) => error is UnauthorizedAccessException or IOException or InvalidDataException or SecurityException;
 }

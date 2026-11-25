@@ -12,11 +12,9 @@ public sealed class ProcessRow : ObservableRow
     private Thickness _indent;
     private Visibility _branchSpace, _arrowVisibility;
     private bool _canExpand;
-
     internal TaskSample Sample { get; private set; }
     internal ProcessKey Key => Sample.Info.Key;
     internal ProcessRow(TaskSample sample) => Sample = sample;
-
     private string _gpu = "";
     public string Gpu => _gpu;
     public string Name => _name;
@@ -39,9 +37,8 @@ public sealed class ProcessRow : ObservableRow
     {
         Sample = branch.Task;
         Set(ref _gpu, MainWindow.GpuText(Sample.Gpu), nameof(Gpu));
-        var info = Sample.Info;
-        // A collapsed branch shows the totals of the process and everything below it.
-        var total = branch.Total;
+        ProcessCounters info = Sample.Info;
+        BranchTotal? total = branch.Total;
         double? cpu = total is { } sum ? sum.Cpu : Sample.Cpu;
         Set(ref _name, total is { } named ? $"{info.Name} ({named.Processes})" : info.Name, nameof(Name));
         Set(ref _pid, info.Key.Pid.ToString(), nameof(Pid));

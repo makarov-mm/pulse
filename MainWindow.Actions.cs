@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Security;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -40,14 +39,15 @@ public sealed partial class MainWindow
         menu.Items.Add(MenuEntry("MenuElevate", true, RestartElevated));
     }
 
-    private void RestartElevated()
+    internal void RestartElevated()
     {
         try
         {
             Elevation.StartElevated();
             Close();
         }
-        catch (Win32Exception) { }
+        catch (Win32Exception error) when (error.NativeErrorCode == 1223) { } // UAC cancelled.
+        catch (Exception error) { ShowError(UiText.Get("ActionError"), error.Message); }
     }
 
     private async Task RunActionAsync(Action action, bool background = false)
@@ -63,7 +63,7 @@ public sealed partial class MainWindow
                 action();
             }
         }
-        catch (Exception error) when (error is Win32Exception or UnauthorizedAccessException or SecurityException or IOException or TimeoutException or InvalidOperationException)
+        catch (Exception error)
         {
             if (!_closed)
             {
@@ -72,7 +72,7 @@ public sealed partial class MainWindow
         }
 
         if (_closed) return;
-        RefreshInspectorSources();
+        RefreshInspectorSources(force: true);
         UpdateTabRows();
     }
 
@@ -245,6 +245,39 @@ public sealed partial class MainWindow
         await RunActionAsync(() => StartupItems.Save(item, newName, newCommand, on));
     }
 
+    private bool _serviceActionPending;
+
+    private async Task RunServiceActionAsync(Action action)
+    {
+        if (_closed || _serviceActionPending) return;
+        _serviceActionPending = true;
+        try { await RunActionAsync(action, background: true); }
+        finally { _serviceActionPending = false; }
+    }
+
+    // Stopping a service also stops the running services that depend on it, so those are confirmed first.
+    private async Task StopServiceAsync(string name, bool restart)
+    {
+        List<string> dependents;
+        try { dependents = await Task.Run(() => ServiceControl.ActiveDependents(name)); }
+        catch (Win32Exception error)
+        {
+            if (!_closed) ShowError(UiText.Get("ActionError"), error.Message);
+            return;
+        }
+
+        if (_closed) return;
+
+        if (dependents.Count != 0 && !await ConfirmAsync(UiText.Get("ConfirmDependents"),
+                UiText.Format("ConfirmDependentsBody", name, string.Join(", ", dependents)),
+                UiText.Get(restart ? "MenuRestart" : "MenuStop")))
+        {
+            return;
+        }
+
+        await RunServiceActionAsync(() => ServiceControl.ChangeState(name, dependents, restart));
+    }
+
     private void ServiceRightTapped(object sender, RightTappedRoutedEventArgs e)
     {
         if ((e.OriginalSource as FrameworkElement)?.DataContext is not ServiceRow row) return;
@@ -263,32 +296,43 @@ public sealed partial class MainWindow
     private void ShowServiceMenu(ServiceRow row, Point? position)
     {
         if (row.Info is not { } service) return;
-        bool elevated = Elevation.IsElevated;
+        bool canChange = Elevation.IsElevated && !_serviceActionPending;
         string name = service.Name;
         var menu = new MenuFlyout();
-        menu.Items.Add(MenuEntry("MenuStart", elevated && service.State == ServiceState.Stopped,
-            () => _ = RunActionAsync(() => ServiceControl.Start(name), true)));
-        menu.Items.Add(MenuEntry("MenuStop", elevated && service.State == ServiceState.Running,
-            () => _ = RunActionAsync(() => ServiceControl.Stop(name), true)));
-        menu.Items.Add(MenuEntry("MenuRestart", elevated && service.State == ServiceState.Running,
-            () => _ = RunActionAsync(() => ServiceControl.Restart(name), true)));
+        menu.Items.Add(MenuEntry("MenuStart", canChange && service.State == ServiceState.Stopped,
+            () => _ = RunServiceActionAsync(() => ServiceControl.Start(name))));
+        menu.Items.Add(MenuEntry("MenuStop", canChange && service.State == ServiceState.Running,
+            () => _ = StopServiceAsync(name, false)));
+        menu.Items.Add(MenuEntry("MenuRestart", canChange && service.State == ServiceState.Running,
+            () => _ = StopServiceAsync(name, true)));
         menu.Items.Add(new MenuFlyoutSeparator());
 
-        ServiceStart? current = null;
-        try { current = ServiceControl.StartType(name); }
-        catch (Win32Exception) { }
+        var choices = new List<(ServiceStart Type, RadioMenuFlyoutItem Option)>();
         var types = new MenuFlyoutSubItem { Text = UiText.Get("MenuStartType") };
-        foreach (var (type, key) in new[] { (ServiceStart.Automatic, "StartAutomatic"), (ServiceStart.Manual, "StartManual"),
+        foreach (var (type, key) in new[] { (ServiceStart.Automatic, "StartAutomatic"),
+                     (ServiceStart.AutomaticDelayed, "StartAutomaticDelayed"), (ServiceStart.Manual, "StartManual"),
                      (ServiceStart.Disabled, "StartupDisabled") })
         {
             var option = new RadioMenuFlyoutItem
             {
-                Text = UiText.Get(key), GroupName = "ServiceStart", IsChecked = current == type, IsEnabled = elevated
+                Text = UiText.Get(key), GroupName = "ServiceStart", IsEnabled = canChange
             };
-            option.Click += (_, _) => _ = RunActionAsync(() => ServiceControl.SetStartType(name, type));
+            option.Click += (_, _) => _ = RunServiceActionAsync(() => ServiceControl.SetStartType(name, type));
             types.Items.Add(option);
+            choices.Add((type, option));
         }
         menu.Items.Add(types);
+        menu.Opened += async (_, _) =>
+        {
+            try
+            {
+                var current = await Task.Run(() => ServiceControl.StartType(name));
+                if (_closed || !menu.IsOpen) return;
+                foreach (var (type, option) in choices) option.IsChecked = type == current;
+            }
+            catch (Win32Exception) { } // Windows can deny reading the current configuration.
+            catch (Exception error) { if (!_closed) ShowError(UiText.Get("ActionError"), error.Message); }
+        };
         if (service.Pid != 0)
         {
             menu.Items.Add(new MenuFlyoutSeparator());

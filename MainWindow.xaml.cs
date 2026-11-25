@@ -23,7 +23,7 @@ public sealed partial class MainWindow : Window
 {
     private readonly Sampler _sampler = new();
     private readonly UISettings _systemColors = new();
-    private readonly DispatcherTimer _timer = new();
+    private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromSeconds(1) };
     private readonly ObservableCollection<ProcessRow> _visible = [];
     private readonly HashSet<ProcessKey> _collapsed = [];
     private readonly Dictionary<string, TextBlock> _facts = [];
@@ -31,12 +31,12 @@ public sealed partial class MainWindow : Window
     private Frame? _frame;
     private ProcessKey? _selected;
     private SortField _sort = SortField.Cpu;
-    private bool _descending = true, _tree = true, _refreshing, _busy, _closed, _paused, _restart = true;
+    private bool _descending = true, _tree = true, _refreshing, _busy, _closed, _restart = true;
     private bool _loaded, _dialogOpen;
-    private int _generation;
     private string? _imagePath;
     private ProcessIdentity _identity = new("", null, "");
     private int? _inspectedBasePriority;
+    private int _identityRequest;
 
     [DllImport("user32.dll")]
     private static extern uint GetDpiForWindow(nint hwnd);
@@ -66,11 +66,7 @@ public sealed partial class MainWindow : Window
         MemoryCard.Configure(UiText.Get("Memory"), "\uE964", true, v => Format.Percent(v));
         DiskCard.Configure(UiText.Get("Disk"), "\uEDA2", false, v => Format.Bytes(v, true));
         NetworkCard.Configure(UiText.Get("Network"), "\uE968", false, v => Format.Bytes(v, true));
-        CpuCard.EnableSelection(UiText.Get("MomentHint"));
-        MemoryCard.EnableSelection(UiText.Get("MomentHint"));
-        CpuCard.SampleSelected += (_, time) => ShowMoment(CpuCard, time);
-        MemoryCard.SampleSelected += (_, time) => ShowMoment(MemoryCard, time);
-        UpdateSpanText();
+        HostText.Text = Environment.MachineName;
         CreateDeviceViews();
         CreateSpace();
         CreateFacts();
@@ -112,15 +108,14 @@ public sealed partial class MainWindow : Window
     {
         if (_loaded) return;
         _loaded = true;
-        SetInterval();
+        _timer.Start();
         await RefreshAsync();
     }
 
     private async Task RefreshAsync()
     {
-        if (_busy || _closed || _paused) return;
+        if (_busy || _closed) return;
         _busy = true;
-        int generation = _generation;
         try
         {
             bool restart = _restart;
@@ -128,21 +123,20 @@ public sealed partial class MainWindow : Window
             // Threads are only sampled for the process shown in the inspector.
             int? inspect = Inspector.IsPaneOpen && InspectorSection == 1 ? _selected?.Pid : null;
             var frame = await Task.Run(() => _sampler.Sample(restart, inspect));
-            if (_closed || _paused || generation != _generation) return;
+            if (_closed) return;
             _frame = frame;
             _byPid = frame.Tasks.ToDictionary(t => t.Info.Key.Pid);
             var live = frame.Tasks.Select(t => t.Info.Key).ToHashSet();
             _collapsed.RemoveWhere(k => !live.Contains(k));
             UpdateCards(frame);
             UpdateDevices(frame);
-            RecordMoment(frame);
-            RecordDiagnostics(frame);
+            _diagnostics?.UpdateLive(frame);
             RefreshInspectorSources();
             UpdateRows();
             UpdateTabRows();
             var uptime = TimeSpan.FromMilliseconds(Environment.TickCount64);
             Uptime.Text = UiText.Format("Uptime", uptime.Days, uptime.Hours, uptime.Minutes);
-            Status.Text = UiText.Format("LastUpdate", frame.Clock, frame.Tasks.Sum(t => t.Info.Threads));
+            Status.Text = UiText.Format("LiveThreads", frame.Tasks.Sum(t => t.Info.Threads));
             if (ErrorBar.Title == UiText.Get("SampleError")) ErrorBar.IsOpen = false;
         }
         catch (Exception ex)
@@ -161,19 +155,27 @@ public sealed partial class MainWindow : Window
     {
         var topCpu = f.Tasks.MaxBy(t => t.Cpu);
         var topRam = f.Tasks.MaxBy(t => t.Info.WorkingSet);
-        CpuCard.Update(f.Time, f.Clock, f.Cpu, f.Cpu is { } cpu ? Format.Number(cpu, 1) : "—",
-            f.Cpu.HasValue ? "%" : "", UiText.Format("CpuCount", Sampler.LogicalProcessors),
+        CpuCard.Update(f.Time, f.Cpu, f.Cpu is { } cpu ? Format.Number(cpu, 1) : "—",
+            f.Cpu.HasValue ? "%" : "", UiText.Format("CpuCount", f.Cores is { Count: > 0 } cores ? cores.Count : Sampler.LogicalProcessors),
             topCpu?.Cpu is > 0 ? UiText.Format("TopCpu", topCpu.Info.Name, topCpu.Info.Key.Pid, Format.Percent(topCpu.Cpu)) : null);
         double? memory = 100.0 * f.UsedRam / f.TotalRam;
-        MemoryCard.Update(f.Time, f.Clock, memory, memory is { } ram ? Format.Number(ram, 1) : "—",
+        MemoryCard.Update(f.Time, memory, memory is { } ram ? Format.Number(ram, 1) : "—",
             memory.HasValue ? "%" : "", UiText.Format("MemoryUsage", Format.Bytes(f.UsedRam), Format.Bytes(f.TotalRam)),
             topRam is null ? null : UiText.Format("TopMemory", topRam.Info.Name, topRam.Info.Key.Pid, Format.Bytes(topRam.Info.WorkingSet)));
         double? disk = f.DiskRead + f.DiskWrite;
         var (number, unit) = Format.Size(disk, true);
-        DiskCard.Update(f.Time, f.Clock, disk, number, unit, UiText.Format("DiskRates", Format.Bytes(f.DiskRead, true), Format.Bytes(f.DiskWrite, true)));
+        string diskRates = UiText.Format("DiskRates", Format.Bytes(f.DiskRead, true), Format.Bytes(f.DiskWrite, true));
+        string? diskSource = null;
+        if (f.DiskRatesFromVolumes && f.Disks is { } volumes)
+        {
+            int measured = volumes.Count(d => d.Read.HasValue && d.Write.HasValue);
+            if (measured < volumes.Count) diskRates += $" ({measured}/{volumes.Count})";
+            diskSource = $"{UiText.Get("MountedVolumes")} · {diskRates}";
+        }
+        DiskCard.Update(f.Time, disk, number, unit, diskRates, captionToolTip: diskSource);
         double? net = f.Received + f.Sent;
         (number, unit) = Format.Size(net, true);
-        NetworkCard.Update(f.Time, f.Clock, net, number, unit, $"↓ {Format.Bytes(f.Received, true)}   ·   ↑ {Format.Bytes(f.Sent, true)}");
+        NetworkCard.Update(f.Time, net, number, unit, $"↓ {Format.Bytes(f.Received, true)}   ·   ↑ {Format.Bytes(f.Sent, true)}");
     }
 
     private void UpdateRows()
@@ -206,38 +208,6 @@ public sealed partial class MainWindow : Window
         EmptyText.Text = search.Length > 0 ? UiText.Get("NoMatches") : UiText.Get("NoProcesses");
         EmptyText.Visibility = _visible.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         UpdateDetails();
-    }
-
-    private void SetInterval()
-    {
-        _timer.Interval = TimeSpan.FromSeconds(IntervalBox.SelectedIndex switch { 0 => 1, 2 => 5, _ => 2 });
-        if (_loaded && !_paused) _timer.Start();
-    }
-
-    private void IntervalChanged(object sender, SelectionChangedEventArgs e) { if (_loaded) SetInterval(); }
-
-    private async void PauseClicked(object sender, RoutedEventArgs e)
-    {
-        _paused = PauseButton.IsChecked == true;
-        _generation++;
-        PauseIcon.Glyph = _paused ? "\uE768" : "\uE769";
-        PauseLabel.Text = _paused ? UiText.Get("Resume") : UiText.Get("Pause");
-        AutomationProperties.SetName(PauseButton, _paused ? UiText.Get("ResumeUpdates") : UiText.Get("PauseUpdates"));
-        StatusIcon.Glyph = _paused ? "\uE769" : "\uE9D9";
-        if (_paused)
-        {
-            _timer.Stop();
-            Status.Text = _frame is { } f ? UiText.Format("PausedAt", f.Clock) : UiText.Get("Paused");
-            return;
-        }
-        foreach (var card in new[] { CpuCard, MemoryCard, DiskCard, NetworkCard }) card.ClearHistory();
-        ClearDeviceHistory();
-        _moments.Clear();
-        _history.Samples.Clear();
-        _graphics.Clear();
-        _restart = true;
-        SetInterval();
-        await RefreshAsync();
     }
 
     private void SearchChanged(object sender, TextChangedEventArgs e) { UpdateRows(); UpdateTabRows(); }
@@ -288,6 +258,7 @@ public sealed partial class MainWindow : Window
         catch (Win32Exception ex) { DetailPath.Text = ex.NativeErrorCode == 5 ? UiText.Get("AccessDenied") : ex.Message; }
         catch (InvalidOperationException ex) { DetailPath.Text = ex.Message; }
         _inspectedBasePriority = null;
+        _identity = new("", null, "");
         Inspector.IsPaneOpen = true;
         RefreshInspectorSources();
         UpdateDetails();
@@ -338,14 +309,35 @@ public sealed partial class MainWindow : Window
         _facts["GpuEngine"].Text = GpuText(t.Gpu);
         if (_inspectedBasePriority != t.Info.BasePriority)
         {
-            _identity = ProcessActions.Describe(key);
             _inspectedBasePriority = t.Info.BasePriority;
+            _ = LoadIdentityAsync(key, ++_identityRequest);
         }
+        ShowIdentity();
+        UpdateInspectorPage(key);
+        EndButton.IsEnabled = key.Pid > 4 && key.Pid != Environment.ProcessId;
+    }
+
+    // The user, priority class and command line are read off the UI thread: resolving an account name can take seconds.
+    private async Task LoadIdentityAsync(ProcessKey key, int request)
+    {
+        try
+        {
+            var identity = await Task.Run(() => ProcessActions.Describe(key));
+            if (_closed || _selected != key || request != _identityRequest) return;
+            _identity = identity;
+            ShowIdentity();
+        }
+        catch (Exception error)
+        {
+            if (!_closed && _selected == key && request == _identityRequest) ShowError(UiText.Get("SampleError"), error.Message);
+        }
+    }
+
+    private void ShowIdentity()
+    {
         _facts["User"].Text = _identity.User.Length == 0 ? "—" : _identity.User;
         _facts["Priority"].Text = Format.Priority(_identity.PriorityClass);
         _facts["CommandLine"].Text = _identity.CommandLine.Length == 0 ? "—" : _identity.CommandLine;
-        UpdateInspectorPage(key);
-        EndButton.IsEnabled = key.Pid > 4 && key.Pid != Environment.ProcessId;
     }
 
     private void CloseInspector(object sender, RoutedEventArgs e) { Inspector.IsPaneOpen = false; ClearSelection(); }

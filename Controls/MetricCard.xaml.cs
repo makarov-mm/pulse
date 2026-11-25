@@ -17,34 +17,13 @@ public sealed partial class MetricCard : UserControl
         Plot.Configure(percent, format);
     }
 
-    public void Update(double time, DateTime clock, double? value, string number, string unit, string caption, string? detail = null)
+    public void Update(double time, double? value, string number, string unit, string caption, string? detail = null, string? captionToolTip = null)
     {
-        Plot.Add(time, clock, value, detail);
+        Plot.Add(time, value, detail);
         Number.Text = number;
         Unit.Text = unit;
         Caption.Text = caption;
-        ToolTipService.SetToolTip(Caption, caption);
-    }
-
-    internal void SetSeries(List<(double Time, DateTime Clock, double? Value)> points, string number, string caption)
-    {
-        Plot.Append(points);
-        Number.Text = number;
-        Caption.Text = caption;
-        ToolTipService.SetToolTip(Caption, caption);
-    }
-
-    public void ClearHistory() => Plot.Clear();
-
-    public void SetSpan(double seconds) => Plot.SetSpan(seconds);
-
-    // Raised with the sample time when the user taps the graph. EnableSelection turns it on.
-    public event System.EventHandler<double>? SampleSelected;
-
-    public void EnableSelection(string hint)
-    {
-        Plot.Hint = hint;
-        Plot.SampleSelected += (_, time) => SampleSelected?.Invoke(this, time);
+        ToolTipService.SetToolTip(Caption, captionToolTip ?? caption);
     }
 
     // Raised when the user asks to open or close the device view behind this card.

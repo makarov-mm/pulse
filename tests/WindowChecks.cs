@@ -66,11 +66,24 @@ public sealed partial class MainWindow
 
     internal async Task RunChecksAsync()
     {
-        for (int i = 0; i < 100 && _frame is null; i++) await Task.Delay(100);
-        var frame = _frame ?? throw new InvalidOperationException("The first process sample did not arrive.");
-        PauseButton.IsChecked = true;
-        PauseClicked(this, new());
-        Require(_paused && frame.Tasks.Any(t => t.Info.Key.Pid == Environment.ProcessId), "Missing live process.");
+        // Wait for two real samples so the counters have a baseline. Verify the visible tiles as well as the numbers.
+        for (int i = 0; i < 150 && !(_frame is { DiskRead: >= 0, DiskWrite: >= 0, Received: >= 0, Sent: >= 0 } current &&
+            current.Cores?.All(c => c.Usage is >= 0 and <= 100) == true); i++)
+            await Task.Delay(100);
+        _timer.Stop();
+        while (_busy) await Task.Delay(20);
+        var frame = _frame ?? throw new InvalidOperationException("Missing live sample.");
+        var cores = frame.Cores ?? throw new InvalidOperationException("Missing processor inventory.");
+        Require(cores.Count == Sampler.LogicalProcessors && cores.All(c => c.Usage is >= 0 and <= 100) &&
+            cores.Select(c => (c.Group, c.Number)).Distinct().Count() == cores.Count, "Live per-processor usage is incomplete.");
+        ToggleDevices(DeviceView.Processor);
+        Require(DeviceGrid.Children.Count == cores.Count && DeviceEmpty.Visibility == Visibility.Collapsed &&
+            DeviceGrid.Children.OfType<DeviceTile>().All(t => ((TextBlock)t.FindName("Reading")).Text != "—"),
+            "The processor panel did not render the live readings.");
+        CloseDevices(this, new());
+        CheckLiveCards(frame);
+        CheckCounterDeltas();
+        Require(frame.Tasks.Any(t => t.Info.Key.Pid == Environment.ProcessId), "Missing live process.");
         Require(SearchBox.PlaceholderText == UiText.Get("Search") && Title == UiText.Get("WindowTitle"), "Wrong UI language.");
         CheckLanguageResources();
         CheckExecutableLocation();
@@ -91,9 +104,6 @@ public sealed partial class MainWindow
         ExpandDevice(DeviceView.Disk, "0 C:");
         await Task.Delay(100);
         Require(ReferenceEquals(FocusManager.GetFocusedElement(Root.XamlRoot), tile), "Expanding a tile lost keyboard focus.");
-        SpanBox.SelectedIndex = 1;
-        Require(((TextBlock)tile.FindName("SpanStart")).Text.Contains(SpanLabel) && _span == 900, "Incorrect expanded time axis.");
-
         UpdateDevices(sample with { Time = sample.Time + 1, Disks = null, Adapters = Array.Empty<AdapterSample>() });
         Require(_devices[DeviceView.Network].Tiles.Count == 0, "The last disconnected adapter is still displayed.");
         Require(ReferenceEquals(tile, _devices[DeviceView.Disk].Tiles.Single().Tile), "A failed query discarded the disk history.");
@@ -114,26 +124,52 @@ public sealed partial class MainWindow
         await Task.Delay(150);
 
         var chart = (Sparkline)MemoryCard.FindName("Plot");
+        foreach (int second in new[] { 70, 71, 92, 93 }) chart.Add(frame.Time + second, 30);
         var line = (Microsoft.UI.Xaml.Shapes.Path)chart.FindName("Line");
-        var clock = DateTime.Now;
-        chart.Clear();
-        foreach (int second in new[] { 0, 1, 120, 121 })
-            chart.Add(second, clock.AddSeconds(second), 30);
-        Require(line.Data is PathGeometry geometry && geometry.Figures.Count == 2, "A line crossed a sampling gap.");
-        chart.Clear();
-        Require(line.Data is null, "Clearing history left a stale graph on screen.");
-
-        _moments.Clear();
-        for (int second = 0; second <= 1000; second++) RecordMoment(sample with { Time = second });
-        Require(_moments.Count == 901 && _moments[0].Time == 100, "Unexpected 15-minute retention boundary.");
-        CheckMonitorTabs();
-        await CheckTableHeadersAsync();
+        Require(line.Data is PathGeometry geometry && geometry.Figures.Count == 2, "A live graph crossed a sampling gap.");
+        await CheckMonitorTabsAsync();
         await CheckDiskSpaceAsync();
+        await CheckTableHeadersAsync();
         await CheckRoadmapAsync();
-        PauseButton.IsChecked = false;
-        PauseClicked(this, new());
-        Require(!_paused && _moments.Count <= 1, "Resuming retained the paused history.");
+        _timer.Start();
     }
+    private void CheckLiveCards(Telemetry.Frame frame)
+    {
+        Require(frame.Cpu is >= 0 and <= 100 && frame.TotalRam > 0 && frame.UsedRam >= 0 && frame.UsedRam <= frame.TotalRam,
+            "Missing live CPU or memory readings.");
+        Require(frame.DiskRead >= 0 && frame.DiskWrite >= 0, "Missing live disk throughput.");
+        Require(frame.Received >= 0 && frame.Sent >= 0, "Missing live network throughput.");
+        static string Number(MetricCard card) => ((TextBlock)card.FindName("Number")).Text;
+        Require(Number(CpuCard) == Format.Number(frame.Cpu!.Value, 1) &&
+            Number(MemoryCard) == Format.Number(100.0 * frame.UsedRam!.Value / frame.TotalRam!.Value, 1) &&
+            Number(DiskCard) == Format.Size(frame.DiskRead + frame.DiskWrite, true).Value &&
+            Number(NetworkCard) == Format.Size(frame.Received + frame.Sent, true).Value,
+            "An overview card failed to render its current sample.");
+        string caption = ((TextBlock)DiskCard.FindName("Caption")).Text;
+        Require(caption.StartsWith(UiText.Format("DiskRates", Format.Bytes(frame.DiskRead, true), Format.Bytes(frame.DiskWrite, true)),
+            StringComparison.Ordinal), "The disk card did not show the two live rates.");
+        ToggleDevices(DeviceView.Disk);
+        Require(frame.Disks?.Any(d => d.Read >= 0 && d.Write >= 0) == true &&
+            DeviceGrid.Children.OfType<DeviceTile>().Any(t => ((TextBlock)t.FindName("Reading")).Text != "—"),
+            "The disk panel did not render a live device.");
+        CloseDevices(this, new());
+    }
+
+    private static void CheckCounterDeltas()
+    {
+        var old = new VolumeActivity.Counters { BytesRead = 1000, BytesWritten = 2000 };
+        var now = new VolumeActivity.Counters { BytesRead = 3048, BytesWritten = 2000, QueryTime = 20_000_000,
+            IdleTime = 15_000_000, ReadTime = 20_000, ReadCount = 2 };
+        var row = VolumeActivity.Measure("volume", "test", old, now, 2);
+        Require(row.Read == 1024 && row.Write == 0 && row.Active == 25 && row.Response == 0.001 && row.IsVolume,
+            "Volume throughput, active time or latency used the wrong units.");
+        Require(VolumeActivity.Measure("volume", "test", now, old, 2).Read == null &&
+            VolumeActivity.Measure("volume", "test", old, old, 1).Read == 0, "A reset or idle volume was misreported.");
+        Require(Sampler.AdapterTotals(Array.Empty<AdapterSample>(), true) == (0d, 0d) && Sampler.AdapterTotals(Array.Empty<AdapterSample>(), false) == (null, null) &&
+            Sampler.AdapterTotals(new AdapterSample[] { new("test", "test", null, 128, null) }, true) == (null, 128d),
+            "Network warm-up, disconnect or one-direction counter reset was misreported.");
+    }
+
     private static void CheckLanguageResources()
     {
         var language = UiText.Language;
@@ -149,7 +185,7 @@ public sealed partial class MainWindow
                 Require(UiText.Language.Name == expected, "Incorrect preferred-language fallback.");
             }
         }
-        finally { UiText.UsePreferredLanguages([language.Name]); }
+        finally { UiText.UsePreferredLanguages(new[] { language.Name }); }
 
         var resources = new System.Resources.ResourceManager("Pulse.Localization.Strings", typeof(App).Assembly);
         var neutral = resources.GetResourceSet(System.Globalization.CultureInfo.InvariantCulture, true, false)!;
@@ -202,7 +238,7 @@ public sealed partial class MainWindow
         Tabs.SelectedItem = ProcessesTab;
     }
 
-    private void CheckMonitorTabs()
+    private async Task CheckMonitorTabsAsync()
     {
         int pid = Environment.ProcessId;
         Tabs.SelectedItem = DetailsTab;
@@ -210,12 +246,14 @@ public sealed partial class MainWindow
         Tabs.SelectedItem = UsersTab;
         Require(_userRows.Count != 0, "The Users tab did not list any sessions.");
         Tabs.SelectedItem = ServicesTab;
+        await _sourceRefresh;
         if (_serviceReadError is null)
             Require(_serviceRows.Any(row => row.ProcessId > 0), "The Services tab did not show a running service.");
         else
             Require(_serviceRows.Count == 0 && CountText.Text == UiText.Get("ServicesUnavailableShort") &&
                 HostedServices(pid) == _serviceReadError, "An unreadable service list was displayed as empty.");
         Tabs.SelectedItem = StartupTab;
+        await _sourceRefresh;
         Require(_tab == LowerTab.Startup && CountText.Text == UiText.Format("StartupCount",
             _startupRows.Count(row => row.Item!.Enabled), _startupRows.Count), "Incorrect startup summary.");
         Tabs.SelectedItem = NetworkTab;
@@ -224,6 +262,7 @@ public sealed partial class MainWindow
         listener.Start();
         using var udp = new UdpClient(new IPEndPoint(IPAddress.Loopback, 0));
         Tabs.SelectedItem = ConnectionsTab;
+        await _sourceRefresh;
         if (_availableTables.HasFlag(SocketTables.Tcp4))
             Require(_connectionRows.Any(row => row.ProcessId == pid && row.Local == listener.LocalEndpoint.ToString()
                 && row.State == "LISTENING"), "The Connections tab missed a live local listening socket.");
@@ -241,11 +280,10 @@ public sealed partial class MainWindow
         TcpConnection established = new(pid, false, local, 10003, remote, 443, TcpState.Established);
         _connections = [listener, udp, established, established with { LocalPort = 10004 }, udp with { Pid = pid + 1, LocalPort = 10005 }];
         _availableTables = SocketTables.All;
-        Require(ProcessEndpoints(pid, bound: true) == $"TCP {listener.Local}{Environment.NewLine}UDPv6 {udp.Local}",
-            "Bound ports included an established connection or another process.");
-        Require(ProcessEndpoints(pid, bound: false).Split(Environment.NewLine).Length == 2 &&
-            ProcessEndpoints(pid, bound: false).Contains($"{established.Local} → {established.Remote}"),
-            "Two connections to the same peer were merged or lost their local endpoint.");
+        string[] lines = ProcessEndpoints(pid).Split(Environment.NewLine);
+        Require(lines.SequenceEqual(new[] { $"TCP {listener.Local}", $"UDPv6 {udp.Local}",
+                $"TCP {established.Local} → {established.Remote}", $"TCP {local}:10004 → {established.Remote}" }),
+            "The inspector merged sockets, included another process, or rendered a peer for a binding.");
         SearchBox.Text = "udPv6";
         UpdateConnectionRows();
         Require(_connectionRows.Count == 2 && _connectionRows.All(row => row.Protocol == "UDPv6"), "Protocol filter failed.");
@@ -262,10 +300,10 @@ public sealed partial class MainWindow
                 $"Incorrect availability for {label}.");
         }
         _availableTables = SocketTables.Tcp;
-        Require(!ProcessEndpoints(pid, bound: false).Contains("UDP"), "A missing UDP table affected TCP conversations.");
-        _availableTables = SocketTables.Udp4;
-        Require(ProcessEndpoints(pid, bound: false) == UiText.Get("ConnectionsUnavailable"), "Missing TCP tables were shown as readable.");
+        Require(ProcessEndpoints(pid).EndsWith(UiText.Format("ProtocolUnavailable", "UDP/IPv4, UDP/IPv6")),
+            "Partial socket coverage was hidden in the inspector.");
         _availableTables = SocketTables.None;
+        Require(ProcessEndpoints(pid) == UiText.Get("ConnectionsUnavailable"), "Missing socket tables were displayed as readable.");
         Require(WithConnectionStatus("0", SocketTables.All, " · ") == UiText.Get("ConnectionsUnavailable"), "Denied queries were counted as empty.");
 
         // Two adjacent TCP6 address/scope fields in the Windows row layout, both in network byte order.
@@ -314,10 +352,30 @@ public sealed partial class MainWindow
         SearchBox.Text = "";
     }
 
+    private async Task WaitForSpaceScanAsync()
+    {
+        for (int i = 0; i < 200 && _spaceCancel is not null; i++) await Task.Delay(25);
+        Require(_spaceCancel is null, "The fixture scan did not finish.");
+    }
+
     private async Task CheckDiskSpaceAsync()
     {
+        Require(_spaceRoot is null, "A drive scan started before Disk space was opened.");
         Tabs.SelectedItem = SpaceTab;
-        Require(_tab == LowerTab.Space && SpaceBrowse.IsEnabled, "Missing disk space tab or folder picker.");
+        for (int i = 0; i < 150 && _spaceRoot is null; i++) await Task.Delay(100);
+        var drive = _spaceRoot ?? throw new InvalidOperationException("Opening Disk space did not start the selected drive.");
+        Require(SpaceDrives.SelectedIndex >= 0 && drive.Name == _spaceTargets[SpaceDrives.SelectedIndex] &&
+            SpacePath.Text.Contains(drive.Name) && SpaceDrives.IsEnabled && SpaceBrowse.IsEnabled,
+            "The selected drive and the visible scan do not match.");
+        var running = _spaceCancel;
+        Tabs.SelectedItem = ProcessesTab;
+        Tabs.SelectedItem = SpaceTab;
+        Require(_spaceRoot == drive && _spaceCancel == running, "Returning to Disk space restarted the drive scan.");
+        if (string.Equals(drive.Name, Path.GetPathRoot(Environment.SystemDirectory), StringComparison.OrdinalIgnoreCase))
+        {
+            for (int i = 0; i < 100 && SpaceItems.Items.Count == 0; i++) await Task.Delay(100);
+            Require(SpaceItems.Items.Count > 0, "The default system drive did not populate the folder list.");
+        }
         var fixture = Directory.CreateTempSubdirectory("Pulse-space-");
         try
         {
@@ -333,13 +391,24 @@ public sealed partial class MainWindow
                 File.WriteAllBytes(Path.Combine(small.FullName, "one"), [1]);
             }
 
+            var page = FileAllocation.Enumerate(fixture, new byte[1024]).ToDictionary(entry => entry.Name);
+            foreach (var file in fixture.EnumerateFiles())
+            {
+                Require(page.TryGetValue(file.Name, out var entry) && entry.Length == file.Length &&
+                    entry.Allocation == FileAllocation.Read(file.FullName, file.Attributes),
+                    "A paged directory listing lost an entry or changed its allocated size.");
+            }
             string path = fixture.FullName;
             SelectSpaceTarget(path);
+            SelectSpaceTarget(large.FullName);
             SelectSpaceTarget(path);
+            var selectedRoot = _spaceRoot;
+            Require(!SelectSpaceTarget(path) && _spaceRoot == selectedRoot, "The same selection restarted its scan.");
             Require(_spaceTargets.Count(target => target == path) == 1 && _spaceTargets[SpaceDrives.SelectedIndex] == path,
                 "Selecting a folder did not set a reusable scan target.");
-            await ScanSpaceAsync(path);
+            await WaitForSpaceScanAsync();
             var root = _spaceRoot!;
+            Require(root == selectedRoot && root.Name == path && !_spaceCancelled, "An older scan replaced the latest selection.");
             Require(root.Size == 1554 && root.Children.Sum(n => n.Size) == 1554, "The scanned file lengths do not add up.");
             var group = root.Children.Single(n => n.Grouped != 0);
             Require(group.Size == 55 && group.Grouped == 10 && root.Children.Count(n => n.IsFile) == 21,
@@ -390,6 +459,9 @@ public sealed partial class MainWindow
                 SpaceItems.SelectedItem == row, "Reordering the disk list moved focus away from the folder.");
             OpenSpaceFolder(nested);
             Require(_spaceCurrent == nested && SpaceUp.IsEnabled && SpaceItems.Items.Count == 1, "Folder drill-down failed.");
+            Tabs.SelectedItem = ProcessesTab;
+            Tabs.SelectedItem = SpaceTab;
+            Require(_spaceRoot == root && _spaceCurrent == nested && _spaceCancel is null, "Returning to the tab discarded its folder.");
             SpaceUpClicked(this, new());
             Require(_spaceCurrent == root, "Up did not return to the scanned folder.");
 
@@ -398,8 +470,13 @@ public sealed partial class MainWindow
             await scan;
             Require(_spaceCancelled && SpacePath.Text.Contains(UiText.Get("SpaceCancelled")) && SpaceBrowse.IsEnabled,
                 "Cancelling a scan did not preserve and identify the partial result.");
-            await ScanSpaceAsync(path);
-            Require(!_spaceCancelled && _spaceRoot?.Size == 1554, "Rescanning did not replace the partial result.");
+            var partial = _spaceRoot;
+            Tabs.SelectedItem = ProcessesTab;
+            Tabs.SelectedItem = SpaceTab;
+            Require(_spaceRoot == partial && _spaceCancel is null && _spaceCancelled, "Returning to the tab restarted a cancelled scan.");
+            SpaceScanClicked(this, new());
+            await WaitForSpaceScanAsync();
+            Require(_spaceRoot != partial && !_spaceCancelled && _spaceRoot?.Size == 1554, "Rescanning did not replace the partial result.");
         }
         finally { fixture.Delete(true); }
         Tabs.SelectedItem = ProcessesTab;

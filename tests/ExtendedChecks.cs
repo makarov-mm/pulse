@@ -1,4 +1,7 @@
+using System.ComponentModel;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
 using Pulse.Telemetry;
 
 namespace Pulse;
@@ -10,82 +13,63 @@ public sealed partial class MainWindow
         Directory.CreateDirectory(directory);
         for (int i = 0; i < 100 && _frame is null; i++) await Task.Delay(100);
         Require(_frame != null, "No samples.");
-        switch (Environment.GetEnvironmentVariable("PULSE_EXTENDED_PHASE"))
-        {
-            case "profile": await ProfileHistoryAsync(directory); break;
-            case "recordings": await VerifyRecordingsAsync(directory); break;
-            case "volume": await VerifyVolumeCancellationAsync(directory); break;
-            default: throw new ArgumentException("Unknown extended test phase.");
-        }
+        await VerifyDiskTrafficAsync(directory);
+        await VerifyVolumeCancellationAsync(directory);
     }
 
-    private async Task ProfileHistoryAsync(string directory)
+    private async Task VerifyDiskTrafficAsync(string directory)
     {
-        string metrics = Path.Combine(directory, "metrics.csv");
-        using var self = Process.GetCurrentProcess();
-        await File.WriteAllTextAsync(metrics, "build,interval_s,elapsed_s,cpu_ms,working_set_bytes,private_bytes,processes\n");
-        foreach (int interval in new[] { 2, 5, 1 })
-        {
-            IntervalBox.SelectedIndex = interval switch { 1 => 0, 5 => 2, _ => 1 };
-            await Task.Delay(6000);
-            self.Refresh();
-            var cpu = self.TotalProcessorTime;
-            var elapsed = Stopwatch.StartNew();
-            for (int i = 0; i < (interval == 1 ? 91 : 3); i++)
-            {
-                await Task.Delay(10000);
-                self.Refresh();
-                await File.AppendAllTextAsync(metrics, FormattableString.Invariant($"current,{interval},{elapsed.Elapsed.TotalSeconds:F2},{(self.TotalProcessorTime - cpu).TotalMilliseconds:F1},{self.WorkingSet64},{self.PrivateMemorySize64},{_frame!.Tasks.Count}\n"));
-            }
-        }
-
-        var spans = _history.Samples;
-        Require(spans.Count > 100 && spans[^1].Time - spans[0].Time > 890, "The live history did not fill its 15-minute window.");
-        await File.WriteAllTextAsync(Path.Combine(directory, "profile.txt"), "PASS 15-minute live history");
+        _timer.Stop();
+        while (_busy) await Task.Delay(20);
+        await RefreshAsync();
+        var baseline = _frame!;
+        string path = Path.Combine(directory, $"{Guid.NewGuid()}.bin");
+        await Task.Run(() => ExerciseDisk(path));
+        await Task.Delay(1000);
+        await RefreshAsync();
+        var frame = _frame!;
+        CheckLiveCards(frame);
+        double elapsed = frame.Time - baseline.Time;
+        Require(elapsed > 0 && frame.DiskRead * elapsed >= TrafficBytes * 0.90 &&
+            frame.DiskWrite * elapsed >= TrafficBytes * 0.90,
+            "The disk card did not register a write-through write and an uncached read.");
+        await File.WriteAllTextAsync(Path.Combine(directory, "overview.txt"),
+            $"PASS live overview. Disk read {frame.DiskRead:F0} B/s, write {frame.DiskWrite:F0} B/s. " +
+            $"CPU {frame.Cpu:F1}%, memory {frame.UsedRam}/{frame.TotalRam} bytes, " +
+            $"network receive {frame.Received:F0} B/s, send {frame.Sent:F0} B/s.");
+        _timer.Start();
     }
 
-    private async Task VerifyRecordingsAsync(string directory)
+    private const int TrafficBytes = 4 * 1024 * 1024;
+
+    private static void ExerciseDisk(string path)
     {
-        IntervalBox.SelectedIndex = 0;
-        await Task.Delay(2000);
-        var spans = _history.Samples;
-        async Task<HistoryCapture> Workload(string file)
+        const int size = TrafficBytes, alignment = 64 * 1024;
+        var data = new byte[size];
+        Random.Shared.NextBytes(data);
+        using var writer = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.Read | FileShare.Delete,
+            4096, FileOptions.WriteThrough | FileOptions.DeleteOnClose);
+        writer.Write(data);
+        writer.Flush(true);
+        // Bypass the Windows file cache so the test measures a real storage read.
+        using var reader = CreateFileW(path, 0x80000000, FileShare.ReadWrite | FileShare.Delete, 0, FileMode.Open, 0x20000000, 0);
+        if (reader.IsInvalid) throw new Win32Exception(Marshal.GetLastWin32Error());
+        nint buffer = Marshal.AllocHGlobal(size + alignment - 1);
+        try
         {
-            var info = new ProcessStartInfo("powershell.exe") { UseShellExecute = false, CreateNoWindow = true };
-            info.ArgumentList.Add("-NoProfile"); info.ArgumentList.Add("-Command");
-            info.ArgumentList.Add("$w=[Diagnostics.Stopwatch]::StartNew(); while($w.Elapsed.TotalSeconds -lt 20){[void][Math]::Sqrt(121)}");
-            double start = spans[^1].Time;
-            using var child = Process.Start(info)!;
-            await child.WaitForExitAsync();
-            await Task.Delay(2000);
-            var loaded = Capture();
-            int begin = Array.FindIndex(loaded.Samples, s => s.Time >= start);
-            var selected = loaded.Slice(begin, loaded.Samples.Length - 1);
-            var rank = selected.Rank(0, selected.Samples.Length - 1).Single(c => c.First.Key.Pid == child.Id);
-            Require(rank.CpuTicks > TimeSpan.TicksPerSecond && rank.LastIndex < selected.Samples.Length - 1, "Exited workload missing.");
-            await selected.SaveAsync(file);
-            return selected;
+            nint aligned = (buffer + alignment - 1) & ~(nint)(alignment - 1);
+            if (!ReadFile(reader, aligned, size, out int bytes, 0)) throw new Win32Exception(Marshal.GetLastWin32Error());
+            Require(bytes == size, "Incomplete uncached read.");
         }
-
-        string a = Path.Combine(directory, "run-a.pulse"), b = Path.Combine(directory, "run-b.pulse");
-        var first = await Workload(a);
-        var other = await Workload(b);
-        await Task.Delay(TimeSpan.FromMinutes(5));
-        var saved = await HistoryCapture.OpenAsync(a);
-        var fromMemory = Capture();
-        int start = Array.FindIndex(fromMemory.Samples, s => s.Time == first.Samples[0].Time);
-        int end = Array.FindIndex(fromMemory.Samples, s => s.Time == first.Samples[^1].Time);
-        Require(start >= 0 && end >= start, "The workload disappeared from live history.");
-        static object[] Values(List<HistoryCapture.Contribution> rows) =>
-            rows.Select(c => (object)(c.First.Key, c.CpuTicks, c.PrivateChange, c.Read, c.Write)).ToArray();
-        Require(Values(saved.Rank(0, saved.Samples.Length - 1)).SequenceEqual(Values(fromMemory.Rank(start, end))), "Offline rankings differ.");
-        var second = await HistoryCapture.OpenAsync(b);
-        static (double? Cpu, long? Memory) Peaks(HistoryCapture capture) =>
-            (capture.Samples.Max(s => s.CpuPercent), capture.Samples.Max(s => s.UsedMemoryBytes));
-        Require(second.Samples.Length > 1 && Peaks(first) == Peaks(saved) && Peaks(other) == Peaks(second), "Offline peaks differ.");
-        await File.WriteAllTextAsync(Path.Combine(directory, "recordings.txt"),
-            "PASS two workloads, exited process, five-minute retention, offline rankings and peaks.");
+        finally { Marshal.FreeHGlobal(buffer); }
     }
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern SafeFileHandle CreateFileW(string path, uint access, FileShare share, nint security,
+        FileMode mode, uint flags, nint template);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool ReadFile(SafeFileHandle file, nint buffer, int size, out int bytes, nint overlapped);
 
     private static async Task VerifyVolumeCancellationAsync(string directory)
     {

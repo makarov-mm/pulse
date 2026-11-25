@@ -15,18 +15,23 @@ internal static class Format
         if (bytes is null) return ("—", "");
         double value = bytes.Value;
         int i = 0;
-        while (value >= 1024 && i < UnitKeys.Length - 1) { value /= 1024; i++; }
+
+        while (value >= 1024 && i < UnitKeys.Length - 1)
+        {
+            value /= 1024;
+            i++;
+        }
+
         string unit = UiText.Get(UnitKeys[i]);
         return (Number(value, i != 0 && value < 100 ? 1 : 0), rate ? UiText.Format("RateUnit", unit) : unit);
     }
 
     public static string Bytes(double? bytes, bool rate = false)
     {
-        var (value, unit) = Size(bytes, rate);
+        (string value, string unit) = Size(bytes, rate);
         return unit.Length > 0 ? $"{value} {unit}" : value;
     }
 
-    // Names the Windows priority class of a process.
     public static string Priority(uint? priorityClass) => priorityClass switch
     {
         0x40 => UiText.Get("PriorityLow"),
@@ -39,15 +44,20 @@ internal static class Format
     };
 
     public static string Milliseconds(double? seconds) => seconds is { } s
-        ? $"{Number(s * 1000, s < 0.01 ? 1 : 0)} {UiText.Get("Milliseconds")}" : "—";
+        ? $"{Number(s * 1000, s < 0.01 ? 1 : 0)} {UiText.Get("Milliseconds")}"
+        : "—";
 
-    // Link speeds use decimal prefixes, unlike byte sizes.
     public static string BitRate(long? bitsPerSecond)
     {
         if (bitsPerSecond is null) return "—";
         double value = bitsPerSecond.Value;
         int i = 0;
-        while (value >= 1000 && i < BitRateKeys.Length - 1) { value /= 1000; i++; }
+
+        while (value >= 1000 && i < BitRateKeys.Length - 1)
+        {
+            value /= 1000; i++;
+        }
+
         return $"{Number(value, i != 0 && value < 10 && value % 1 != 0 ? 1 : 0)} {UiText.Get(BitRateKeys[i])}";
     }
 }

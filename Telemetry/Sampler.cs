@@ -11,11 +11,12 @@ internal sealed record TaskSample(ProcessCounters Info, double? Cpu, double? Rea
 }
 internal sealed record ThreadSample(int Id, double? Cpu);
 
-internal sealed record Frame(double Time, DateTime Clock, double? Cpu, long? TotalRam, long? UsedRam,
+internal sealed record Frame(double Time, double? Cpu, long? TotalRam, long? UsedRam,
     double? DiskRead, double? DiskWrite, double? Received, double? Sent, IReadOnlyList<TaskSample> Tasks,
     IReadOnlyList<CoreSample>? Cores, IReadOnlyList<DiskSample>? Disks, IReadOnlyList<AdapterSample>? Adapters)
 {
     public GpuSnapshot? Gpu { get; init; }
+    public bool DiskRatesFromVolumes { get; init; }
     // Thread samples belong to this process instance even if Windows reuses the PID.
     public ProcessKey? ThreadOwner { get; init; }
     public IReadOnlyList<ThreadSample> Threads { get; init; } = [];
@@ -37,12 +38,23 @@ internal sealed class Sampler : IDisposable
     private static extern uint GetActiveProcessorCount(ushort group);
     [DllImport("kernel32.dll")]
     private static extern bool GetSystemTimes(out long idle, out long kernel, out long user);
+    [DllImport("iphlpapi.dll")]
+    private static extern uint ConvertInterfaceGuidToLuid(in Guid guid, out ulong luid);
+    [DllImport("iphlpapi.dll")]
+    private static extern uint GetIfEntry2(nint row);
+
+    // MIB_IF_ROW2 starts with the interface LUID. InterfaceAndOperStatusFlags follows DirectionType.
+    private const int InterfaceRowBytes = 1352, InterfaceFlagsOffset = 1152;
+    private const byte HardwareInterface = 0x01, FilterInterface = 0x02;
 
     public static readonly int LogicalProcessors = Math.Max(1, (int)GetActiveProcessorCount(ushort.MaxValue));
     private readonly ProcessSnapshot _processes = new();
     private readonly PerformanceCounters _performance = new();
+    private readonly ProcessorTimes _processorTimes = new();
+    private readonly VolumeActivity _volumeActivity = new();
     private Dictionary<ProcessKey, ProcessCounters> _previous = [];
     private Dictionary<string, (long Rx, long Tx)> _network = [];
+    private readonly Dictionary<string, byte> _interfaceFlags = [];
     private Dictionary<int, ThreadCounters> _threads = [];
     private ProcessKey? _threadOwner;
     private double? _lastTime;
@@ -72,7 +84,8 @@ internal sealed class Sampler : IDisposable
 
         var memory = new MemoryStatus { Length = (uint)Marshal.SizeOf<MemoryStatus>() };
         bool haveMemory = GlobalMemoryStatusEx(ref memory) && memory.Total > 0;
-        double? cpuTotal = counters.Cpu;
+        var processor = _processorTimes.Read(compare, counters.Cores);
+        double? cpuTotal = counters.Cpu ?? processor.Total;
         if (GetSystemTimes(out long idle, out long kernel, out long user))
         {
             long total = kernel + user;
@@ -80,6 +93,7 @@ internal sealed class Sampler : IDisposable
                 cpuTotal = 100 * (1 - (double)(idle - old.Idle) / (total - old.Total));
             _lastCpu = (idle, total);
         }
+        var (diskRead, diskWrite, disks, fromVolumes) = DiskRates(counters, time, compare);
         var (rx, tx, adapters) = NetworkRates(compare, seconds);
         _previous = tasks.ToDictionary(p => p.Key);
         _lastTime = time;
@@ -95,34 +109,72 @@ internal sealed class Sampler : IDisposable
         }
         _threads = threads.ToDictionary(t => t.Id);
         _threadOwner = owner;
-        return new Frame(time, DateTime.Now, compare && cpuTotal is { } c ? Math.Clamp(c, 0, 100) : null,
+        return new Frame(time, compare && cpuTotal is { } c ? Math.Clamp(c, 0, 100) : null,
             haveMemory ? (long)memory.Total : null, haveMemory ? (long)(memory.Total - memory.Available) : null,
-            compare ? counters.Read : null, compare ? counters.Write : null, rx, tx, rows,
-            compare ? counters.Cores : null, compare ? counters.Disks : null, adapters)
+            diskRead, diskWrite, rx, tx, rows,
+            processor.Cores, disks, adapters)
         {
-            Gpu = counters.Gpu, ThreadOwner = owner, Threads = threadRows
+            DiskRatesFromVolumes = fromVolumes, Gpu = counters.Gpu, ThreadOwner = owner, Threads = threadRows
         };
     }
 
-    private static double? Rate(long current, long previous, double seconds) =>
-        current >= previous ? (current - previous) / seconds : null;
+    private (double? Read, double? Write, IReadOnlyList<DiskSample>? Disks, bool FromVolumes)
+        DiskRates(CounterSample counters, double time, bool compare)
+    {
+        var physical = compare ? counters.Disks : null;
+        double? read = counters.Read ?? CompleteSum(physical, d => d.Read);
+        double? write = counters.Write ?? CompleteSum(physical, d => d.Write);
+        bool physicalRows = physical?.Any(d => d.Read.HasValue || d.Write.HasValue) == true;
+        if (compare && read.HasValue && write.HasValue && physicalRows)
+        {
+            _volumeActivity.Reset();
+            return (read, write, physical, false);
+        }
+
+        var volumes = _volumeActivity.Sample(time, compare);
+        if (!compare) return (null, null, volumes, false);
+        bool useVolumeRows = !physicalRows && volumes is { Count: > 0 };
+        var rows = useVolumeRows ? volumes : physical;
+        if (read.HasValue && write.HasValue) return (read, write, rows, false);
+
+        var measured = volumes?.Where(d => d.Read.HasValue && d.Write.HasValue).ToArray();
+        if (measured is { Length: > 0 })
+            return (measured.Sum(d => d.Read), measured.Sum(d => d.Write), volumes, true);
+        return (read, write, rows, false);
+    }
+
+    private static double? CompleteSum(IReadOnlyList<DiskSample>? disks, Func<DiskSample, double?> value)
+    {
+        if (disks is not { Count: > 0 }) return null;
+        double total = 0;
+        foreach (var disk in disks)
+        {
+            if (value(disk) is not { } rate) return null;
+            total += rate;
+        }
+        return total;
+    }
+
+    internal static double? Rate(long current, long previous, double seconds) =>
+        seconds > 0 && previous >= 0 && current >= previous ? (current - previous) / seconds : null;
 
     private (double? Received, double? Sent, List<AdapterSample>? Adapters) NetworkRates(bool compare, double seconds)
     {
         var current = new Dictionary<string, (long Rx, long Tx)>();
         var adapters = new List<AdapterSample>();
-        double rx = 0, tx = 0;
-        bool matched = false;
+        var hardware = new List<AdapterSample>();
         try
         {
             foreach (var adapter in NetworkInterface.GetAllNetworkInterfaces())
             {
                 if (adapter.OperationalStatus != OperationalStatus.Up ||
                     adapter.NetworkInterfaceType is NetworkInterfaceType.Loopback or NetworkInterfaceType.Tunnel) continue;
+                byte flags = GetInterfaceFlags(adapter.Id);
+                if ((flags & FilterInterface) != 0) continue;
+                AdapterSample sample;
                 try
                 {
                     var stats = adapter.GetIPStatistics();
-                    long speed = adapter.Speed;
                     current[adapter.Id] = (stats.BytesReceived, stats.BytesSent);
                     double? down = null, up = null;
                     if (compare && _network.TryGetValue(adapter.Id, out var old))
@@ -130,17 +182,22 @@ internal sealed class Sampler : IDisposable
                         down = Rate(stats.BytesReceived, old.Rx, seconds);
                         up = Rate(stats.BytesSent, old.Tx, seconds);
                     }
-                    adapters.Add(new(adapter.Id, adapter.Name, down, up, speed > 0 ? speed : (long?)null));
-                    if (down is null || up is null) continue;
-                    rx += down.Value;
-                    tx += up.Value;
-                    matched = true;
+                    long? speed = null;
+                    try
+                    {
+                        long bits = adapter.Speed;
+                        if (bits > 0) speed = bits;
+                    }
+                    catch (NetworkInformationException) { /* Link speed is optional. */ }
+                    sample = new(adapter.Id, adapter.Name, down, up, speed);
                 }
                 catch (NetworkInformationException)
                 {
                     // The adapter was enumerated but its statistics are temporarily unavailable.
-                    adapters.Add(new(adapter.Id, adapter.Name, null, null, null));
+                    sample = new(adapter.Id, adapter.Name, null, null, null);
                 }
+                adapters.Add(sample);
+                if ((flags & HardwareInterface) != 0) hardware.Add(sample);
             }
         }
         catch (NetworkInformationException)
@@ -154,8 +211,44 @@ internal sealed class Sampler : IDisposable
             return order != 0 ? order : StringComparer.Ordinal.Compare(a.Id, b.Id);
         });
         _network = current;
-        double? received = matched ? rx : null, sent = matched ? tx : null;
-        return (received, sent, adapters);
+        // Traffic of a virtual switch or VPN adapter also crosses a physical adapter. Counting only
+        // hardware interfaces avoids double counting. Virtual-only systems use the available adapters.
+        var (rx, tx) = AdapterTotals(hardware.Count > 0 ? hardware : adapters, compare);
+        return (rx, tx, adapters);
+    }
+
+    internal static (double? Received, double? Sent) AdapterTotals(IReadOnlyList<AdapterSample> adapters, bool compare)
+    {
+        if (!compare) return (null, null);
+        if (adapters.Count == 0) return (0, 0);
+        double? rx = null, tx = null;
+        foreach (var adapter in adapters)
+        {
+            if (adapter.Received is { } down) rx = (rx ?? 0) + down;
+            if (adapter.Sent is { } up) tx = (tx ?? 0) + up;
+        }
+        return (rx, tx);
+    }
+
+    // Retry failed interface lookups on later samples instead of caching a guessed classification.
+    private byte GetInterfaceFlags(string id)
+    {
+        if (_interfaceFlags.TryGetValue(id, out byte known)) return known;
+
+        if (Guid.TryParse(id, out Guid guid) && ConvertInterfaceGuidToLuid(guid, out ulong luid) == 0)
+        {
+            nint row = Marshal.AllocHGlobal(InterfaceRowBytes);
+
+            try
+            {
+                Marshal.Copy(new byte[InterfaceRowBytes], 0, row, InterfaceRowBytes);
+                Marshal.WriteInt64(row, unchecked((long)luid));
+                if (GetIfEntry2(row) == 0) return _interfaceFlags[id] = Marshal.ReadByte(row, InterfaceFlagsOffset);
+            }
+            finally { Marshal.FreeHGlobal(row); }
+        }
+
+        return 0;
     }
 
     public void Dispose()
